@@ -1,0 +1,91 @@
+{
+  "id": "canvas-simple-01",
+  "name": "E-Commerce API Generator",
+  "description": "Simple workflow to test artifact generation",
+  "created_at": "2026-02-09T00:00:00Z",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "task",
+      "label": "Generate Product API",
+      "description": "Create REST API for products",
+      "data": {
+        "task_type": "code_gen",
+        "language": "python",
+        "framework": "FastAPI"
+      },
+      "position": { "x": 100, "y": 100 }
+    },
+    {
+      "id": "node-2",
+      "type": "task",
+      "label": "Write Unit Tests",
+      "description": "Create test suite",
+      "data": {
+        "task_type": "test_gen",
+        "language": "python",
+        "framework": "pytest"
+      },
+      "position": { "x": 100, "y": 250 }
+    },
+    {
+      "id": "node-3",
+      "type": "task",
+      "label": "Database Schema",
+      "description": "PostgreSQL tables",
+      "data": {
+        "task_type": "sql_migration",
+        "database": "postgresql"
+      },
+      "position": { "x": 350, "y": 100 }
+    },
+    {
+      "id": "node-4",
+      "type": "task",
+      "label": "Web Dashboard",
+      "description": "React UI",
+      "data": {
+        "task_type": "html_gen",
+        "framework": "React"
+      },
+      "position": { "x": 350, "y": 250 }
+    },
+    {
+      "id": "node-5",
+      "type": "task",
+      "label": "Docker Config",
+      "description": "Containerized deployment",
+      "data": {
+        "task_type": "deploy_config",
+        "platform": "Docker"
+      },
+      "position": { "x": 600, "y": 175 }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "node-1",
+      "target": "node-2",
+      "label": "Test from API"
+    },
+    {
+      "id": "edge-2",
+      "source": "node-1",
+      "target": "node-3",
+      "label": "Schema"
+    },
+    {
+      "id": "edge-3",
+      "source": "node-1",
+      "target": "node-4",
+      "label": "Integrate API"
+    },
+    {
+      "id": "edge-4",
+      "source": "node-3",
+      "target": "node-5",
+      "label": "Deploy DB"
+    }
+  ]
+}

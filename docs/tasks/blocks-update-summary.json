@@ -1,0 +1,266 @@
+﻿[
+    {
+        "sourceFeature":  "feature-00.5-prototype-polish.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-06",
+        "addBlocks":  "F00.5-MH-01, F00.5-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-01",
+        "addBlocks":  "F01-MH-06"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-02",
+        "addBlocks":  "F01-MH-06"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-05",
+        "addBlocks":  "F01-SH-01"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-MH-01",
+        "addBlocks":  "F01-MH-01, F01-MH-02, F01-MH-03, F01-CH-01, F01-CH-02, F01-CH-03"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-MH-02",
+        "addBlocks":  "F01-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-MH-03",
+        "addBlocks":  "F01-MH-02"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-MH-04",
+        "addBlocks":  "F01-MH-03, F01-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-MH-05",
+        "addBlocks":  "F01-MH-04, F01-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-01-prompt-canvas.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-SH-01",
+        "addBlocks":  "F01-MH-01"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-01",
+        "addBlocks":  "F02-MH-02, F02-MH-04, F02-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-02",
+        "addBlocks":  "F02-MH-02, F02-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-05",
+        "addBlocks":  "F02-MH-03"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-06",
+        "addBlocks":  "F02-MH-01"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-07",
+        "addBlocks":  "F02-MH-03"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-00.5-prototype-polish.md",
+        "taskId":  "F00.5-MH-05",
+        "addBlocks":  "F02-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-02-agent-dashboard.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-06",
+        "addBlocks":  "F02-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-03-orchestrator-hub.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-04",
+        "addBlocks":  "F03-MH-01, F03-MH-03"
+    },
+    {
+        "sourceFeature":  "feature-03-orchestrator-hub.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-06",
+        "addBlocks":  "F03-MH-03"
+    },
+    {
+        "sourceFeature":  "feature-03-orchestrator-hub.md",
+        "targetFile":  "feature-02-agent-dashboard.md",
+        "taskId":  "F02-MH-01",
+        "addBlocks":  "F03-MH-02, F03-MH-04"
+    },
+    {
+        "sourceFeature":  "feature-03-orchestrator-hub.md",
+        "targetFile":  "feature-02-agent-dashboard.md",
+        "taskId":  "F02-MH-04",
+        "addBlocks":  "F03-SH-03"
+    },
+    {
+        "sourceFeature":  "feature-04-output-simulator.md",
+        "targetFile":  "feature-03-orchestrator-hub.md",
+        "taskId":  "F03-MH-03",
+        "addBlocks":  "F04-MH-03"
+    },
+    {
+        "sourceFeature":  "feature-04-output-simulator.md",
+        "targetFile":  "feature-03-orchestrator-hub.md",
+        "taskId":  "F03-MH-05",
+        "addBlocks":  "F04-SH-03"
+    },
+    {
+        "sourceFeature":  "feature-05-ai-trace-viewer.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-03",
+        "addBlocks":  "F05-MH-01, F05-MH-02, F05-MH-04"
+    },
+    {
+        "sourceFeature":  "feature-05-ai-trace-viewer.md",
+        "targetFile":  "feature-04-output-simulator.md",
+        "taskId":  "F04-MH-02",
+        "addBlocks":  "F05-MH-01, F05-SH-01"
+    },
+    {
+        "sourceFeature":  "feature-05-ai-trace-viewer.md",
+        "targetFile":  "feature-04-output-simulator.md",
+        "taskId":  "F04-MH-04",
+        "addBlocks":  "F05-MH-03, F05-SH-02"
+    },
+    {
+        "sourceFeature":  "feature-05-ai-trace-viewer.md",
+        "targetFile":  "feature-02-agent-dashboard.md",
+        "taskId":  "F02-MH-03",
+        "addBlocks":  "F05-MH-05"
+    },
+    {
+        "sourceFeature":  "feature-05-ai-trace-viewer.md",
+        "targetFile":  "feature-03-orchestrator-hub.md",
+        "taskId":  "F03-MH-05",
+        "addBlocks":  "F05-MH-05, F05-SH-02"
+    },
+    {
+        "sourceFeature":  "feature-06-analytics-pane.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-01",
+        "addBlocks":  "F06-MH-01"
+    },
+    {
+        "sourceFeature":  "feature-06-analytics-pane.md",
+        "targetFile":  "feature-02-agent-dashboard.md",
+        "taskId":  "F02-MH-01",
+        "addBlocks":  "F06-MH-01"
+    },
+    {
+        "sourceFeature":  "feature-06-analytics-pane.md",
+        "targetFile":  "feature-03-orchestrator-hub.md",
+        "taskId":  "F03-MH-01",
+        "addBlocks":  "F06-MH-01"
+    },
+    {
+        "sourceFeature":  "feature-06-analytics-pane.md",
+        "targetFile":  "feature-04-output-simulator.md",
+        "taskId":  "F04-MH-01",
+        "addBlocks":  "F06-MH-01"
+    },
+    {
+        "sourceFeature":  "feature-08-multi-user-mode.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-02",
+        "addBlocks":  "`F08-MH-01`"
+    },
+    {
+        "sourceFeature":  "feature-08-multi-user-mode.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-07",
+        "addBlocks":  "`F08-MH-01`, `F08-SH-01`"
+    },
+    {
+        "sourceFeature":  "feature-08-multi-user-mode.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-03",
+        "addBlocks":  "`F08-MH-02`, `F08-MH-03`"
+    },
+    {
+        "sourceFeature":  "feature-08-multi-user-mode.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-06",
+        "addBlocks":  "`F08-MH-01`"
+    },
+    {
+        "sourceFeature":  "feature-08-multi-user-mode.md",
+        "targetFile":  "feature-07-security-compliance.md",
+        "taskId":  "F07-MH-01",
+        "addBlocks":  "`F08-MH-03`, `F08-MH-04`, `F08-SH-03`"
+    },
+    {
+        "sourceFeature":  "feature-08-multi-user-mode.md",
+        "targetFile":  "feature-07-security-compliance.md",
+        "taskId":  "F07-MH-03",
+        "addBlocks":  "`F08-MH-01`, `F08-MH-03`, `F08-MH-04`, `F08-SH-01`"
+    },
+    {
+        "sourceFeature":  "feature-09-plugin-marketplace.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-07",
+        "addBlocks":  "`F09-MH-01`, `F09-MH-03`"
+    },
+    {
+        "sourceFeature":  "feature-09-plugin-marketplace.md",
+        "targetFile":  "feature-07-security-compliance.md",
+        "taskId":  "F07-MH-01",
+        "addBlocks":  "`F09-MH-04`, `F09-MH-05`, `F09-MH-06`"
+    },
+    {
+        "sourceFeature":  "feature-09-plugin-marketplace.md",
+        "targetFile":  "feature-07-security-compliance.md",
+        "taskId":  "F07-MH-03",
+        "addBlocks":  "`F09-MH-01`, `F09-MH-02`, `F09-MH-03`, `F09-MH-04`, `F09-MH-05`"
+    },
+    {
+        "sourceFeature":  "feature-10-accessibility-adaptive-ui.md",
+        "targetFile":  "feature-00-foundations.md",
+        "taskId":  "F00-MH-07",
+        "addBlocks":  "`F10-MH-01`"
+    },
+    {
+        "sourceFeature":  "feature-10-accessibility-adaptive-ui.md",
+        "targetFile":  "feature-01-prompt-canvas.md",
+        "taskId":  "F01-MH-06",
+        "addBlocks":  "`F10-MH-02`, `F10-MH-03`"
+    },
+    {
+        "sourceFeature":  "feature-10-accessibility-adaptive-ui.md",
+        "targetFile":  "feature-02-agent-dashboard.md",
+        "taskId":  "F02-MH-01",
+        "addBlocks":  "`F10-MH-02`, `F10-MH-03`"
+    }
+]

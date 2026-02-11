@@ -1,0 +1,32 @@
+{
+  "name": "Feature Task Completion Workflow",
+  "description": "Automatically triggers documentation generation when a feature task is marked complete",
+  "version": "1.0",
+  "trigger": {
+    "type": "file_change",
+    "paths": [
+      "docs/tasks/feature-*.md"
+    ],
+    "events": ["write"],
+    "conditions": [
+      {
+        "type": "content_pattern",
+        "pattern": "- \\[x\\] `F\\d+-MH-",
+        "description": "Detects when Must-Have tasks are marked complete"
+      }
+    ]
+  },
+  "actions": [
+    {
+      "type": "prompt",
+      "file": ".claude/hooks/prompts/task-completion-workflow.md",
+      "description": "Invoke task completion workflow"
+    }
+  ],
+  "metadata": {
+    "auto_trigger": true,
+    "user_confirmation_required": true,
+    "max_auto_triggers_per_day": 5,
+    "cooldown_minutes": 30
+  }
+}

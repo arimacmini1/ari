@@ -1,0 +1,105 @@
+{
+  "id": "canvas-test-01",
+  "name": "E-Commerce Product Generator",
+  "description": "Sample canvas to test artifact generation workflow",
+  "created_at": "2026-02-09T00:00:00Z",
+  "nodes": [
+    {
+      "id": "block-1",
+      "type": "task",
+      "label": "Generate Product API",
+      "description": "Create REST API endpoints for product management",
+      "data": {
+        "task_type": "code_gen",
+        "language": "python",
+        "framework": "FastAPI",
+        "requirements": ["CRUD operations", "Authentication", "Pagination"]
+      }
+    },
+    {
+      "id": "block-2",
+      "type": "task",
+      "label": "Write Unit Tests",
+      "description": "Create comprehensive test suite",
+      "data": {
+        "task_type": "test_gen",
+        "language": "python",
+        "framework": "pytest",
+        "coverage_target": 85
+      }
+    },
+    {
+      "id": "block-3",
+      "type": "task",
+      "label": "Design Database Schema",
+      "description": "Create PostgreSQL schema for products",
+      "data": {
+        "task_type": "sql_migration",
+        "database": "postgresql",
+        "tables": ["products", "categories", "inventory"]
+      }
+    },
+    {
+      "id": "block-4",
+      "type": "task",
+      "label": "Build Web Dashboard",
+      "description": "Create responsive admin dashboard",
+      "data": {
+        "task_type": "html_gen",
+        "framework": "React",
+        "components": ["ProductList", "ProductForm", "Analytics"]
+      }
+    },
+    {
+      "id": "block-5",
+      "type": "task",
+      "label": "Docker Deployment Config",
+      "description": "Create containerized deployment setup",
+      "data": {
+        "task_type": "deploy_config",
+        "platform": "Docker",
+        "services": ["API", "Database", "Web"]
+      }
+    },
+    {
+      "id": "block-6",
+      "type": "decision",
+      "label": "API Ready?",
+      "description": "Check if API generation passed",
+      "data": {
+        "condition": "task-1 completed successfully"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "block-1",
+      "target": "block-2",
+      "label": "Generate tests from API"
+    },
+    {
+      "id": "edge-2",
+      "source": "block-1",
+      "target": "block-3",
+      "label": "Schema requirements"
+    },
+    {
+      "id": "edge-3",
+      "source": "block-3",
+      "target": "block-5",
+      "label": "Database in deployment"
+    },
+    {
+      "id": "edge-4",
+      "source": "block-1",
+      "target": "block-4",
+      "label": "API integration"
+    }
+  ],
+  "metadata": {
+    "author": "QA Team",
+    "version": "1.0",
+    "tags": ["test", "e-commerce", "full-stack"]
+  }
+}

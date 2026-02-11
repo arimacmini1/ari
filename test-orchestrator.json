@@ -1,0 +1,20 @@
+{
+  "instruction_graph": [
+    {
+      "id": "task-1",
+      "type": "code_gen",
+      "description": "Generate API",
+      "estimated_cost": 10,
+      "estimated_duration": 30
+    },
+    {
+      "id": "task-2",
+      "type": "test_gen",
+      "description": "Write tests",
+      "estimated_cost": 5,
+      "estimated_duration": 20,
+      "dependencies": ["task-1"]
+    }
+  ],
+  "rule_set_id": "default"
+}
