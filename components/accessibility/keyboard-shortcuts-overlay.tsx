@@ -31,7 +31,16 @@ export function KeyboardShortcutsOverlay() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    const isTypingTarget = (target: EventTarget | null) => {
+      if (!(target instanceof HTMLElement)) return false;
+      const tag = target.tagName.toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || tag === 'select') return true;
+      return target.isContentEditable || Boolean(target.closest('[contenteditable="true"]'));
+    };
+
     const handler = (event: KeyboardEvent) => {
+      if (isTypingTarget(event.target)) return;
+
       const key = event.key;
       if (key === '?' || (key === '/' && (event.ctrlKey || event.metaKey))) {
         event.preventDefault();

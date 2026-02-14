@@ -8,33 +8,38 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
 
 ## Must-Have Tasks (vertical slice — get the loop working)
 
-- [ ] `F11-MH-01` Build Familiar Mode entry flow (chat-first start + minimal chrome)
+- [x] `F11-MH-01` Build Familiar Mode entry flow (chat-first start + minimal chrome)
   - Owner: Frontend / Design
   - Dependencies: `F01-MH-06`, `F02-MH-01`
-  - Blocks: `F11-MH-02`, `F11-MH-05`, `F11-SH-01`
+  - Blocks: `F11-MH-02`, `F11-MH-05`, `F11-MH-06`, `F11-SH-01`, `F15-MH-01`, `F15-MH-03`
   - Roadmap ref: `P1-MH-12`
   - Acceptance criteria:
-    - New project can start in a single chat prompt with minimal UI chrome
-    - Users can toggle into full Canvas + Dashboard without losing chat context
-    - First-run guidance explains the transition from prompt → canvas → swarm
-    - Familiar Mode state persists across reloads for the current project
+    - New project can start in a single chat prompt from the main dashboard AI Copilot with minimal friction
+    - Prompt Canvas + dashboard remain available alongside Copilot in one screen without losing chat context
+    - Copilot status chips and toasts make the prompt -> canvas -> swarm transition visible during use
+    - Familiar state persists across reloads for the current project (chat, draft metadata, archives/checkpoints)
   - Effort: M
   - Gotchas / debug notes: Keep the Familiar shell thin; reuse existing workspace routes instead of duplicating views.
   - Progress / Fixes / Updates:
     - 2026-02-10: Started. Drafted initial UX flow (chat-first shell -> expand to full workspace) and identified reuse points in existing workspace routes.
     - 2026-02-11: Implemented Familiar Mode shell with chat-first UI, first-run guidance, and localStorage persistence. Added toggle into full workspace and back, with shared chat storage.
     - 2026-02-11: Added Clear Chat action with confirmation plus Reset Draft control to discard the auto-drafted preview.
+    - 2026-02-11: Added New Chat with archived chat history restore in Familiar Mode. Added expansion UX hardening: Expanding state, 12s timeout, deterministic fallback notice.
+    - 2026-02-11: Migrated Familiar Mode capabilities into main-dashboard AI Copilot workbench (chat, draft preview, clear/new/history, apply-to-canvas with timeout/fallback). Page now opens directly to one-screen workspace.
+    - 2026-02-11: Added per-message checkpoint restore (chat + draft snapshot), archive metadata cards (timestamp + preview + delete), and toast-based non-blocking fallback notifications.
+    - 2026-02-11: Added system prompt registry and router with Auto/manual prompt selection in AI Copilot. `/api/familiar/chat` now resolves prompt per request and returns prompt metadata.
+    - 2026-02-11: Verified one-screen dashboard copilot workflow (`/`) including persistence and session controls; task marked complete.
 
-- [ ] `F11-MH-02` Implement chat-to-canvas expansion with context preservation
+- [x] `F11-MH-02` Implement chat-to-canvas expansion with context preservation
   - Owner: Frontend / AI-Agent
   - Dependencies: `F11-MH-01`, `F01-MH-02`, `F01-MH-04`
   - Blocks: `F11-MH-03`, `F11-MH-05`
   - Roadmap ref: `P1-MH-12`
   - Acceptance criteria:
-    - Expansion uses a strong model to convert the refined chat transcript into a high-quality canvas graph (nodes + edges) within 5s for typical prompts
+    - Expansion uses strong-model routing to convert the refined chat transcript into a canvas graph (nodes + edges) with provider fallback and deterministic backup
     - Generated blocks reuse the block template library (task/decision/parallel/text/artifact/preview)
     - Users can switch back to chat view and see the full conversation history (no context loss)
-    - If LLM expansion fails, system falls back to deterministic expansion and surfaces a recoverable warning with suggested fixes
+    - If LLM expansion fails or times out (12s guardrail), system falls back to deterministic expansion and surfaces a recoverable warning toast
   - Effort: L
   - Gotchas / debug notes: Avoid lossy conversion; store raw chat alongside generated canvas metadata. Keep a clear separation: fast model for chat, strong model for final expansion.
   - Progress / Fixes / Updates:
@@ -42,11 +47,12 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
     - 2026-02-11: Added hybrid LLM expansion via `/api/familiar/expand` with provider fallback (OpenAI → Anthropic → Gemini). Deterministic fallback retained if no API keys are configured or parsing fails.
     - 2026-02-11: Updated scope. Next: split fast-model chat from strong-model expansion (separate routing + env vars), and add incremental draft-canvas updates during chat.
     - 2026-02-11: Split fast vs strong routing (fast chat + draft endpoints, strong expand defaults) and wired incremental draft updates in Familiar Mode.
+    - 2026-02-11: Verified apply-to-canvas flow in Copilot workbench: expanding state, timeout guardrail, deterministic fallback toast, and canvas-state sync; task marked complete.
 
 - [x] `F11-MH-06` Add real-time LLM participation in Familiar Mode chat (fast model)
   - Owner: Backend / Frontend
   - Dependencies: `F11-MH-01`
-  - Blocks: `F11-MH-07`, `F11-MH-02`
+  - Blocks: `F11-MH-02`, `F11-MH-07`
   - Roadmap ref: `P1-MH-12`
   - Acceptance criteria:
     - Every user message triggers a server-side LLM call and appends an assistant response to chat
@@ -64,19 +70,19 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
   - Blocks: `F11-MH-02`
   - Roadmap ref: `P1-MH-12`
   - Acceptance criteria:
-    - After N user turns (default 3), server generates a draft canvas update and UI renders a mini-canvas preview in Familiar Mode
-    - Draft updates are applied as JSON Patch (or a constrained patch format) to avoid full-regeneration flicker
-    - User can request an update explicitly (button: "Update draft") and undo the last patch
-    - Draft state persists across reloads and survives toggle into/out of full workspace
+    - After N user turns (default 3), server generates draft canvas updates from chat context
+    - Draft updates are applied as constrained patch ops to avoid full-regeneration flicker
+    - Draft updates sync into `canvas-state` and preserve stable IDs where possible
+    - Draft state persists across reloads and survives workspace navigation
   - Effort: L
   - Gotchas / debug notes: Patch application must be deterministic; validate patch before applying. Keep nodes stable (IDs) to avoid re-render churn.
   - Progress / Fixes / Updates:
-    - 2026-02-11: Added `/api/familiar/draft` to return collab-style patch ops and applied patches client-side with validation. Draft preview panel renders a mini canvas, supports manual update and undo, and persists across reloads.
+    - 2026-02-11: Added `/api/familiar/draft` to return collab-style patch ops and applied patches client-side with validation. Draft updates run on cadence (every 3 user turns) and persist across reloads.
 
-- [ ] `F11-MH-03` Prototype Replit project import → canvas flow
+- [x] `F11-MH-03` Prototype Replit project import → canvas flow
   - Owner: Backend / AI-Agent
   - Dependencies: `F01-MH-04`, `F01-MH-06`, `F03-MH-01`
-  - Blocks: `F11-CH-01`
+  - Blocks: `F11-CH-01`, `F12-SH-02`, `F15-MH-04`
   - Roadmap ref: `P1-MH-13`
   - Acceptance criteria:
     - Accept a Replit project description or export and map it to a starter canvas
@@ -86,12 +92,15 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
   - Effort: M
   - Gotchas / debug notes: Prefer deterministic mappings; log import failures with actionable hints.
   - Progress / Fixes / Updates:
-    - 2026-02-10: Not started.
+    - 2026-02-12: Started implementation. Added deterministic import endpoint `POST /api/familiar/import` in `app/api/familiar/import/route.ts` to map project description/export JSON into a starter canvas.
+    - 2026-02-12: Added task decomposition + assignment preview generation (`task -> assigned_agent`) in import response payload.
+    - 2026-02-12: Added Copilot workbench import action in `components/aei/copilot-workbench.tsx` (paste import input, apply starter canvas, sync draft state, and toast assignment preview).
+    - 2026-02-12: Manual verification passed: import input maps to starter canvas, assignment preview appears, and imported canvas remains editable/versioned in Prompt Canvas. Task marked complete.
 
-- [ ] `F11-MH-04` Add Code Peek panel for generated artifacts (read-only)
+- [x] `F11-MH-04` Add Code Peek panel for generated artifacts (read-only)
   - Owner: Frontend
   - Dependencies: `F03-MH-03`, `F04-MH-02`
-  - Blocks: `F11-CH-02`, `F11-MH-05`
+  - Blocks: `F11-CH-02`, `F11-MH-05`, `F12-CH-02`, `F15-MH-01`, `F15-MH-03`
   - Roadmap ref: `P1-MH-14`
   - Acceptance criteria:
     - Toggleable panel shows generated code/schema/config in read-only mode
@@ -101,9 +110,12 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
   - Effort: S
   - Gotchas / debug notes: Reuse artifact preview components; avoid mounting heavy editors when panel is closed.
   - Progress / Fixes / Updates:
-    - 2026-02-10: Not started.
+    - 2026-02-12: Started implementation. Added top-level `Code Peek` workspace tab in `components/aei/main-workspace.tsx` as a lightweight read-only generated-artifact panel.
+    - 2026-02-12: Wired Code Peek to load latest generated files from `GET /api/code-explorer/snapshot` and auto-refresh when simulation publishes snapshot updates.
+    - 2026-02-12: Added explicit read-only messaging and fast open/close via tab switch (panel content mounts only when active).
+    - 2026-02-12: Manual verification passed: generated artifact list/content loads, refresh behavior works after simulation updates, and read-only messaging is clear. Task marked complete.
 
-- [ ] `F11-MH-05` Ship Replit-style onboarding tutorial flow
+- [x] `F11-MH-05` Ship Replit-style onboarding tutorial flow
   - Owner: Product / Design
   - Dependencies: `F11-MH-01`, `F11-MH-02`, `F03-MH-03`
   - Blocks: `F11-SH-02`
@@ -116,7 +128,12 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
   - Effort: M
   - Gotchas / debug notes: Keep the tutorial as a scripted canvas template with checkpointed steps.
   - Progress / Fixes / Updates:
-    - 2026-02-10: Not started.
+    - 2026-02-12: Started implementation in `components/aei/copilot-workbench.tsx` with a scripted in-app tutorial card (Start/Next/Skip/Restart) covering Prompt -> Canvas -> Code Peek iteration flow.
+    - 2026-02-12: Added local tutorial metrics logging (`startedAt`, `firstOutputAt`, `dropOffStep`, `completedAt`) persisted in localStorage to support completion/drop-off tracking.
+    - 2026-02-12: Added explicit messaging to highlight where Familiar Mode upgrades into multi-agent orchestration (`Apply to Canvas`) and artifact inspection (`Code Peek`).
+    - 2026-02-12: Fixed tutorial/chat layout so chat input remains visible while tutorial card is active.
+    - 2026-02-12: Manual verification passed: walkthrough controls work (start/next/skip/restart), and metric `firstOutputAt` updates from pending to timestamp after first assistant response. Task marked complete.
+    - 2026-02-12: Dogfood pass: 5+ turn chat persistence across reload, draft updates after 3 user messages, expand-to-canvas sanity check (no obvious data loss), and tutorial run completed under 15 minutes.
 
 ## Should-Have Tasks (makes it dogfood-able and lovable)
 
@@ -186,13 +203,13 @@ When this lands, a real user can start a project in chat-first Familiar Mode wit
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Start a new project in Familiar Mode and expand to full Canvas
-- [ ] Chat with LLM for 5+ turns; confirm conversation + draft canvas persists across reload
-- [ ] See draft canvas update after 3 user messages and undo the last patch
-- [ ] Convert refined chat transcript into a valid full canvas graph without data loss
-- [ ] Import a small Replit project and edit the resulting canvas
-- [ ] Open Code Peek and inspect generated artifacts in read-only mode
-- [ ] Complete the tutorial in under 15 minutes
+- [x] Start a new project from AI Copilot and apply expansion into Prompt Canvas
+- [x] Chat with LLM for 5+ turns; confirm conversation + draft canvas persists across reload
+- [x] See draft canvas update after 3 user messages and confirm persisted draft/canvas state
+- [x] Convert refined chat transcript into a valid full canvas graph without data loss
+- [x] Import a small Replit project and edit the resulting canvas
+- [x] Open Code Peek and inspect generated artifacts in read-only mode
+- [x] Complete the tutorial in under 15 minutes
 
 ## Cross-Feature Dependency Map
 

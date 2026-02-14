@@ -2,20 +2,24 @@
 
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from "react"
-import { Send, Terminal, Bot, User, Sparkles } from "lucide-react"
+import { Send, Terminal, Bot, User, Sparkles, ArrowDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { applyOperations, type CollabOperation, type CollabVersions } from "@/lib/canvas-collab"
 import { createInitialCanvasState, type CanvasState } from "@/lib/canvas-state"
+import { emitTelemetryEvent } from "@/lib/telemetry-client"
 
-interface Message {
+const TELEMETRY_STORAGE_KEY = "aei.familiar.chat"
+
+export interface ChatMessage {
   id: string
   role: "user" | "ai" | "system"
   content: string
@@ -34,7 +38,15 @@ export interface DraftStatus {
   message?: string
 }
 
-const defaultSeedMessages: Message[] = [
+export interface PromptResolution {
+  id: string
+  name: string
+  version: number
+  mode: "auto" | "manual"
+  reason?: string
+}
+
+const defaultSeedMessages: ChatMessage[] = [
   {
     id: "1",
     role: "system",
@@ -65,18 +77,25 @@ const defaultSeedMessages: Message[] = [
 export interface ConsoleChatHandle {
   requestDraftUpdate: () => void
   clearChat: () => void
+  getMessages: () => ChatMessage[]
+  loadChat: (messages: ChatMessage[]) => void
 }
 
 interface ConsoleChatProps {
   storageKey?: string
   showHeader?: boolean
   className?: string
+  fontScale?: "normal" | "small" | "xsmall"
+  messageStyle?: "detailed" | "plain"
   enableAssistant?: boolean
   enableDraft?: boolean
   draftState?: CanvasState | null
   onDraftStateChange?: (state: CanvasState, meta: DraftMeta) => void
   onDraftStatusChange?: (status: DraftStatus) => void
-  seedMessages?: Message[]
+  onMessagesChange?: (messages: ChatMessage[]) => void
+  chatPromptId?: string | null
+  onPromptResolved?: (prompt: PromptResolution) => void
+  seedMessages?: ChatMessage[]
 }
 
 function formatTimestamp(date: Date) {
@@ -99,22 +118,31 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
     storageKey = "aei.familiar.chat",
     showHeader = true,
     className,
+    fontScale = "normal",
+    messageStyle = "detailed",
     enableAssistant = false,
     enableDraft = false,
     draftState,
     onDraftStateChange,
     onDraftStatusChange,
+    onMessagesChange,
+    chatPromptId,
+    onPromptResolved,
     seedMessages = defaultSeedMessages,
   },
   ref
 ) {
+  const fontClass =
+    fontScale === "xsmall" ? "text-[11px]" : fontScale === "small" ? "text-xs" : "text-sm"
+  const labelFontClass = fontScale === "xsmall" ? "text-[10px]" : "text-[10px]"
   const draftKey = `${storageKey}.draft`
-  const [messages, setMessages] = useState<Message[]>(() => {
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
     if (typeof window === "undefined") return seedMessages
     const stored = localStorage.getItem(storageKey)
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as Message[]
+        const parsed = JSON.parse(stored) as ChatMessage[]
         if (Array.isArray(parsed) && parsed.length > 0) {
           return parsed
         }
@@ -128,9 +156,22 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
   })
   const [isSending, setIsSending] = useState(false)
   const [draftStatus, setDraftStatus] = useState<DraftStatus>({ state: "idle" })
+  const [autoScrollPaused, setAutoScrollPaused] = useState(false)
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
   const lastDraftUserCountRef = useRef(0)
   const versionsRef = useRef<CollabVersions>({ nodeTs: new Map(), edgeTs: new Map() })
   const draftStateRef = useRef<CanvasState | null>(draftState ?? null)
+  const sessionStartedRef = useRef(false)
+  const emitTelemetry = useCallback(
+    async (eventName: string, metadata?: Record<string, unknown>) => {
+      await emitTelemetryEvent({
+        storageKey: storageKey || TELEMETRY_STORAGE_KEY,
+        eventName,
+        metadata,
+      })
+    },
+    [storageKey]
+  )
 
   useEffect(() => {
     draftStateRef.current = draftState ?? null
@@ -142,6 +183,10 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
   }, [messages, storageKey])
 
   useEffect(() => {
+    onMessagesChange?.(messages)
+  }, [messages, onMessagesChange])
+
+  useEffect(() => {
     if (!storageKey) return
     localStorage.setItem(draftKey, input)
   }, [draftKey, input, storageKey])
@@ -151,8 +196,18 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
   }, [draftStatus, onDraftStatusChange])
 
   const messageCount = useMemo(() => messages.length, [messages.length])
+  const isNearBottom = useCallback((el: HTMLDivElement) => {
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    return distanceFromBottom <= 120
+  }, [])
 
-  const requestDraftUpdate = async (messagesForDraft: Message[]) => {
+  const scrollToBottom = useCallback((behavior: ScrollBehavior) => {
+    const el = scrollAreaRef.current
+    if (!el) return
+    el.scrollTo({ top: el.scrollHeight, behavior })
+  }, [])
+
+  const requestDraftUpdate = async (messagesForDraft: ChatMessage[]) => {
     if (!enableDraft || !onDraftStateChange) return
     if (draftStatus.state === "loading") return
     setDraftStatus({ state: "loading" })
@@ -179,11 +234,18 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
       }
       const baseDraft = draftStateRef.current ?? createInitialCanvasState()
       const nextDraft = applyOperations(baseDraft, ops, versionsRef.current)
+      const draftSource = data?.source || "deterministic"
+      const draftModel = typeof data?.model === "string" ? data.model : undefined
       onDraftStateChange(nextDraft, {
-        source: data?.source || "deterministic",
-        model: typeof data?.model === "string" ? data.model : undefined,
+        source: draftSource,
+        model: draftModel,
         updatedAt: new Date().toISOString(),
         opsCount: ops.length,
+      })
+      emitTelemetry("draft_generated", {
+        source: draftSource,
+        model: draftModel,
+        ops_count: ops.length,
       })
       setDraftStatus({ state: "idle" })
     } catch (error) {
@@ -204,9 +266,26 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
         localStorage.removeItem(draftKey)
       }
     },
+    getMessages: () => messages,
+    loadChat: (nextMessages: ChatMessage[]) => {
+      setMessages(nextMessages)
+      setInput("")
+      lastDraftUserCountRef.current = 0
+      versionsRef.current = { nodeTs: new Map(), edgeTs: new Map() }
+    },
   }))
 
-  const maybeAutoDraft = async (nextMessages: Message[]) => {
+  useEffect(() => {
+    if (autoScrollPaused) return
+    scrollToBottom("auto")
+    setShowScrollToBottom(false)
+  }, [messages, autoScrollPaused, scrollToBottom])
+
+  useEffect(() => {
+    scrollToBottom("auto")
+  }, [scrollToBottom])
+
+  const maybeAutoDraft = async (nextMessages: ChatMessage[]) => {
     if (!enableDraft) return
     const userCount = nextMessages.filter((msg) => msg.role === "user").length
     const autoEvery = 3
@@ -222,7 +301,7 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
     const trimmed = input.trim()
     if (!trimmed) return
     const timestamp = formatTimestamp(new Date())
-    const userMessage: Message = {
+    const userMessage: ChatMessage = {
       id: String(messages.length + 1),
       role: "user",
       content: trimmed,
@@ -231,6 +310,13 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
     const nextMessages = [...messages, userMessage]
     setMessages(nextMessages)
     setInput("")
+    if (!sessionStartedRef.current) {
+      sessionStartedRef.current = true
+      emitTelemetry("session_started", {
+        prompt_id: chatPromptId ?? "auto",
+        message_count: nextMessages.length,
+      })
+    }
 
     if (!enableAssistant) {
       await maybeAutoDraft(nextMessages)
@@ -243,6 +329,7 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: nextMessages.map((m) => ({ role: m.role, content: m.content })),
+          promptId: chatPromptId ?? "auto",
         }),
       })
       if (!resp.ok) {
@@ -262,9 +349,18 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
         return
       }
       const data = await resp.json()
+      if (data?.prompt?.id && data?.prompt?.name) {
+        onPromptResolved?.({
+          id: data.prompt.id,
+          name: data.prompt.name,
+          version: Number(data.prompt.version ?? 1),
+          mode: data.prompt.mode === "manual" ? "manual" : "auto",
+          reason: typeof data.prompt.reason === "string" ? data.prompt.reason : undefined,
+        })
+      }
       const reply = typeof data?.reply === "string" ? data.reply : null
       if (reply) {
-        const assistantMessage: Message = {
+        const assistantMessage: ChatMessage = {
           id: String(nextMessages.length + 1),
           role: "ai",
           content: reply,
@@ -272,6 +368,10 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
         }
         const updated = [...nextMessages, assistantMessage]
         setMessages(updated)
+        emitTelemetry("assistant_response", {
+          prompt_id: chatPromptId ?? "auto",
+          message_count: updated.length,
+        })
         await maybeAutoDraft(updated)
       }
     } catch (error) {
@@ -292,7 +392,13 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
   }
 
   return (
-    <div className={cn("flex flex-col h-full", className)}>
+    <div
+      className={cn(
+        "flex flex-col h-full",
+        messageStyle === "plain" && "bg-[#1f2023] text-[#d7d7d9]",
+        className
+      )}
+    >
       {showHeader ? (
         <div className="flex items-center gap-3 px-6 py-3 border-b border-border shrink-0">
           <Terminal className="w-4 h-4 text-primary" />
@@ -304,62 +410,137 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
         </div>
       ) : null}
 
-      <div className="flex-1 overflow-y-auto px-6 py-4 flex flex-col gap-3">
-        {messageCount === 0 ? (
-          <div className="text-xs text-muted-foreground">
-            Start by describing what you want the agents to build.
-          </div>
-        ) : null}
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={cn(
-              "flex items-start gap-3 text-sm leading-relaxed",
-              msg.role === "system" && "text-muted-foreground italic"
-            )}
-          >
-            <div className="shrink-0 mt-0.5">
-              {msg.role === "user" && (
-                <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
-                  <User className="w-3.5 h-3.5 text-primary" />
-                </div>
-              )}
-              {msg.role === "ai" && (
-                <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-primary" />
-                </div>
-              )}
-              {msg.role === "system" && (
-                <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center">
-                  <Bot className="w-3.5 h-3.5 text-muted-foreground" />
-                </div>
-              )}
+      <div className="relative flex-1 min-h-0">
+        <div
+          ref={scrollAreaRef}
+          onScroll={() => {
+            const el = scrollAreaRef.current
+            if (!el) return
+            const nearBottom = isNearBottom(el)
+            if (!nearBottom && !autoScrollPaused) {
+              setAutoScrollPaused(true)
+            }
+            setShowScrollToBottom(!nearBottom)
+          }}
+          className={cn(
+            "h-full overflow-y-auto py-4 flex flex-col gap-3",
+            messageStyle === "plain" ? "px-1.5 gap-2" : "px-6"
+          )}
+        >
+          {messageCount === 0 ? (
+            <div className={cn(fontScale === "normal" ? "text-xs" : "text-[11px]", "text-muted-foreground")}>
+              Start by describing what you want the agents to build.
             </div>
-            <div className="flex-1 min-w-0">
-              <span
+          ) : null}
+          {messages.map((msg) => (
+          messageStyle === "plain" ? (
+            <div
+              key={msg.id}
+              className={cn(
+                "flex",
+                msg.role === "user" ? "justify-end pr-1" : "justify-start pl-0.5"
+              )}
+            >
+              <div className={cn(msg.role === "ai" && "px-2 w-full")}>
+              <div
                 className={cn(
-                  "font-mono text-sm",
-                  msg.role === "user" && "text-foreground",
-                  msg.role === "ai" && "text-primary",
-                  msg.role === "system" && "text-muted-foreground"
+                  "rounded-lg px-3 py-2 leading-relaxed border",
+                  msg.role === "ai" ? "max-w-[99%]" : "max-w-[92%]",
+                  fontClass,
+                  msg.role === "user" && "bg-[#2a2c31] border-[rgba(40,223,202,0.35)] text-[#e4e5e7]",
+                  msg.role === "ai" && "bg-[#26282d] border-[#3a3d44] text-[#d7d7d9]",
+                  msg.role === "system" && "bg-[#24262a] border-[#373a40] text-[#a7abb3] italic"
                 )}
               >
-                {msg.content}
+                <div className={cn("mb-0.5 uppercase tracking-wide text-[#9ea2ab]", labelFontClass)}>
+                  {msg.role === "user" ? "You" : msg.role === "ai" ? "AI Copilot" : "System"}
+                </div>
+                <p className={cn("whitespace-pre-wrap break-words", msg.role === "user" && "pl-1")}>
+                  {msg.content}
+                </p>
+              </div>
+              </div>
+            </div>
+          ) : (
+            <div
+              key={msg.id}
+              className={cn(
+                "flex items-start gap-3 leading-relaxed",
+                fontClass,
+                msg.role === "system" && "text-muted-foreground italic"
+              )}
+            >
+              <div className="shrink-0 mt-0.5">
+                {msg.role === "user" && (
+                  <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
+                    <User className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                )}
+                {msg.role === "ai" && (
+                  <div className="w-6 h-6 rounded-md bg-primary/20 flex items-center justify-center">
+                    <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  </div>
+                )}
+                {msg.role === "system" && (
+                  <div className="w-6 h-6 rounded-md bg-secondary flex items-center justify-center">
+                    <Bot className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span
+                  className={cn(
+                    "font-mono whitespace-pre-wrap break-words",
+                    fontClass,
+                    msg.role === "user" && "text-foreground",
+                    msg.role === "ai" && "text-primary",
+                    msg.role === "system" && "text-muted-foreground"
+                  )}
+                >
+                  {msg.content}
+                </span>
+              </div>
+              <span className="text-xs font-mono text-muted-foreground shrink-0 mt-0.5">
+                {msg.timestamp}
               </span>
             </div>
-            <span className="text-xs font-mono text-muted-foreground shrink-0 mt-0.5">
-              {msg.timestamp}
-            </span>
-          </div>
-        ))}
+            )
+          ))}
+        </div>
+        {showScrollToBottom && (
+          <Button
+            size="sm"
+            variant="secondary"
+            className="absolute bottom-3 right-3 h-8 px-2.5 text-xs"
+            onClick={() => {
+              setAutoScrollPaused(false)
+              scrollToBottom("smooth")
+            }}
+          >
+            <ArrowDown className="w-3.5 h-3.5 mr-1" />
+            Latest
+          </Button>
+        )}
       </div>
 
-      <div className="flex items-center gap-3 px-6 py-3 border-t border-border shrink-0">
+      <div
+        className={cn(
+          "flex items-center gap-3 px-6 py-3 shrink-0 border-t",
+          messageStyle === "plain" ? "border-[#353840]" : "border-border"
+        )}
+      >
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Query agents or instruct orchestrator..."
-          className="flex-1 h-9 text-sm bg-secondary border-border font-mono placeholder:text-muted-foreground"
+          className={cn(
+            "flex-1 h-9 placeholder:text-muted-foreground",
+            messageStyle === "plain"
+              ? "bg-[#2a2c31] border-[#3b3e45] text-[#d7d7d9] placeholder:text-[#8f949e]"
+              : "bg-secondary border-border",
+            messageStyle === "plain" ? "font-sans" : "font-mono",
+            fontClass
+          )}
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault()
@@ -370,7 +551,12 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
         />
         <Button
           size="icon"
-          className="h-9 w-9 bg-primary text-primary-foreground hover:bg-primary/90 shrink-0"
+          className={cn(
+            "h-9 w-9 shrink-0",
+            messageStyle === "plain"
+              ? "bg-[#3a7df0] text-white hover:bg-[#4a89f5]"
+              : "bg-primary text-primary-foreground hover:bg-primary/90"
+          )}
           onClick={handleSend}
           disabled={isSending}
         >

@@ -62,12 +62,26 @@ export function VersionHistory({
                       addSuffix: true,
                     })}
                   </span>
-                  {isCurrent && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      Current
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      {version.save_source}
                     </Badge>
-                  )}
+                    {isCurrent && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                        Current
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+                <div className="text-[10px] text-muted-foreground">
+                  by {version.actor_name} • {version.collaborator_count} collaborator
+                  {version.collaborator_count === 1 ? "" : "s"}
+                </div>
+                {version.save_source === "rollback" && version.rollback_from_version_id && (
+                  <div className="text-[10px] text-amber-300">
+                    rollback of {version.rollback_from_version_id}
+                  </div>
+                )}
 
                 <div className="flex flex-wrap gap-1">
                   {diff.nodes_added > 0 && (

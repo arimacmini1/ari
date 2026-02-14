@@ -1,9 +1,15 @@
 "use client"
 
-import React, { useState, useCallback, useRef, useEffect } from "react"
-import { Play, Download, Upload, Undo2, Redo2, Scan, History, Save, GitBranch } from "lucide-react"
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react"
+import { Play, Download, Upload, Undo2, Redo2, Scan, History, Save, GitBranch, ChevronDown, Trash2, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
   Dialog,
   DialogContent,
@@ -18,6 +24,7 @@ import { PropertiesEditor } from "./properties-editor"
 import { ArtifactPreview } from "./artifact-preview"
 import { InstructionPreview } from "./instruction-preview"
 import { VersionHistory } from "./version-history"
+import { CanvasCommentsPanel } from "./canvas-comments-panel"
 import type { CanvasState, CanvasNode, CanvasEdge, BlockType, HistoryState } from "@/lib/canvas-state"
 import type { InstructionGraph } from "@/lib/instruction-graph"
 import {
@@ -25,9 +32,12 @@ import {
   createInitialHistory,
 } from "@/lib/canvas-state"
 import { canvasSerializer } from "@/lib/canvas-serialization"
+import { convertPrdToCanvas, isPrdJson } from "@/lib/prd-canvas-converter"
 import { CanvasVersionStore } from "@/lib/canvas-versions"
 import { useCanvasCollaboration } from "@/lib/use-canvas-collaboration"
+import { useCanvasComments } from "@/lib/use-canvas-comments"
 import { threeWayMerge, type MergeConflict } from "@/lib/canvas-merge"
+import { useActiveProject } from "@/components/aei/active-project-provider"
 
 const blockDefaults: Record<BlockType, { label: string; description: string }> = {
   task: { label: "Task", description: "Process or action" },
@@ -38,11 +48,17 @@ const blockDefaults: Record<BlockType, { label: string; description: string }> =
   artifact: { label: "Artifact", description: "Generated output artifact" },
   preview: { label: "Preview", description: "Live output preview" },
 }
+const COMMENTS_VISIBLE_KEY = "aei.canvas.comments.visible"
+const COMMENTS_VISIBILITY_EVENT = "aei:comments-visibility"
+const SET_COMMENTS_VISIBILITY_EVENT = "aei:set-comments-panel"
 
 export function PromptCanvas() {
   const canvasId = "default-canvas"
+  const { activeProjectId } = useActiveProject()
+  const effectiveProjectId = activeProjectId || "default-project"
   const containerRef = useRef<HTMLDivElement | null>(null)
   const suppressBroadcastRef = useRef(false)
+  const lastLocalJsonRef = useRef<string>("")
 
   const [state, setState] = useState<CanvasState>(() => {
     if (typeof window === "undefined") return { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 } }
@@ -60,6 +76,12 @@ export function PromptCanvas() {
   const [selectedNode, setSelectedNode] = useState<CanvasNode | null>(null)
   const [executionResult, setExecutionResult] = useState(null)
   const [showVersions, setShowVersions] = useState(false)
+  const [showComments, setShowComments] = useState<boolean>(() => {
+    if (typeof window === "undefined") return true
+    const stored = localStorage.getItem(COMMENTS_VISIBLE_KEY)
+    if (stored === "false") return false
+    return true
+  })
   const [showBranches, setShowBranches] = useState(false)
   const [versionStoreInstance] = useState(() => new CanvasVersionStore())
   const [currentVersionId, setCurrentVersionId] = useState<string | null>(null)
@@ -97,7 +119,11 @@ export function PromptCanvas() {
     ? (localStorage.getItem("aei-role") || "Admin")
     : "Admin")
   const actorId = useRef<string>(typeof window !== "undefined"
-    ? (localStorage.getItem("aei-user") || "local-user")
+    ? (
+        sessionStorage.getItem("aei-user") ||
+        sessionStorage.getItem("aei.userId") ||
+        "local-user"
+      )
     : "local-user")
 
 
@@ -108,13 +134,150 @@ export function PromptCanvas() {
     localStorage.setItem("canvas-state", JSON.stringify(nextState))
   }, [])
 
+  useEffect(() => {
+    lastLocalJsonRef.current = JSON.stringify(state)
+  }, [state])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+
+    const readCanvasState = () => {
+      const raw = localStorage.getItem("canvas-state")
+      if (!raw) return
+      if (raw === lastLocalJsonRef.current) return
+      try {
+        const parsed = JSON.parse(raw) as CanvasState
+        if (!parsed?.nodes || !parsed?.edges) return
+        applyRemoteState(parsed)
+      } catch {
+        // ignore invalid external state
+      }
+    }
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== "canvas-state") return
+      readCanvasState()
+    }
+
+    const handleCanvasEvent = () => readCanvasState()
+
+    window.addEventListener("storage", handleStorage)
+    window.addEventListener("aei:canvas-state", handleCanvasEvent)
+    return () => {
+      window.removeEventListener("storage", handleStorage)
+      window.removeEventListener("aei:canvas-state", handleCanvasEvent)
+    }
+  }, [applyRemoteState])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(COMMENTS_VISIBLE_KEY, showComments ? "true" : "false")
+    window.dispatchEvent(
+      new CustomEvent(COMMENTS_VISIBILITY_EVENT, {
+        detail: { visible: showComments },
+      })
+    )
+  }, [showComments])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ visible: boolean }>).detail
+      if (!detail || typeof detail.visible !== "boolean") return
+      setShowComments(detail.visible)
+    }
+    window.addEventListener(SET_COMMENTS_VISIBILITY_EVENT, handler as EventListener)
+    return () => {
+      window.removeEventListener(SET_COMMENTS_VISIBILITY_EVENT, handler as EventListener)
+    }
+  }, [])
+
   const {
+    displayName: collaborationDisplayName,
     collaborators,
     broadcastCursor,
     observeLocalState,
     conflicts,
+    editEvents,
     resolveConflict,
-  } = useCanvasCollaboration(canvasId, applyRemoteState)
+  } = useCanvasCollaboration(canvasId, applyRemoteState, { scopeKey: effectiveProjectId })
+
+  const {
+    activity: commentActivity,
+    unreadMentions,
+    actorMentionHandle,
+    addComment,
+    recordEditActivity,
+    recordRollbackActivity,
+    threadForNode,
+    markActivityRead,
+    markAllActivityRead,
+    clearReadActivity,
+  } = useCanvasComments(canvasId, effectiveProjectId)
+  const processedEditIdsRef = useRef<Set<string>>(new Set())
+  const collaboratorPayload = useMemo(
+    () =>
+      collaborators.map((collaborator) => ({
+        id: collaborator.userId || collaborator.id,
+        name: collaborator.name,
+      })),
+    [collaborators]
+  )
+  const collaboratorEventSignature = useMemo(
+    () =>
+      JSON.stringify(
+        collaboratorPayload
+          .map((collaborator) => `${collaborator.id}:${collaborator.name}`)
+          .sort()
+      ),
+    [collaboratorPayload]
+  )
+
+  useEffect(() => {
+    const names = collaborators.slice(0, 4).map((c) => c.name)
+    window.dispatchEvent(
+      new CustomEvent("aei-collaborators", {
+        detail: { count: collaborators.length, names, collaborators: collaboratorPayload },
+      })
+    )
+  }, [collaboratorEventSignature, collaboratorPayload, collaborators])
+
+  useEffect(() => {
+    return () => {
+      window.dispatchEvent(
+        new CustomEvent("aei-collaborators", {
+          detail: { count: 0, names: [], collaborators: [] },
+        })
+      )
+    }
+  }, [])
+
+  const collaborationNames = useCallback(() => {
+    const names = [collaborationDisplayName, ...collaborators.map((c) => c.name)]
+      .map((name) => name.trim())
+      .filter(Boolean)
+    return Array.from(new Set(names))
+  }, [collaborationDisplayName, collaborators])
+
+  useEffect(() => {
+    if (!editEvents.length) return
+    for (const event of editEvents) {
+      if (processedEditIdsRef.current.has(event.id)) continue
+      processedEditIdsRef.current.add(event.id)
+      recordEditActivity({
+        editId: event.id,
+        nodeId: event.nodeId,
+        nodeLabel: event.nodeLabel,
+        actorName: event.actorName,
+        action: event.action,
+        timestampMs: event.createdAt,
+      })
+    }
+    if (processedEditIdsRef.current.size > 500) {
+      const trimmed = Array.from(processedEditIdsRef.current).slice(-250)
+      processedEditIdsRef.current = new Set(trimmed)
+    }
+  }, [editEvents, recordEditActivity])
 
   const handleStateChange = useCallback((newState: CanvasState) => {
     setState(newState)
@@ -183,6 +346,20 @@ export function PromptCanvas() {
     })
   }, [])
 
+  const clearCanvas = useCallback(() => {
+    if (state.nodes.length === 0 && state.edges.length === 0) return
+    const confirmed = window.confirm("Delete all blocks and connections from this canvas?")
+    if (!confirmed) return
+    const cleared: CanvasState = {
+      ...state,
+      nodes: [],
+      edges: [],
+    }
+    setSelectedNode(null)
+    handleStateChange(cleared)
+    setHistory((prev) => canvasActions.pushHistory({ ...prev, present: cleared }))
+  }, [state, handleStateChange])
+
   const exportCanvas = useCallback(() => {
     canvasSerializer.downloadJSON(state)
   }, [state])
@@ -198,13 +375,26 @@ export function PromptCanvas() {
       reader.onload = (event) => {
         try {
           const json = JSON.parse(event.target?.result as string)
+          if (isPrdJson(json)) {
+            const converted = convertPrdToCanvas(json)
+            if (converted) {
+              handleStateChange(converted)
+              setHistory((prev) => canvasActions.pushHistory({ ...prev, present: converted }))
+              alert("PRD JSON imported and converted to canvas")
+              return
+            }
+            alert("Unable to convert PRD JSON")
+            return
+          }
+
           const deserialized = canvasSerializer.import(json)
           if (deserialized) {
             handleStateChange(deserialized)
             setHistory((prev) => canvasActions.pushHistory({ ...prev, present: deserialized }))
-          } else {
-            alert("Invalid canvas file")
+            return
           }
+
+          alert("Invalid canvas file")
         } catch {
           alert("Failed to parse canvas file")
         }
@@ -331,22 +521,15 @@ export function PromptCanvas() {
     await executeFromPreview()
   }, [parsedGraph, canvasChanged, parseCanvas, executeFromPreview])
 
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { type: string; blockType?: string }
-      if (detail?.type === "execute-canvas") {
-        executeCanvas()
-      }
-      if (detail?.type === "canvas-add-block" && detail.blockType) {
-        addBlock(detail.blockType as BlockType)
-      }
-    }
-    window.addEventListener("aei-voice-command", handler as EventListener)
-    return () => window.removeEventListener("aei-voice-command", handler as EventListener)
-  }, [executeCanvas, addBlock])
-
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      const isTypingTarget =
+        target?.tagName === "INPUT" ||
+        target?.tagName === "TEXTAREA" ||
+        target?.isContentEditable
+      if (isTypingTarget) return
+
       if (e.ctrlKey || e.metaKey) {
         if (e.key === "z") {
           e.preventDefault()
@@ -354,18 +537,26 @@ export function PromptCanvas() {
         } else if (e.key === "y") {
           e.preventDefault()
           redo()
+        } else if (e.shiftKey && (e.key === "Backspace" || e.key === "Delete")) {
+          e.preventDefault()
+          clearCanvas()
         }
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [undo, redo])
+  }, [undo, redo, clearCanvas])
 
   const saveVersion = useCallback(() => {
-    const version = versionStoreInstance.save(canvasId, state)
+    const version = versionStoreInstance.save(canvasId, state, {
+      userId: actorId.current,
+      actorName: collaborationDisplayName,
+      saveSource: "manual",
+      collaboratorNames: collaborationNames(),
+    })
     setCurrentVersionId(version.version_id)
     lastSavedRef.current = JSON.stringify(state)
-  }, [versionStoreInstance, canvasId, state])
+  }, [versionStoreInstance, canvasId, state, collaborationDisplayName, collaborationNames])
 
   const createBranch = useCallback(() => {
     const name = newBranchName.trim()
@@ -496,15 +687,39 @@ export function PromptCanvas() {
 
   const handleRevert = useCallback(
     (versionId: string) => {
+      const confirmed = window.confirm("Revert canvas to this saved version?")
+      if (!confirmed) return
+      const targetVersion = versionStoreInstance.getVersion(canvasId, versionId)
       const reverted = versionStoreInstance.revert(canvasId, versionId)
-      if (reverted) {
+      if (reverted && targetVersion) {
         handleStateChange(reverted)
         setHistory((prev) => canvasActions.pushHistory({ ...prev, present: reverted }))
-        setCurrentVersionId(versionId)
+        const rollbackVersion = versionStoreInstance.save(canvasId, reverted, {
+          userId: actorId.current,
+          actorName: collaborationDisplayName,
+          saveSource: "rollback",
+          collaboratorNames: collaborationNames(),
+          rollbackFromVersionId: targetVersion.version_id,
+        })
+        setCurrentVersionId(rollbackVersion.version_id)
+        recordRollbackActivity({
+          rollbackId: `rollback-${rollbackVersion.version_id}`,
+          actorName: collaborationDisplayName,
+          fromVersionId: targetVersion.version_id,
+          toVersionId: rollbackVersion.version_id,
+          timestampMs: Date.now(),
+        })
         lastSavedRef.current = JSON.stringify(reverted)
       }
     },
-    [versionStoreInstance, canvasId, handleStateChange]
+    [
+      versionStoreInstance,
+      canvasId,
+      handleStateChange,
+      collaborationDisplayName,
+      collaborationNames,
+      recordRollbackActivity,
+    ]
   )
 
   useEffect(() => {
@@ -538,113 +753,113 @@ export function PromptCanvas() {
     const interval = setInterval(() => {
       const current = JSON.stringify(state)
       if (current !== lastSavedRef.current) {
-        const version = versionStoreInstance.save(canvasId, state)
+        const version = versionStoreInstance.save(canvasId, state, {
+          userId: actorId.current,
+          actorName: collaborationDisplayName,
+          saveSource: "autosave",
+          collaboratorNames: collaborationNames(),
+        })
         setCurrentVersionId(version.version_id)
         lastSavedRef.current = current
       }
     }, 60000)
     return () => clearInterval(interval)
-  }, [state, versionStoreInstance, canvasId])
+  }, [state, versionStoreInstance, canvasId, collaborationDisplayName, collaborationNames])
 
   return (
     <div className="flex flex-1 h-full gap-0">
       <BlockPalette onAddBlock={addBlock} />
 
       <div className="flex-1 flex flex-col min-h-0 min-w-0">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0 gap-4">
-          <h2 className="text-sm font-semibold text-foreground">Prompt Canvas</h2>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Collaborators</span>
-              <div className="flex items-center gap-1">
-                {collaborators.length === 0 && <span className="text-xs">Solo</span>}
-                {collaborators.slice(0, 4).map((c) => (
-                  <span
-                    key={c.id}
-                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 border border-border"
-                    style={{ color: c.color }}
-                  >
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
-                    {c.name}
-                  </span>
-                ))}
-              </div>
-            </div>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <h2 className="text-sm font-semibold text-foreground shrink-0">Prompt Canvas</h2>
+          </div>
+          <div className="flex items-center gap-1.5 justify-end lg:flex-nowrap lg:overflow-x-auto">
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1.5"
+              className="h-7 w-7 p-0"
               onClick={() => undo()}
               disabled={history.past.length === 0}
+              aria-label="Undo"
+              title="Undo"
             >
               <Undo2 className="w-3 h-3" />
-              Undo
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1.5"
+              className="h-7 w-7 p-0"
               onClick={() => redo()}
               disabled={history.future.length === 0}
+              aria-label="Redo"
+              title="Redo"
             >
               <Redo2 className="w-3 h-3" />
-              Redo
             </Button>
-            <div className="w-px h-4 bg-border" />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5">
+                  File
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={exportCanvas}>
+                  <Download className="w-3 h-3" />
+                  Export
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={importCanvas}>
+                  <Upload className="w-3 h-3" />
+                  Import
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={clearCanvas}>
+                  <Trash2 className="w-3 h-3" />
+                  Clear canvas
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="sm" variant="outline" className="h-7 text-xs gap-1.5">
+                  Workflow
+                  <ChevronDown className="w-3 h-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setShowVersions((v) => !v)}>
+                  <History className="w-3 h-3" />
+                  Versions
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setShowBranches(true)}>
+                  <GitBranch className="w-3 h-3" />
+                  Branches
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setShowApprovals(true)}>
+                  Approvals
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setShowComments((value) => !value)}>
+                  <MessageSquare className="w-3 h-3" />
+                  {showComments ? "Hide comments" : "Show comments"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={exportCanvas}
-            >
-              <Download className="w-3 h-3" />
-              Export
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={importCanvas}
-            >
-              <Upload className="w-3 h-3" />
-              Import
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={() => setShowVersions((v) => !v)}
-            >
-              <History className="w-3 h-3" />
-              Versions
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={() => setShowBranches(true)}
-            >
-              <GitBranch className="w-3 h-3" />
-              Branches
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
-              onClick={() => setShowApprovals(true)}
-            >
-              Approvals
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs gap-1.5"
+              className="h-7 w-7 p-0"
               onClick={saveVersion}
+              aria-label="Save version"
+              title="Save version"
             >
               <Save className="w-3 h-3" />
-              Save
             </Button>
-            <div className="w-px h-4 bg-border" />
+            {unreadMentions > 0 && (
+              <span className="inline-flex h-7 items-center rounded-full border border-amber-300/40 bg-amber-200/10 px-2 text-[10px] font-medium text-amber-200">
+                {unreadMentions} unread
+              </span>
+            )}
             <Button
               size="sm"
               variant="outline"
@@ -704,37 +919,16 @@ export function PromptCanvas() {
             initialState={state}
             onStateChange={handleStateChange}
             onDropBlock={addBlockAtPosition}
+            collaborators={collaborators}
             selectedNode={selectedNode?.id}
             onSelectNode={(id) => {
               const node = state.nodes.find((n) => n.id === id)
               setSelectedNode(node || null)
             }}
-            onPointerMove={(point) => {
-              broadcastCursor(point.x, point.y)
+            onFlowPointerMove={(point) => {
+              broadcastCursor(point.xFlow, point.yFlow)
             }}
           />
-          <div className="pointer-events-none absolute inset-0">
-            {collaborators
-              .filter((c) => c.cursor)
-              .map((c) => {
-                const rect = containerRef.current?.getBoundingClientRect()
-                if (!rect || !c.cursor) return null
-                const left = c.cursor.x - rect.left
-                const top = c.cursor.y - rect.top
-                return (
-                  <div
-                    key={c.id}
-                    className="absolute"
-                    style={{ left, top }}
-                  >
-                    <div className="flex items-center gap-1 text-[10px] font-medium" style={{ color: c.color }}>
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
-                      {c.name}
-                    </div>
-                  </div>
-                )
-              })}
-          </div>
         </div>
       </div>
 
@@ -750,6 +944,21 @@ export function PromptCanvas() {
             handleStateChange(newState)
             setHistory((prev) => canvasActions.pushHistory({ ...prev, present: newState }))
           }}
+        />
+      )}
+
+      {showComments && (
+        <CanvasCommentsPanel
+          selectedNode={selectedNode}
+          activeThread={threadForNode(selectedNode?.id || null)}
+          activity={commentActivity}
+          unreadMentions={unreadMentions}
+          actorMentionHandle={actorMentionHandle}
+          onAddComment={addComment}
+          onMarkActivityRead={markActivityRead}
+          onMarkAllActivityRead={markAllActivityRead}
+          onClearReadActivity={clearReadActivity}
+          onHidePanel={() => setShowComments(false)}
         />
       )}
 

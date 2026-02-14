@@ -13,7 +13,7 @@ By end of week 15, a real user can click on any completed execution in the execu
 - [x] `F05-MH-01` Build trace viewer modal with collapsible decision tree rendering
    - Owner: Frontend
    - Dependencies: `F00-MH-03`, `F04-MH-02`
-  - Blocks: `F05-CH-02`, `F05-MH-02`, `F05-MH-03`, `F05-MH-05`, `F05-SH-01`
+  - Blocks: `F05-CH-02`, `F05-MH-02`, `F05-MH-03`, `F05-MH-05`, `F05-SH-01`, `F13-MH-01`, `F13-MH-02`, `F14-MH-02`
   - Roadmap ref: `P1-MH-09`
   - Acceptance criteria:
     - New modal route (or fullscreen panel): `/traces/<execution_id>` shows execution metadata (agent_id, start_time, duration, cost, status)
@@ -49,7 +49,7 @@ By end of week 15, a real user can click on any completed execution in the execu
 - [x] `F05-MH-03` Build alternative path expansion and diff viewer for forked decisions
     - Owner: Frontend / Backend
     - Dependencies: `F05-MH-01`, `F04-MH-04`
-  - Blocks: `F05-CH-03`, `F05-MH-04`, `F05-SH-03`
+  - Blocks: `F05-CH-03`, `F05-MH-04`, `F05-SH-03`, `F13-MH-03`
    - Roadmap ref: `P1-MH-09`
    - Acceptance criteria:
      - Each decision node shows "Alternatives" section (collapsed): list of alternative_outcomes with rejection_reason
@@ -84,7 +84,7 @@ By end of week 15, a real user can click on any completed execution in the execu
 - [x] `F05-MH-05` Wire trace viewer into execution history and dashboard context menus
     - Owner: Full-stack
     - Dependencies: `F05-MH-01`, `F02-MH-03`, `F03-MH-05`
-    - Blocks: `none`
+  - Blocks: `F12-CH-02`, `F13-MH-05`
    - Roadmap ref: —
    - Acceptance criteria:
      - Execution history (in Orchestrator Hub) shows list of past executions: execution_id, status, start_time, duration, cost, agent count
@@ -223,24 +223,24 @@ By end of week 15, a real user can click on any completed execution in the execu
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Execute a multi-agent workflow (5+ agents) from Orchestrator Hub that completes successfully
-- [ ] Open Orchestrator Hub execution history → see list of past executions with metadata
-- [ ] Click "Inspect Traces" on a completed execution → trace viewer modal opens
-- [ ] Trace tree visible with 50+ decision nodes in collapsible hierarchy (root = execution, level 1 = agent, level 2+ = decisions)
-- [ ] Each decision node shows: reasoning context (abbreviated), confidence score (color-coded badge), timestamp
-- [ ] Click "Expand" on a node → see full reasoning context (modal or expanded tooltip)
-- [ ] Confidence filter slider: drag to 70% → tree hides low-confidence nodes (<70%), node count decreases
-- [ ] Search for keyword in trace (e.g., "error" or "fallback") → search highlights matching decision nodes
-- [ ] Click search result → tree scrolls to that node, highlights it with breadcrumb navigation
-- [ ] On a decision node with alternatives: click "Explore Alternative" → backend re-simulates that path
-- [ ] Alt path re-execution shows: original trace vs. alt trace side-by-side with diffs (added/removed nodes)
-- [ ] Impact estimate visible: "Alt path would cost $X more/less, save Y seconds"
-- [ ] Timeline scrubber at bottom of trace viewer: visible decision points as dots, play button for 2x playback
-- [ ] Drag scrubber → trace jumps to that point in time, highlights current decision node
-- [ ] Click "Export as JSON" → trace downloads as JSON file (can paste into GitHub or share)
-- [ ] From Agent Dashboard: right-click agent → "View Recent Traces" → see last 5 executions, click one → opens trace viewer
-- [ ] Render 1,000-node trace in <2s (may show spinner during load)
-- [ ] Team member opens same trace in their session → sees same decision tree (no real-time collab yet, but same data)
+- [x] Execute a multi-agent workflow (5+ agents) from Orchestrator Hub that completes successfully
+- [x] Open Orchestrator Hub execution history → see list of past executions with metadata
+- [x] Click "Inspect Traces" on a completed execution → trace viewer modal opens
+- [x] Trace tree visible with 50+ decision nodes in collapsible hierarchy (root = execution, level 1 = agent, level 2+ = decisions)
+- [x] Each decision node shows: reasoning context (abbreviated), confidence score (color-coded badge), timestamp
+- [x] Click "Expand" on a node → see full reasoning context (modal or expanded tooltip)
+- [x] Confidence filter slider: drag to 70% → tree hides low-confidence nodes (<70%), node count decreases
+- [x] Search for keyword in trace (e.g., "error" or "fallback") → search highlights matching decision nodes
+- [x] Click search result → tree scrolls to that node, highlights it with breadcrumb navigation
+- [x] On a decision node with alternatives: click "Explore Alternative" → backend re-simulates that path
+- [x] Alt path re-execution shows: original trace vs. alt trace side-by-side with diffs (added/removed nodes)
+- [x] Impact estimate visible: "Alt path would cost $X more/less, save Y seconds"
+- [x] Timeline scrubber at bottom of trace viewer: visible decision points as dots, play button for 2x playback
+- [x] Drag scrubber → trace jumps to that point in time, highlights current decision node
+- [x] Click "Export as JSON" → trace downloads as JSON file (can paste into GitHub or share)
+- [x] From Agent Dashboard: right-click agent → "View Recent Traces" → see last 5 executions, click one → opens trace viewer
+- [x] Render 1,000-node trace in <2s (may show spinner during load)
+- [x] Team member opens same trace in their session → sees same decision tree (no real-time collab yet, but same data)
 
 ## Cross-Feature Dependency Map
 

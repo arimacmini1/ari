@@ -10,7 +10,7 @@ When this lands, users can operate AEI with keyboard and voice-first controls, s
 
 ## Must-Have Tasks (vertical slice — accessible core flows)
 
-- [ ] `F10-MH-01` Implement global accessibility settings and persistence
+- [x] `F10-MH-01` Implement global accessibility settings and persistence
   - Owner: Frontend
   - Dependencies: `F00-MH-07`
   - Blocks: `F10-MH-02`, `F10-MH-03`, `F10-MH-04`, `F10-SH-01`, `F10-SH-02`
@@ -122,10 +122,10 @@ When this lands, users can operate AEI with keyboard and voice-first controls, s
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Navigate canvas and dashboard without a mouse
-- [ ] Enable high-contrast + large text and verify layouts remain usable
-- [ ] Use voice command to select node and trigger simulation
-- [ ] Switch novice/expert modes without losing canvas state
+- [x] Navigate canvas and dashboard without a mouse
+- [x] Enable high-contrast + large text and verify layouts remain usable
+- [x] Use voice command to select node and trigger simulation
+- [x] Switch novice/expert modes without losing canvas state
 
 ## Cross-Feature Dependency Map
 

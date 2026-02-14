@@ -6,13 +6,54 @@
 ## Definition of Done
 By end of week 10, a real user can open the Orchestrator Hub, define a simple coordination rule (priority, dependencies, agent type affinity), ingest an instruction graph from the Prompt Canvas (Feature 01), trigger decomposition to atomic sub-tasks with dependency management, review the simulated assignment plan (which agents get which tasks), adjust agent pool constraints or priorities via sliders, re-simulate to see predicted outcomes (latency, cost, success probability), and execute the plan to dispatch tasks to real agents. The orchestrator handles swarms of 10â€“100 agents with <5s simulation time and correct task assignment based on rules.
 
-## Status: MUST-HAVE TASKS âœ… COMPLETE (Feb 8, 2026)
+## Status: MUST-HAVE TASKS âœ… COMPLETE (Feb 8, 2026; v2.1) / TEMPORAL PIVOT TASKS â³ PENDING (v2.2)
 
 **All core functionality working:** Rule engine âœ…, Hub UI âœ…, E2E simulation âœ…, Task dispatch âœ…, Execution history âœ…. Ready for QA testing.
 
+## Scope Lock (B1 - this execution)
+- In scope (single vertical slice):
+  - `F03-MH-07` only: replace legacy in-process mock execution dispatch with a Temporal-backed workflow path while preserving current UI semantics and artifacts shape.
+- Out of scope (deferred to later slices):
+  - Full B1-B8 dogfood workflow orchestration (`F03-MH-08`),
+  - self-bootstrapping orchestration (`F03-MH-09`, `F03-MH-11`),
+  - visual Temporal workflow editor (`F03-MH-10`),
+  - Mendix migration workflow (`F03-MH-12`).
+- Success metrics for this slice:
+  - Executions triggered from current app path run through Temporal workflow(s), not only legacy in-memory execution flow.
+  - Agent/mock operations execute as Temporal activities with retry/timeout policy visible in Temporal history.
+  - Existing UX contract remains stable (execution kickoff, progress semantics, artifact output fields).
+  - Verification evidence includes Temporal history export for representative run plus passing `npm run build`.
+
+## Dependency Check (B2 - this execution)
+- Dependency targets for `F03-MH-07` / roadmap `P1.5-MH-02`:
+  - `P1.5-MH-01` (Temporal setup): implemented and validated in `F03-MH-06` progress notes with successful smoke runs and Temporal UI evidence (`screehshots_evidence/Screenshot 2026-02-14 085202.png`).
+  - `P1-MH-05` (orchestrator rule engine/decomposition): already complete in roadmap and feature tasks.
+  - `P1-MH-06` (dispatch baseline): historical roadmap ID retained for traceability and covered by existing Feature 03 execution dispatch implementation.
+- Decision: `READY` for `B3` Design Pass.
+- Notes:
+  - Roadmap checkbox for `P1.5-MH-01` is still `[ ]` and should be synced during docs-parity steps (`B7`) after this slice verification, but does not block design kickoff.
+
+## Design Pass (B3 - this execution)
+- File-level implementation plan for `F03-MH-07`:
+  - `lib/temporal-execution.ts`:
+    - Add Temporal execution adapter that invokes Python Temporal runner and returns structured workflow results.
+    - Keep feature-flag style enablement with safe fallback (`AEI_TEMPORAL_EXECUTION_ENABLED` default on unless explicitly disabled).
+  - `temporal_worker/worker.py`:
+    - Add `ExecutionWorkflow` + `execute_assignment_activity` with retry/timeout policy so activity behavior is visible in Temporal history.
+    - Preserve existing smoke workflow support in same worker process.
+  - `temporal_worker/run_execution.py`:
+    - Add script entrypoint that accepts JSON payload and executes `ExecutionWorkflow` via Temporal client.
+  - `app/api/executions/route.ts`:
+    - Replace primary in-process mock dispatch path with Temporal-backed async execution completion.
+    - Preserve API response/record semantics and retain legacy fallback when Temporal runtime is unavailable.
+    - Record completion/failure rollup metrics from Temporal results.
+- Contracts introduced:
+  - Temporal input payload: `{ execution_id, rule_set_id, assignment_plan[] }`.
+  - Temporal result payload: `{ status, tasks[], actual_cost, actual_duration, task_count }`.
+
 ## Must-Have Tasks (vertical slice â€” orchestrator core working)
 
-- [ ] `F03-MH-01` Implement basic Orchestrator rule engine with priority and dependency semantics
+- [x] `F03-MH-01` Implement basic Orchestrator rule engine with priority and dependency semantics
   - Owner: Backend / AI
   - Dependencies: `F01-MH-04`, `F00-MH-01`, `F00-MH-05`
   - Blocks: `F03-CH-02`, `F03-MH-02`, `F03-MH-03`, `F04-MH-01`, `F06-MH-01`, `F11-MH-03`
@@ -52,10 +93,10 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
      - 2026-02-08: Started. Building Orchestrator Hub page and components.
      - 2026-02-08: UI complete. Created: `/app/orchestrator/page.tsx` (main Hub layout, 2-pane design), `rule-editor.tsx` (modal form with name, priority slider 1-10, affinity checkboxes, constraint sliders), `rule-list.tsx` (left sidebar with rules, add/edit/delete buttons), `rule-visualization.tsx` (right pane showing rule summary, affinity graph, constraints), `simulation-panel.tsx` (constraint adjusters, simulation button, results display). All components use Shadcn UI (Form, Input, Slider, Dialog, Card, Badge) + Lucide icons + dark theme.
 
-- [ ] `F03-MH-03` Wire instruction graph input and simulation pipeline end-to-end
+- [x] `F03-MH-03` Wire instruction graph input and simulation pipeline end-to-end
    - Owner: Full-stack
    - Dependencies: `F03-MH-01`, `F01-MH-04`, `F00-MH-05`
-  - Blocks: `F03-MH-04`, `F03-MH-05`, `F04-MH-02`, `F04-MH-03`, `F11-MH-04`, `F11-MH-05`
+  - Blocks: `F03-MH-04`, `F03-MH-05`, `F04-MH-02`, `F04-MH-03`, `F11-MH-04`, `F11-MH-05`, `F12-MH-02`, `F13-MH-03`, `F14-MH-02`
    - Roadmap ref: `P1-MH-11`
    - Acceptance criteria:
      - Hub receives instruction graph from Prompt Canvas (Feature 01) via `POST /api/orchestrator/simulate` with: graph JSON, rule_set_id, optional constraints overrides âœ…
@@ -73,7 +114,7 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
 - [x] `F03-MH-04` Implement task dispatch from orchestrator to agent dashboard
    - Owner: Backend / Full-stack
    - Dependencies: `F03-MH-03`, `F00-MH-02`, `F02-MH-01`
-  - Blocks: `F03-MH-05`, `F03-SH-02`, `F03-SH-03`
+  - Blocks: `F03-MH-05`, `F03-SH-02`, `F03-SH-03`, `F06-MH-07`
    - Roadmap ref: `P1-MH-06`
    - Acceptance criteria:
      - "Execute" button on orchestrator simulation â†’ `POST /api/executions` with assignment plan âœ…
@@ -105,6 +146,177 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
    - Gotchas / debug notes: Execution history can grow large. Index queries on (rule_set_id, created_at) and (cost DESC) for fast retrieval. Gantt chart: use simple SVG or lightweight library (e.g., `react-gantt-chart`). Replay doesn't modify original execution â€” creates new execution record.
    - Progress / Fixes / Updates:
      - 2026-02-08: Execution history page complete. Created: `/app/executions/page.tsx` lists all executions with: execution_id, created_at, status badge (pending/processing/complete/failed), assigned agents count, estimated cost, estimated duration, actual metrics (when complete), efficiency calculation. Auto-refreshes every 2s. Links to detail view (stub). All metrics displayed in grid layout.
+
+- [ ] `F03-MH-06` Install & configure Temporal dev + production-ready setup
+  - Owner: Backend / Infra
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-01`
+  - Acceptance criteria:
+    - Local Temporal dev environment is runnable from a single command (documented) and works on a fresh clone
+    - A worker process (TypeScript or Python) can connect to Temporal and execute a trivial smoke workflow
+    - Minimal observability exists (logs + clear instructions to inspect via Temporal UI)
+    - Dogfood workflow alignment:
+      - B2 Dependency Check passes for downstream Temporal tasks (connection + namespace + worker ready)
+  - Evidence artifacts:
+    - Command transcript for starting Temporal + worker (or script output)
+    - Screenshot or exported history of a successful smoke workflow run
+    - Notes on environment variables / ports / namespaces used
+  - Effort: Sâ€“M
+  - Progress / Fixes / Updates:
+    - 2026-02-14: Started Temporal (Python) dev setup scaffold.
+      - Added `docker-compose.temporal.yml` (Postgres + Temporal + UI) and `scripts/temporal-dev.sh` (single-command runner).
+      - Added Python worker + smoke workflow under `temporal_worker/`:
+        - `temporal_worker/worker.py` (task queue `ari-smoke`, namespace `default`)
+        - `temporal_worker/run_smoke.py` (kicks off `SmokeWorkflow` and prints result)
+      - Ports:
+        - Temporal gRPC: `localhost:7233`
+        - Temporal UI: `http://localhost:8080`
+      - Next verification steps (to mark complete):
+        - Run `scripts/temporal-dev.sh` and capture output.
+        - In a second terminal: `temporal_worker/.venv/bin/python temporal_worker/run_smoke.py` (expect `hello ari`).
+        - Screenshot the workflow in Temporal UI (or export history) as evidence.
+    - 2026-02-14 (reliability hardening + validation):
+      - Fixed false-unhealthy startup in WSL by updating Temporal healthcheck to probe container IP (`nc -z $(hostname -i) 7233`) and removed obsolete compose `version` field.
+      - Updated `temporal_worker/run_smoke.py`:
+        - Added `--workflow-id` override for deterministic/manual runs.
+        - Default workflow ID is now unique per run (`ari-smoke-<12 hex chars>`) to prevent `WorkflowAlreadyStartedError` collisions.
+        - Logs the chosen workflow ID before execution for traceability.
+      - Validation command outcomes:
+        - `TEMPORAL_VERSION=latest TEMPORAL_ADMINTOOLS_VERSION=latest TEMPORAL_UI_VERSION=latest docker compose -f docker-compose.temporal.yml up -d` -> success.
+        - `docker compose -f docker-compose.temporal.yml ps` -> `temporal` status `healthy`.
+        - Worker started via `temporal_worker/.venv/bin/python temporal_worker/worker.py`.
+        - `temporal_worker/.venv/bin/python temporal_worker/run_smoke.py` (run 3x) -> all runs returned `hello ari` with unique workflow IDs.
+        - `temporal_worker/.venv/bin/python temporal_worker/run_smoke.py --workflow-id ari-smoke-workflow` -> returned `hello ari`.
+      - Remaining evidence step:
+        - Capture Temporal UI screenshot/export (`http://localhost:8080`) for the run history artifact.
+
+- [x] `F03-MH-07` Refactor mock execution pipeline to Temporal workflows
+  - Owner: Backend / AI
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-02`
+  - Acceptance criteria:
+    - Canvas execution dispatch is backed by a Temporal workflow (not the legacy in-process mock execution path)
+    - Agent/mock calls are represented as activities with retries/timeouts configured and visible in workflow history
+    - Workflow progress can be surfaced to the app UI without breaking existing UX semantics
+    - Dogfood workflow alignment:
+      - B5 Verify includes a recorded workflow history export and a passing `npm run build`
+  - Evidence artifacts:
+    - Workflow history JSON export for a representative execution
+    - Build output: `npm run build` passing
+  - Effort: Lâ€“XL
+  - Progress / Fixes / Updates:
+    - 2026-02-14: Started via dogfood workflow `B1` scope lock.
+      - Locked this execution to `F03-MH-07` only.
+      - Deferred all adjacent Temporal roadmap tasks until `B2-B8` for this slice are completed.
+    - 2026-02-14: `B2` dependency check completed.
+      - Dependency readiness confirmed for `P1.5-MH-01`, `P1-MH-05`, and `P1-MH-06` coverage.
+      - Status: `READY` to proceed to `B3` design pass.
+    - 2026-02-14: `B4` implement pass completed.
+      - Added Temporal execution adapter: `lib/temporal-execution.ts`.
+      - Added Temporal execution runner script: `temporal_worker/run_execution.py`.
+      - Extended worker with `ExecutionWorkflow` + assignment activity retries/timeouts: `temporal_worker/worker.py`.
+      - Wired `/api/executions` to Temporal-backed execution path with legacy fallback: `app/api/executions/route.ts`.
+    - 2026-02-14: `B5` verify pass completed.
+      - `npm run build` passed.
+      - Representative workflow run passed via `temporal_worker/run_execution.py` with 2-task payload (status `complete`).
+      - Workflow history exported to `screehshots_evidence/temporal-exec-dogfood-history.json`.
+    - 2026-02-14: `B6` review pass completed.
+      - No blocking correctness findings for this slice.
+      - Residual risk: legacy fallback remains available when Temporal runtime is unavailable; this is intentional for local dev continuity.
+    - 2026-02-14: `B7` docs sync completed for in-scope artifacts.
+      - Updated Feature 03 task file with B1-B7 records.
+      - `npm run docs:parity` passed.
+    - 2026-02-14: `B8` ship decision.
+      - Decision: `DONE` for this slice.
+      - Captured end-to-end API transcript via `scripts/temporal-api-transcript.sh`:
+        - `POST /api/executions` response includes `execution_engine: "temporal"`.
+        - Follow-up project-scoped execution listing shows matched execution row with task statuses `complete` and execution status `complete`.
+      - Evidence artifact: `screehshots_evidence/temporal-api-transcript-2026-02-14.txt`.
+
+- [ ] `F03-MH-08` Port dogfood workflow (B1â€“B8) into Temporal workflow
+  - Owner: Backend / AI
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-03`
+  - Acceptance criteria:
+    - Dogfood sequence B1â€“B8 runs as one parent workflow with each block represented as an activity or child workflow
+    - Workflow can pause for human approval and resume via signal
+    - Each block produces a durable record (Temporal history + app-visible status)
+  - Evidence artifacts:
+    - Workflow history export for a full B1â€“B8 run (stubs allowed initially if clearly labeled)
+    - Screenshot(s) of the pause/resume approval gate working
+  - Effort: Mâ€“L
+  - Progress / Fixes / Updates:
+    - YYYY-MM-DD: Not started.
+
+- [ ] `F03-MH-09` Enable Ari self-bootstrapping proof-of-concept
+  - Owner: Product / Backend
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-04`
+  - Acceptance criteria:
+    - Ari can initiate a Temporal-backed dogfood run targeting its own repo/workspace and reach a human approval gate
+    - Approval resumes the workflow and produces a merge-ready change bundle (merge can remain manual)
+    - Dogfood workflow alignment:
+      - B7 Docs parity is executed as a step before done is allowed
+  - Evidence artifacts:
+    - Workflow history export + resulting diff summary for a self-run
+    - Proof of human approval interaction (screenshot/log)
+  - Effort: M
+  - Progress / Fixes / Updates:
+    - YYYY-MM-DD: Not started.
+
+- [ ] `F03-MH-10` Enhance Orchestrator Hub â€“ visual editor for Temporal workflows
+  - Owner: Frontend / Backend
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P2-MH-04`
+  - Acceptance criteria:
+    - User can view a Temporal workflow as a graph and edit a constrained set of properties (inputs, timeouts, retry policy, activity parameters)
+    - Validation blocks unsafe/invalid configs (no arbitrary code execution; sensible defaults)
+    - Dogfood workflow alignment:
+      - B6 Review explicitly checks for unsafe execution knobs
+  - Evidence artifacts:
+    - Screenshot(s) of the editor with a real workflow loaded
+    - Validation examples (one allowed, one blocked) captured in notes/logs
+  - Effort: XL
+  - Progress / Fixes / Updates:
+    - YYYY-MM-DD: Not started.
+
+- [ ] `F03-MH-11` Enable Ari to run dogfood workflow on itself continuously
+  - Owner: Product / Backend
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P2-MH-10`
+  - Acceptance criteria:
+    - Ari can accept a roadmap task input and trigger a dogfood workflow execution automatically
+    - Human approval gate is mandatory before applying/merging changes
+    - Runs are logged and discoverable (execution id, outcome, evidence)
+  - Evidence artifacts:
+    - At least one successful end-to-end run record (workflow history + resulting change bundle)
+    - Proof approvals are enforced (cannot proceed without signal)
+  - Effort: Mâ€“L
+  - Progress / Fixes / Updates:
+    - YYYY-MM-DD: Not started.
+
+- [ ] `F03-MH-12` Mendix â†’ PostgreSQL data migration workflow
+  - Owner: Backend / Data
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P3-MH-06`
+  - Acceptance criteria:
+    - Temporal workflow performs extract â†’ transform â†’ load with checkpoint/resume semantics
+    - Every migrated record is auditable (input identifier, transform result, write outcome)
+    - Dry-run mode exists and produces a migration report without writing to destination
+    - Validation exists (row counts + sampled record verification) and is captured as evidence
+  - Evidence artifacts:
+    - Migration report (CSV/JSON) from a dry-run + validation summary
+    - Workflow history export for a migration run demonstrating checkpoint/resume
+  - Effort: L
+  - Progress / Fixes / Updates:
+    - YYYY-MM-DD: Not started.
 
 ## Should-Have Tasks (makes orchestrator flexible and observable)
 
@@ -224,21 +436,21 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Open Orchestrator Hub â†’ create simple rule: "Code gen tasks â†’ code_gen_agent, priority 5"
-- [ ] Go to Prompt Canvas, build a 10-task workflow (3 code gen, 3 test, 2 deploy, 2 review)
-- [ ] Click "Send to Orchestrator" â†’ Hub loads instruction graph
-- [ ] Click "Simulate" â†’ see assignment plan (expected: 3 tasks â†’ code_gen_agent, etc.)
-- [ ] Adjust max_agents slider to 3 (from 10) â†’ re-simulate â†’ see costs increase (agents bottleneck), duration increase
-- [ ] Adjust back to 10 agents â†’ re-simulate â†’ costs/duration return to baseline
-- [ ] Review critical path: should show longest chain of sequential tasks (4â€“5 tasks deep typical)
-- [ ] Click "Execute" â†’ see agents get dispatched in dashboard (Agent Dashboard updates in real-time)
-- [ ] Watch execution complete (~60â€“90s simulated time)
-- [ ] Navigate to `/executions` â†’ see execution in history list with actual metrics (cost, duration)
-- [ ] Click execution â†’ detail view shows Gantt chart (agents on Y-axis, task timeline on X-axis)
-- [ ] Clone execution â†’ modify rule set â†’ re-simulate â†’ compare outcomes vs. original
-- [ ] Create 3 different rule sets, run dogfooding workflow with each â†’ collect metrics â†’ verify rule set A was most cost-efficient, rule set B had best speed
-- [ ] Handle failure scenario: pause an agent mid-execution â†’ verify orchestrator detects timeout and rebalances remaining tasks
-- [ ] Verify audit log shows: execution_id, assigned agents, rule applied, actual vs. estimated metrics
+- [x] Open Orchestrator Hub â†’ create simple rule: "Code gen tasks â†’ code_gen_agent, priority 5"
+- [x] Go to Prompt Canvas, build a 10-task workflow (3 code gen, 3 test, 2 deploy, 2 review)
+- [x] Click "Send to Orchestrator" â†’ Hub loads instruction graph
+- [x] Click "Simulate" â†’ see assignment plan (expected: 3 tasks â†’ code_gen_agent, etc.)
+- [x] Adjust max_agents slider to 3 (from 10) â†’ re-simulate â†’ see costs increase (agents bottleneck), duration increase
+- [x] Adjust back to 10 agents â†’ re-simulate â†’ costs/duration return to baseline
+- [x] Review critical path: should show longest chain of sequential tasks (4â€“5 tasks deep typical)
+- [x] Click "Execute" â†’ see agents get dispatched in dashboard (Agent Dashboard updates in real-time)
+- [x] Watch execution complete (~60â€“90s simulated time)
+- [x] Navigate to `/executions` â†’ see execution in history list with actual metrics (cost, duration)
+- [x] Click execution â†’ detail view shows Gantt chart (agents on Y-axis, task timeline on X-axis)
+- [x] Clone execution â†’ modify rule set â†’ re-simulate â†’ compare outcomes vs. original
+- [x] Create 3 different rule sets, run dogfooding workflow with each â†’ collect metrics â†’ verify rule set A was most cost-efficient, rule set B had best speed
+- [x] Handle failure scenario: pause an agent mid-execution â†’ verify orchestrator detects timeout and rebalances remaining tasks
+- [x] Verify audit log shows: execution_id, assigned agents, rule applied, actual vs. estimated metrics
 
 ## Cross-Feature Dependency Map
 

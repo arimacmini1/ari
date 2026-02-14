@@ -5,22 +5,40 @@ import { Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TraceNode } from './trace-node'
 import { DecisionContextDialog } from './decision-context-dialog'
-import { TraceExecution } from '@/lib/trace-model'
+import { TraceCompareDialog } from './trace-compare-dialog'
+import { Alternative, DecisionNode, TraceExecution } from '@/lib/trace-model'
 
 interface TraceTreeProps {
   trace: TraceExecution
+  onForkCreated?: (forkExecutionId: string) => void
+  compareDisabled?: boolean
+  forkDisabled?: boolean
 }
 
-export function TraceTree({ trace }: TraceTreeProps) {
+export function TraceTree({
+  trace,
+  onForkCreated,
+  compareDisabled = false,
+  forkDisabled = false,
+}: TraceTreeProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [contextDialogOpen, setContextDialogOpen] = useState(false)
   const [selectedContext, setSelectedContext] = useState('')
   const [selectedNodeId, setSelectedNodeId] = useState('')
+  const [compareOpen, setCompareOpen] = useState(false)
+  const [compareNodeId, setCompareNodeId] = useState<string | null>(null)
+  const [compareAlternatives, setCompareAlternatives] = useState<Alternative[]>([])
 
   const handleExpandContext = (context: string, nodeId: string) => {
     setSelectedContext(context)
     setSelectedNodeId(nodeId)
     setContextDialogOpen(true)
+  }
+
+  const handleCompareAlternative = (node: DecisionNode) => {
+    setCompareNodeId(node.node_id)
+    setCompareAlternatives(node.alternatives_considered ?? [])
+    setCompareOpen(true)
   }
 
   const handleExportJson = () => {
@@ -59,6 +77,16 @@ export function TraceTree({ trace }: TraceTreeProps) {
               <span className="text-muted-foreground">Cost: </span>
               <span className="font-mono text-foreground">${trace.cost.toFixed(3)}</span>
             </div>
+            {compareDisabled ? (
+              <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">
+                Compare Disabled
+              </span>
+            ) : null}
+            {forkDisabled ? (
+              <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">
+                Fork Disabled
+              </span>
+            ) : null}
           </div>
           <Button
             onClick={handleExportJson}
@@ -93,6 +121,8 @@ export function TraceTree({ trace }: TraceTreeProps) {
                 key={node.node_id}
                 node={node}
                 onExpandContext={handleExpandContext}
+                onCompareAlternative={handleCompareAlternative}
+                compareDisabled={compareDisabled}
               />
             ))
           ) : (
@@ -110,6 +140,19 @@ export function TraceTree({ trace }: TraceTreeProps) {
         nodeId={selectedNodeId}
         context={selectedContext}
       />
+
+      {compareNodeId && compareAlternatives && compareAlternatives.length > 0 ? (
+        <TraceCompareDialog
+          open={compareOpen}
+          onOpenChange={setCompareOpen}
+          executionId={trace.execution_id}
+          nodeId={compareNodeId}
+          alternatives={compareAlternatives}
+          onForkCreated={onForkCreated}
+          compareDisabled={compareDisabled}
+          forkDisabled={forkDisabled}
+        />
+      ) : null}
     </>
   )
 }

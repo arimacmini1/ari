@@ -15,6 +15,7 @@ import RuleList from '@/components/aei/rule-list';
 import RuleVisualization from '@/components/aei/rule-visualization';
 import SimulationPanel from '@/components/aei/simulation-panel';
 import { ArtifactPreviewPanel } from '@/components/aei/artifact-preview-panel';
+import OrchestratorDagBuilder from '@/components/aei/orchestrator-dag-builder';
 import type { Artifact } from '@/lib/artifact-model';
 
 export interface Rule {
@@ -198,6 +199,27 @@ export default function OrchestratorPage() {
               ) : (
                 <div className="h-full flex items-center justify-center text-slate-500">
                   Select a rule to simulate
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* DAG Builder + Dynamic Allocation */}
+          <Card className="bg-slate-900 border-slate-700 overflow-hidden flex flex-col col-span-2 min-h-[420px]">
+            <CardHeader className="pb-3 shrink-0">
+              <CardTitle>DAG Builder & Dynamic Allocation</CardTitle>
+              <CardDescription>
+                {selectedRule
+                  ? 'Build coordination DAG nodes/edges and inspect live agent allocation recommendations.'
+                  : 'Select a rule to start building orchestration DAGs.'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-y-auto flex-1 min-h-0">
+              {selectedRule ? (
+                <OrchestratorDagBuilder rule={selectedRule} />
+              ) : (
+                <div className="h-full flex items-center justify-center text-slate-500">
+                  Select a rule to use the DAG builder
                 </div>
               )}
             </CardContent>

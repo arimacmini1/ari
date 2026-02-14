@@ -8,10 +8,10 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Background,
-  Controls,
   Connection,
   MarkerType,
   ReactFlowInstance,
+  useViewport,
 } from "reactflow"
 import "reactflow/dist/style.css"
 import { Download, Upload } from "lucide-react"
@@ -40,7 +40,46 @@ interface CanvasFlowProps {
   onDropBlock?: (blockType: BlockType, label: string, description: string, position: { x: number; y: number }) => void
   selectedNode?: string | null
   onSelectNode?: (nodeId: string | null) => void
-  onPointerMove?: (point: { x: number; y: number }) => void
+  collaborators?: Array<{
+    id: string
+    name: string
+    color: string
+    cursor?: { xFlow: number; yFlow: number }
+  }>
+  onFlowPointerMove?: (point: { xFlow: number; yFlow: number }) => void
+}
+
+function CursorOverlay({
+  collaborators,
+}: {
+  collaborators: Array<{
+    id: string
+    name: string
+    color: string
+    cursor?: { xFlow: number; yFlow: number }
+  }>
+}) {
+  const viewport = useViewport()
+
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      {collaborators
+        .filter((c) => c.cursor)
+        .map((c) => {
+          if (!c.cursor) return null
+          const left = c.cursor.xFlow * viewport.zoom + viewport.x
+          const top = c.cursor.yFlow * viewport.zoom + viewport.y
+          return (
+            <div key={c.id} className="absolute" style={{ left, top }}>
+              <div className="flex items-center gap-1 text-[10px] font-medium" style={{ color: c.color }}>
+                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
+                {c.name}
+              </div>
+            </div>
+          )
+        })}
+    </div>
+  )
 }
 
 export function CanvasFlow({
@@ -50,7 +89,8 @@ export function CanvasFlow({
   onDropBlock,
   selectedNode,
   onSelectNode,
-  onPointerMove,
+  collaborators = [],
+  onFlowPointerMove,
 }: CanvasFlowProps) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialState?.nodes || [])
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialState?.edges || [])
@@ -133,29 +173,6 @@ export function CanvasFlow({
     [edges, setEdges, recordHistory, validateConnection, nodes]
   )
 
-  useEffect(() => {
-    const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { type: string; direction?: string; query?: string };
-      if (detail?.type === 'canvas-zoom') {
-        if (!reactFlowInstance.current) return;
-        if (detail.direction === 'in') reactFlowInstance.current.zoomIn?.();
-        if (detail.direction === 'out') reactFlowInstance.current.zoomOut?.();
-        if (detail.direction === 'fit') reactFlowInstance.current.fitView?.({ duration: 300 });
-      }
-      if (detail?.type === 'canvas-select' && detail.query) {
-        const q = detail.query.toLowerCase();
-        setNodes((prev) =>
-          prev.map((node) => {
-            const label = String((node.data as CanvasNode["data"]).label || '').toLowerCase();
-            return { ...node, selected: label === q };
-          })
-        );
-      }
-    };
-    window.addEventListener('aei-voice-command', handler as EventListener);
-    return () => window.removeEventListener('aei-voice-command', handler as EventListener);
-  }, [setNodes]);
-
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -206,6 +223,7 @@ export function CanvasFlow({
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        proOptions={{ hideAttribution: true }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -218,13 +236,16 @@ export function CanvasFlow({
           onSelectNode?.(selection.nodes[0]?.id || null)
         }}
         onMouseMove={(event) => {
-          onPointerMove?.({ x: event.clientX, y: event.clientY })
+          const instance = reactFlowInstance.current
+          if (!instance) return
+          const flow = instance.screenToFlowPosition({ x: event.clientX, y: event.clientY })
+          onFlowPointerMove?.({ xFlow: flow.x, yFlow: flow.y })
         }}
         connectionLineStyle={{ stroke: "#22c55e", strokeWidth: 2 }}
         fitView
       >
         <Background />
-        <Controls />
+        <CursorOverlay collaborators={collaborators} />
       </ReactFlow>
     </div>
   )

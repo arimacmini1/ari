@@ -1,0 +1,322 @@
+import fs from "node:fs"
+import path from "node:path"
+
+function readUtf8(filePath) {
+  return fs.readFileSync(filePath, "utf8")
+}
+
+function stripBom(text) {
+  return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text
+}
+
+function readJson(filePath) {
+  return JSON.parse(stripBom(readUtf8(filePath)))
+}
+
+function fileExists(filePath) {
+  try {
+    fs.accessSync(filePath, fs.constants.F_OK)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function normalizeEol(text) {
+  return text.replace(/\r\n/g, "\n")
+}
+
+function getArg(name) {
+  const arg = process.argv.find((a) => a === name || a.startsWith(`${name}=`))
+  if (!arg) return null
+  if (arg === name) return true
+  return arg.slice(name.length + 1)
+}
+
+function formatDateUtcYmd() {
+  const d = new Date()
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, "0")
+  const day = String(d.getUTCDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+function parseRoadmapTasks(filePath) {
+  const content = normalizeEol(stripBom(readUtf8(filePath)))
+  const tasks = []
+  for (const line of content.split("\n")) {
+    const m = line.match(/^\s*-\s*\[[ x]\]\s*`(P\d+(?:\.\d+)?-(?:MH|SH|CH)-\d+)`\s*(.+)\s*$/)
+    if (!m) continue
+    tasks.push({ pid: m[1], title: m[2].trim(), source: filePath })
+  }
+  return tasks
+}
+
+function pidTier(pid) {
+  const m = pid.match(/^P\d+(?:\.\d+)?-(MH|SH|CH)-\d+$/)
+  return m ? m[1] : null
+}
+
+function listFeatureTaskFiles() {
+  const tasksDir = path.join(process.cwd(), "docs", "tasks")
+  return fs
+    .readdirSync(tasksDir)
+    .filter((name) => name.startsWith("feature-") && name.endsWith(".md"))
+    .filter((name) => name !== "feature-task-index.md")
+    .map((name) => path.join(tasksDir, name))
+}
+
+function parseFeatureRoadmapRefs(filePath) {
+  const content = normalizeEol(stripBom(readUtf8(filePath)))
+  const refs = []
+  for (const line of content.split("\n")) {
+    if (!line.includes("Roadmap ref:")) continue
+    // Collect every backticked token on the line and keep only P-IDs.
+    for (const m of line.matchAll(/`([^`]+)`/g)) {
+      const token = (m[1] || "").trim()
+      if (!token.startsWith("P")) continue
+      refs.push(token)
+    }
+  }
+  return refs
+}
+
+function buildReport({ updatedAt, roadmapTasks, featureRefs, aliasConfig }) {
+  const policy = aliasConfig.policy || {}
+  const aliasList = Array.isArray(aliasConfig.aliases) ? aliasConfig.aliases : []
+  const exceptionList = Array.isArray(aliasConfig.exceptions) ? aliasConfig.exceptions : []
+
+  const roadmapById = new Map()
+  for (const t of roadmapTasks) {
+    if (!roadmapById.has(t.pid)) roadmapById.set(t.pid, { title: t.title, sources: new Set() })
+    roadmapById.get(t.pid).sources.add(t.source)
+  }
+
+  const aliasByFrom = new Map()
+  for (const a of aliasList) {
+    if (!a || typeof a !== "object") continue
+    const from = (a.from || "").trim()
+    const to = (a.to || "").trim()
+    if (!from || !to) continue
+    aliasByFrom.set(from, a)
+  }
+
+  const exceptionsByPid = new Map()
+  for (const e of exceptionList) {
+    if (!e || typeof e !== "object") continue
+    const pid = (e.pid || "").trim()
+    if (!pid) continue
+    exceptionsByPid.set(pid, e)
+  }
+
+  const direct = []
+  const aliased = []
+  const unresolved = []
+  const exceptions = []
+  const invalidAliases = []
+
+  for (const [pid, files] of featureRefs.entries()) {
+    if (roadmapById.has(pid)) {
+      direct.push({ pid, files })
+      continue
+    }
+    if (exceptionsByPid.has(pid)) {
+      exceptions.push({ pid, files, note: exceptionsByPid.get(pid).note || "" })
+      continue
+    }
+    if (aliasByFrom.has(pid)) {
+      const a = aliasByFrom.get(pid)
+      const to = (a.to || "").trim()
+      if (policy.require_reason && !(a.reason || "").trim()) {
+        invalidAliases.push({ pid, files, issue: "Missing reason", alias: a })
+        continue
+      }
+      if (policy.require_to_in_roadmap && !roadmapById.has(to)) {
+        invalidAliases.push({ pid, files, issue: `Alias target not in roadmap: ${to}`, alias: a })
+        continue
+      }
+      aliased.push({ pid, to, files, reason: (a.reason || "").trim() })
+      continue
+    }
+    unresolved.push({ pid, files })
+  }
+
+  const missingCoverage = []
+  for (const [pid, info] of roadmapById.entries()) {
+    const hasDirect = featureRefs.has(pid)
+    const hasAliasedTo = aliased.some((a) => a.to === pid)
+    if (!hasDirect && !hasAliasedTo) {
+      missingCoverage.push({ pid, title: info.title, sources: info.sources })
+    }
+  }
+
+  direct.sort((a, b) => a.pid.localeCompare(b.pid))
+  aliased.sort((a, b) => a.pid.localeCompare(b.pid))
+  unresolved.sort((a, b) => a.pid.localeCompare(b.pid))
+  exceptions.sort((a, b) => a.pid.localeCompare(b.pid))
+  invalidAliases.sort((a, b) => a.pid.localeCompare(b.pid))
+  missingCoverage.sort((a, b) => a.pid.localeCompare(b.pid))
+
+  const lines = []
+  lines.push("# Roadmap ID Alias Map (Generated)")
+  lines.push("")
+  lines.push(`Updated: ${updatedAt}`)
+  lines.push("")
+  lines.push("Generated by: `node scripts/update-roadmap-alias-map.mjs --write`")
+  lines.push("")
+  lines.push("Rules:")
+  lines.push("- This file is generated from roadmap files + `Roadmap ref:` lines in feature task files.")
+  lines.push("- Aliases are manual-only (no inference). Config: `docs/process/roadmap-id-aliases.json`.")
+  lines.push("")
+
+  lines.push("## Summary")
+  lines.push("")
+  lines.push(`- Direct refs: ${direct.length}`)
+  lines.push(`- Aliased refs: ${aliased.length}`)
+  lines.push(`- Exceptions: ${exceptions.length}`)
+  lines.push(`- Unresolved refs: ${unresolved.length}`)
+  lines.push(`- Invalid aliases: ${invalidAliases.length}`)
+  lines.push(`- Roadmap tasks with no feature coverage: ${missingCoverage.length}`)
+  lines.push("")
+
+  lines.push("## Direct Refs (Feature -> Roadmap)")
+  lines.push("")
+  if (direct.length === 0) lines.push("- None")
+  for (const d of direct) {
+    const files = [...d.files].map((f) => `\`${path.relative(process.cwd(), f)}\``).join(", ")
+    lines.push(`- \`${d.pid}\` referenced by ${files}`)
+  }
+  lines.push("")
+
+  lines.push("## Aliased Refs (Manual Only)")
+  lines.push("")
+  if (aliased.length === 0) lines.push("- None")
+  for (const a of aliased) {
+    const files = [...a.files].map((f) => `\`${path.relative(process.cwd(), f)}\``).join(", ")
+    lines.push(`- \`${a.pid}\` -> \`${a.to}\` (${files})`)
+    if (a.reason) lines.push(`  Reason: ${a.reason}`)
+  }
+  lines.push("")
+
+  lines.push("## Exceptions (Historical, No Alias)")
+  lines.push("")
+  if (exceptions.length === 0) lines.push("- None")
+  for (const e of exceptions) {
+    const files = [...e.files].map((f) => `\`${path.relative(process.cwd(), f)}\``).join(", ")
+    lines.push(`- \`${e.pid}\` (${files})`)
+    if (e.note) lines.push(`  Note: ${e.note}`)
+  }
+  lines.push("")
+
+  lines.push("## Unresolved Feature Refs (Needs Human Decision)")
+  lines.push("")
+  if (unresolved.length === 0) lines.push("- None")
+  for (const u of unresolved) {
+    const files = [...u.files].map((f) => `\`${path.relative(process.cwd(), f)}\``).join(", ")
+    lines.push(`- \`${u.pid}\` referenced by ${files}`)
+  }
+  lines.push("")
+
+  lines.push("## Invalid Alias Entries (Fix `roadmap-id-aliases.json`)")
+  lines.push("")
+  if (invalidAliases.length === 0) lines.push("- None")
+  for (const bad of invalidAliases) {
+    const files = [...bad.files].map((f) => `\`${path.relative(process.cwd(), f)}\``).join(", ")
+    lines.push(`- \`${bad.pid}\` (${files}): ${bad.issue}`)
+  }
+  lines.push("")
+
+  lines.push("## Roadmap Tasks With No Feature Coverage")
+  lines.push("")
+  if (missingCoverage.length === 0) lines.push("- None")
+  for (const m of missingCoverage) {
+    const sources = [...m.sources].map((s) => `\`${path.relative(process.cwd(), s)}\``).join(", ")
+    lines.push(`- \`${m.pid}\` ${m.title} (in ${sources})`)
+  }
+  lines.push("")
+
+  return {
+    markdown: lines.join("\n"),
+    unresolvedCount: unresolved.length,
+    invalidAliasCount: invalidAliases.length,
+    missingCoverageCount: missingCoverage.length,
+    policy,
+  }
+}
+
+function main() {
+  const write = !!getArg("--write")
+  const check = !!getArg("--check")
+  const mode = write ? "write" : check ? "check" : "write"
+
+  const aliasConfigPath = path.join(process.cwd(), "docs", "process", "roadmap-id-aliases.json")
+  const aliasConfig = readJson(aliasConfigPath)
+  const includeTiers = Array.isArray(aliasConfig.policy?.include_tiers) ? aliasConfig.policy.include_tiers : null
+
+  if (aliasConfig.policy?.require_updated_at && !(aliasConfig.updated_at || "").trim()) {
+    console.error("roadmap-id-aliases.json missing updated_at")
+    process.exit(1)
+  }
+
+  if (aliasConfig.policy?.mode !== "manual_only" || aliasConfig.policy?.allow_inference !== false) {
+    console.error("Alias policy must be manual_only with allow_inference=false")
+    process.exit(1)
+  }
+
+  const roadmapFiles = [
+    path.join(process.cwd(), "docs", "tasks", "project-roadmap.md"),
+    path.join(process.cwd(), "docs", "tasks", "project-roadmap-should-haves.md"),
+    path.join(process.cwd(), "docs", "tasks", "project-roadmap-could-haves.md"),
+  ]
+
+  const roadmapTasks = []
+  for (const rf of roadmapFiles) {
+    if (!fileExists(rf)) continue
+    for (const t of parseRoadmapTasks(rf)) {
+      const tier = pidTier(t.pid)
+      if (includeTiers && tier && !includeTiers.includes(tier)) continue
+      roadmapTasks.push(t)
+    }
+  }
+
+  const featureRefs = new Map()
+  for (const ff of listFeatureTaskFiles()) {
+    const refs = parseFeatureRoadmapRefs(ff)
+    for (const pid of refs) {
+      const tier = pidTier(pid)
+      if (includeTiers && tier && !includeTiers.includes(tier)) continue
+      if (!featureRefs.has(pid)) featureRefs.set(pid, new Set())
+      featureRefs.get(pid).add(ff)
+    }
+  }
+
+  const outPath = path.join(process.cwd(), "docs", "tasks", "roadmap-id-alias-map.md")
+  const updatedAt = (aliasConfig.updated_at || "").trim() || formatDateUtcYmd()
+  const report = buildReport({ updatedAt, roadmapTasks, featureRefs, aliasConfig })
+  const out = `${report.markdown}\n`
+
+  const unresolvedBehavior = report.policy?.unresolved_behavior || "warn"
+  const shouldFailUnresolved = unresolvedBehavior === "fail"
+
+  if (mode === "check") {
+    if (!fileExists(outPath)) {
+      console.error(`Missing generated file: ${path.relative(process.cwd(), outPath)} (run --write)`)
+      process.exit(1)
+    }
+    const existing = normalizeEol(stripBom(readUtf8(outPath)))
+    if (existing !== out) {
+      console.error(`Generated file is out of date: ${path.relative(process.cwd(), outPath)} (run --write)`)
+      process.exit(1)
+    }
+    if (report.invalidAliasCount > 0) process.exit(1)
+    if (shouldFailUnresolved && report.unresolvedCount > 0) process.exit(1)
+    process.exit(0)
+  }
+
+  fs.writeFileSync(outPath, out, "utf8")
+
+  if (report.invalidAliasCount > 0) process.exit(1)
+  if (shouldFailUnresolved && report.unresolvedCount > 0) process.exit(1)
+}
+
+main()

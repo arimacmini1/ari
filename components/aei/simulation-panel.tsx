@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, Play, Loader2, Zap } from 'lucide-react';
 import type { Artifact } from '@/lib/artifact-model';
+import { useToast } from '@/hooks/use-toast';
 
 interface SimulationPanelProps {
   rule: Rule;
@@ -31,6 +32,8 @@ interface SimulationResult {
   artifacts?: Artifact[];
 }
 
+const CODE_EXPLORER_SNAPSHOT_EVENT = "aei:code-explorer-snapshot-updated";
+
 export default function SimulationPanel({ rule, onArtifactsGenerated }: SimulationPanelProps) {
   const [simulating, setSimulating] = useState(false);
   const [executing, setExecuting] = useState(false);
@@ -40,6 +43,7 @@ export default function SimulationPanel({ rule, onArtifactsGenerated }: Simulati
     max_agents: rule.constraints.max_agents || 10,
     max_cost_budget: 1000,
   });
+  const { toast } = useToast();
 
   const handleConstraintChange = (key: string, value: number) => {
     setConstraints({ ...constraints, [key]: value });
@@ -93,6 +97,19 @@ export default function SimulationPanel({ rule, onArtifactsGenerated }: Simulati
          if (data.simulation?.artifacts && onArtifactsGenerated) {
            onArtifactsGenerated(data.simulation.artifacts);
          }
+         if (data.simulation?.artifacts) {
+           const snapshotResponse = await fetch('/api/code-explorer/snapshot', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({
+               source: 'generated',
+               artifacts: data.simulation.artifacts,
+             }),
+           });
+           if (snapshotResponse.ok) {
+             window.dispatchEvent(new Event(CODE_EXPLORER_SNAPSHOT_EVENT));
+           }
+         }
        } else {
          console.error('Simulation failed');
        }
@@ -120,16 +137,43 @@ export default function SimulationPanel({ rule, onArtifactsGenerated }: Simulati
         }),
       });
 
+      const payload = await response.json().catch(() => ({} as any));
+
       if (response.ok) {
-        const data = await response.json();
+        const data = payload;
         setExecutionId(data.execution_id);
-        alert(`Execution dispatched! ID: ${data.execution_id}\nDispatched to ${data.assigned_agents.length} agents`);
+        toast({
+          title: 'Execution dispatched',
+          description: `ID: ${data.execution_id} • ${data.assigned_agents.length} agent(s)`,
+        });
+        if (data?.budget_warning?.code === 'PROJECT_BUDGET_WARNING_THRESHOLD') {
+          const projected = data?.budget_warning?.budget?.projected_spend;
+          const threshold = data?.budget_warning?.budget?.budget_warning_threshold;
+          toast({
+            title: 'Project budget warning',
+            description:
+              typeof projected === 'number' && typeof threshold === 'number'
+                ? `Projected spend $${projected.toFixed(2)} crossed warning threshold $${threshold.toFixed(2)}.`
+                : 'Projected spend crossed project warning threshold.',
+            variant: 'destructive',
+          });
+        }
       } else {
-        alert('Failed to execute');
+        const errorMessage =
+          payload?.error || (response.status === 402 ? 'Execution blocked by project budget hard cap.' : 'Failed to execute');
+        toast({
+          title: 'Execution failed',
+          description: errorMessage,
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       console.error('Failed to execute:', error);
-      alert('Error executing');
+      toast({
+        title: 'Execution failed',
+        description: 'Error executing plan',
+        variant: 'destructive',
+      });
     } finally {
       setExecuting(false);
     }

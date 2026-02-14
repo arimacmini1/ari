@@ -52,17 +52,6 @@ export function AccessibilitySettingsPanel() {
 
         <div className="flex items-center justify-between">
           <div>
-            <Label className="text-sm text-slate-200">Voice commands (beta)</Label>
-            <p className="text-xs text-slate-400">Enable voice control for navigation and actions.</p>
-          </div>
-          <Switch
-            checked={settings.voiceEnabled}
-            onCheckedChange={(checked) => updateSettings({ voiceEnabled: checked })}
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div>
             <Label className="text-sm text-slate-200">UI mode</Label>
             <p className="text-xs text-slate-400">Novice hides advanced panels.</p>
           </div>
@@ -92,7 +81,6 @@ export function AccessibilitySettingsPanel() {
                 highContrast: false,
                 largeText: false,
                 reducedMotion: false,
-                voiceEnabled: false,
                 uiMode: 'expert',
               })
             }

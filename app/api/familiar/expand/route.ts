@@ -82,10 +82,13 @@ async function callOpenAI(messages: ChatMessage[]) {
       temperature: 0.2,
     }),
   })
-  if (!resp.ok) return null
+  if (!resp.ok) {
+    const errorText = await resp.text().catch(() => "")
+    return { raw: null as string | null, model, error: `OpenAI error ${resp.status}: ${errorText.slice(0, 200)}` }
+  }
   const data = await resp.json()
   const content = data?.choices?.[0]?.message?.content
-  return typeof content === "string" ? { raw: content, model } : null
+  return typeof content === "string" ? { raw: content, model } : { raw: null as string | null, model, error: "OpenAI: missing content" }
 }
 
 async function callAnthropic(messages: ChatMessage[]) {
@@ -110,10 +113,13 @@ async function callAnthropic(messages: ChatMessage[]) {
       })),
     }),
   })
-  if (!resp.ok) return null
+  if (!resp.ok) {
+    const errorText = await resp.text().catch(() => "")
+    return { raw: null as string | null, model, error: `Anthropic error ${resp.status}: ${errorText.slice(0, 200)}` }
+  }
   const data = await resp.json()
   const content = data?.content?.[0]?.text
-  return typeof content === "string" ? { raw: content, model } : null
+  return typeof content === "string" ? { raw: content, model } : { raw: null as string | null, model, error: "Anthropic: missing content" }
 }
 
 async function callGemini(messages: ChatMessage[]) {
@@ -136,20 +142,40 @@ async function callGemini(messages: ChatMessage[]) {
       }),
     }
   )
-  if (!resp.ok) return null
+  if (!resp.ok) {
+    const errorText = await resp.text().catch(() => "")
+    return { raw: null as string | null, model, error: `Gemini error ${resp.status}: ${errorText.slice(0, 200)}` }
+  }
   const data = await resp.json()
   const content = data?.candidates?.[0]?.content?.parts?.[0]?.text
-  return typeof content === "string" ? { raw: content, model } : null
+  return typeof content === "string" ? { raw: content, model } : { raw: null as string | null, model, error: "Gemini: missing content" }
 }
 
 function safeParseCanvas(raw: string): CanvasState | null {
-  try {
-    const parsed = JSON.parse(raw)
-    if (!parsed || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) return null
-    return parsed as CanvasState
-  } catch {
-    return null
+  const candidates: string[] = []
+  const trimmed = raw.trim()
+  if (trimmed) candidates.push(trimmed)
+
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (fenceMatch?.[1]) candidates.push(fenceMatch[1].trim())
+
+  const firstBrace = trimmed.indexOf("{")
+  const lastBrace = trimmed.lastIndexOf("}")
+  if (firstBrace >= 0 && lastBrace > firstBrace) {
+    candidates.push(trimmed.slice(firstBrace, lastBrace + 1).trim())
   }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate)
+      if (!parsed || !Array.isArray(parsed.nodes) || !Array.isArray(parsed.edges)) continue
+      return parsed as CanvasState
+    } catch {
+      // try next candidate
+    }
+  }
+
+  return null
 }
 
 export async function POST(req: Request) {
@@ -160,19 +186,26 @@ export async function POST(req: Request) {
   }
 
   const providers = [callOpenAI, callAnthropic, callGemini]
+  const errors: string[] = []
   for (const provider of providers) {
     try {
       const result = await provider(messages)
-      if (result?.raw) {
+      if (!result) continue
+      if (result.error) errors.push(result.error)
+      if (result.raw) {
         const parsed = safeParseCanvas(result.raw)
-        if (parsed) {
-          return NextResponse.json({ canvas: parsed, source: "llm", model: result.model })
-        }
+        if (parsed) return NextResponse.json({ canvas: parsed, source: "llm", model: result.model })
+        errors.push(`Parse failed for model ${result.model}`)
       }
     } catch {
       // fall through to next provider
     }
   }
 
-  return NextResponse.json({ canvas: deterministicCanvas(messages), source: "deterministic", model: "deterministic" })
+  return NextResponse.json({
+    canvas: deterministicCanvas(messages),
+    source: "deterministic",
+    model: "deterministic",
+    errors,
+  })
 }

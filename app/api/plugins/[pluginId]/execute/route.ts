@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { enforcePermission } from '@/lib/rbac/enforce';
 import { getPluginVersionById } from '@/lib/plugins/registry-service';
 import { executePlugin } from '@/lib/plugins/sandbox-runtime';
+import { resolveProjectContext } from '@/lib/project-context';
+import { enforceProjectPermission } from '@/lib/project-rbac';
 
 export async function POST(
   req: NextRequest,
   { params }: { params: { pluginId: string } }
 ) {
-  const result = await enforcePermission(req, {
+  const projectContext = resolveProjectContext(req);
+  if (!projectContext.ok) {
+    return projectContext.response;
+  }
+
+  const result = await enforceProjectPermission(req, {
+    projectId: projectContext.projectId,
     permission: 'execute',
     action: 'execute',
     resourceType: 'plugin',

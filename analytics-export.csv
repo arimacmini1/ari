@@ -1,0 +1,7 @@
+event_id,event_type,timestamp,project_id,execution_id,agent_id,status,tokens,estimated_cost,actual_cost,latency_ms,error_count,success_count,quality_score
+exec-1771048092826-q07opo0ok:agent:agent-a:task-1:processing,agent_delta,2026-02-14T05:48:12.826Z,project-9c87157c,exec-1771048092826-q07opo0ok,agent-a,processing,100,0.02,,2000,0,0,0
+exec-1771048092826-q07opo0ok:agent:agent-b:task-2:processing,agent_delta,2026-02-14T05:48:12.830Z,project-9c87157c,exec-1771048092826-q07opo0ok,agent-b,processing,150,0.03,,3000,0,0,0
+exec-1771048092826-q07opo0ok:rollup:processing,execution_rollup,2026-02-14T05:48:12.831Z,project-9c87157c,exec-1771048092826-q07opo0ok,,processing,250,0.05,,0,0,0,0
+exec-1771048092826-q07opo0ok:agent:agent-a:task-1:success,agent_delta,2026-02-14T05:48:14.833Z,project-9c87157c,exec-1771048092826-q07opo0ok,agent-a,success,100,0.02,0.02,2000,0,1,92
+exec-1771048092826-q07opo0ok:agent:agent-b:task-2:success,agent_delta,2026-02-14T05:48:15.833Z,project-9c87157c,exec-1771048092826-q07opo0ok,agent-b,success,150,0.03,0.03,3000,0,1,92
+exec-1771048092826-q07opo0ok:rollup:complete,execution_rollup,2026-02-14T05:48:15.833Z,project-9c87157c,exec-1771048092826-q07opo0ok,,success,250,0.05,0.05,5000,0,2,92

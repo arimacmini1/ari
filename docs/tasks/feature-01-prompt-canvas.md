@@ -28,7 +28,7 @@ By end of week 5, a real user can open the Prompt Canvas, compose a multi-step a
 - [x] `F01-MH-02` Build block template library with drag-from-sidebar palette
   - Owner: Frontend / Design
   - Dependencies: `F00.5-MH-01`, `F00.5-MH-03`
-  - Blocks: `F01-MH-04`, `F01-SH-01`, `F01-SH-02`, `F11-MH-02`
+  - Blocks: `F01-MH-04`, `F01-SH-01`, `F01-SH-02`, `F11-MH-02`, `F11-MH-07`
   - Roadmap ref: `P1-MH-04`
   - Acceptance criteria:
     - Left sidebar palette shows available block types grouped by category: Control Flow (task, decision, loop, parallel), Input (text, voice transcript), Output (artifact, preview)
@@ -97,7 +97,7 @@ By end of week 5, a real user can open the Prompt Canvas, compose a multi-step a
 - [x] `F01-MH-06` Wire canvas lifecycle end-to-end: create â†’ compose â†’ validate â†’ parse â†’ preview â†’ execute
   - Owner: Full-stack
   - Dependencies: `F01-MH-01`, `F01-MH-03`, `F01-MH-04`, `F00-MH-01`, `F00-MH-02`
-  - Blocks: `F02-MH-01`, `F02-MH-05`, `F03-MH-03`, `F04-MH-01`, `F08-MH-01`, `F10-MH-02`, `F10-MH-03`, `F11-MH-01`, `F11-MH-03`
+  - Blocks: `F02-MH-01`, `F02-MH-05`, `F03-MH-03`, `F04-MH-01`, `F08-MH-01`, `F10-MH-02`, `F10-MH-03`, `F11-MH-01`, `F11-MH-03`, `F12-MH-01`
   - Roadmap ref: `P1-MH-04`, `P1-MH-06`
   - Acceptance criteria:
     - User creates new canvas â†’ drags blocks from palette â†’ connects with validated edges â†’ saves version
@@ -239,16 +239,16 @@ By end of week 5, a real user can open the Prompt Canvas, compose a multi-step a
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Open canvas â†’ drag 10 blocks from palette sidebar â†’ connect with valid edges (see orange glow on valid, red on invalid)
-- [ ] Attempt circular connection â†’ see rejection with visual warning and snap-back animation
-- [ ] Save canvas â†’ see version appear in version history panel with timestamp
-- [ ] Revert to previous version â†’ canvas restores correctly, new version created
-- [ ] Click "Parse" â†’ see instruction graph preview with task list, dependencies, estimated cost
-- [ ] Edit 2 nodes â†’ click "Parse" again â†’ see delta (only changed tasks re-parsed)
-- [ ] Click "Execute" â†’ watch agents pick up tasks in dashboard â†’ execution completes
-- [ ] Create 50-node canvas â†’ verify no jank (smooth drag, <100ms interaction latency)
-- [ ] Export canvas JSON â†’ import on fresh page â†’ canvas identical (round-trip verified)
-- [ ] Build a 3-page Todo app workflow entirely through canvas â†’ orchestrator â†’ agents â†’ preview artifacts
+- [x] Open canvas â†’ drag 10 blocks from palette sidebar â†’ connect with valid edges (see orange glow on valid, red on invalid)
+- [x] Attempt circular connection â†’ see rejection with visual warning and snap-back animation
+- [x] Save canvas â†’ see version appear in version history panel with timestamp
+- [x] Revert to previous version â†’ canvas restores correctly, new version created
+- [x] Click "Parse" â†’ see instruction graph preview with task list, dependencies, estimated cost
+- [x] Edit 2 nodes â†’ click "Parse" again â†’ see delta (only changed tasks re-parsed)
+- [x] Click "Execute" â†’ watch agents pick up tasks in dashboard â†’ execution completes
+- [x] Create 50-node canvas â†’ verify no jank (smooth drag, <100ms interaction latency)
+- [x] Export canvas JSON â†’ import on fresh page â†’ canvas identical (round-trip verified)
+- [x] Build a 3-page Todo app workflow entirely through canvas â†’ orchestrator â†’ agents â†’ preview artifacts
 
 ## Cross-Feature Dependency Map
 

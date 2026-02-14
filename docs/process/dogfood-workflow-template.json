@@ -1,0 +1,309 @@
+{
+  "title": "AEI Dogfood Workflow PRD",
+  "critical_rules": {
+    "output_requirements": {
+      "format": "Machine-readable JSON document aligned to docs/templates/prd_template.json",
+      "scope": "Comprehensive workflow specification for running one roadmap slice through blocks B1-B8"
+    },
+    "core_philosophy": [
+      "Use AEI to ship AEI by applying one repeatable workflow to every roadmap task",
+      "Operate in thin, independently verifiable vertical slices with explicit pass/fail gates",
+      "Preserve auditability and traceability across planning, implementation, verification, review, docs, and ship decision",
+      "Enforce explicit dual-use risk identification and mitigation on every slice",
+      "Keep workflow deterministic: strict block sequencing, failure routing, and completion gate discipline"
+    ],
+    "strict_structure": [
+      "Document Overview (purpose, scope, assumptions)",
+      "Problem Statement (highest priority - what the workflow solves)",
+      "User Personas (ordered by priority)",
+      "Key Features (organized by workflow phases and runnable slices)",
+      "Core Design Principles",
+      "MVP Success Criteria",
+      "Technical Requirements",
+      "Success Metrics & KPIs",
+      "Risk Mitigation",
+      "Timeline & Roadmap",
+      "Next Immediate Steps"
+    ],
+    "core_rules": [
+      "R1 One-slice cap: only one runnable slice per execution",
+      "R2 No silent drift: every touched acceptance criterion must be validated",
+      "R3 Dependency symmetry: dependency changes must be reflected upstream",
+      "R4 Docs parity: no merge without progress/fixes/updates entry",
+      "R5 Budget guardrail: stop after retry budget exhaustion",
+      "R6 Failure routing: verification failures return to B3, review findings return to B4",
+      "R7 Completion gate: B8 can mark done only if B5 passes and B7 is synced"
+    ]
+  },
+  "sections": {
+    "1_document_overview": {
+      "purpose": "The AEI Dogfood Workflow provides a repeatable, auditable process to deliver roadmap tasks as minimal vertical slices using blocks B1 through B8.",
+      "scope": {
+        "in_scope": [
+          "Single-task execution for one roadmap item at a time",
+          "Strict block sequence B1-B8 with role ownership",
+          "Dual-use risk checks in planning and ship decision",
+          "Verification, review, documentation sync, and ship/iterate decision",
+          "Feature runbooks for Feature 12 and Feature 13 slices"
+        ],
+        "out_of_scope": [
+          "Multi-task bundled execution in a single run",
+          "Unscoped implementation without explicit acceptance gates",
+          "Skipping verification or documentation synchronization",
+          "Bypassing dual-use risk review",
+          "Combining unrelated roadmap phases into one slice"
+        ]
+      },
+      "assumptions": [
+        "Roadmap tasks and feature files are maintained and accessible",
+        "Block dependencies can be validated before implementation",
+        "Build verification command npm run build is available for relevant slices",
+        "Execution, verification, and review IDs can be captured for audit trail",
+        "Operators enforce the one-slice cap and strict ordering"
+      ],
+      "version_history": [
+        "Version 1.0: Initial AEI dogfood workflow template with B1-B8 blocks and orchestrator rules",
+        "Version 1.1: Added Feature 12 and Feature 13 filled examples with acceptance gates and runbooks",
+        "Version 1.2: Converted to PRD-aligned JSON structure"
+      ]
+    },
+    "2_problem_statement": {
+      "context": "Roadmap work can drift, verification can be inconsistent, and documentation can fall out of sync when implementation lacks a strict execution protocol. AEI requires a deterministic process to ship safely and repeatedly.",
+      "core_frictions_to_solve": [
+        "Roadmap tasks are too large without explicit vertical-slice scope lock",
+        "Dependency blockers are often discovered late",
+        "Implementation, testing, and review can diverge from acceptance criteria",
+        "Documentation updates are frequently incomplete",
+        "Dual-use risk may be under-documented without explicit checkpoints"
+      ],
+      "how_the_product_solves_this": "The workflow enforces an ordered B1-B8 process with role-specific outputs, mandatory verification/review/docs gates, and explicit ship criteria so each slice is measurable, auditable, and safe to advance."
+    },
+    "3_user_personas_ordered_by_priority": {
+      "persona_template": [
+        {
+          "name": "Primary Persona: Orchestrator Lead",
+          "demographics": "Technical owner responsible for roadmap throughput, quality gating, and risk control",
+          "goals": [
+            "Run one verified slice at a time",
+            "Ensure all predecessor dependencies are satisfied",
+            "Make deterministic ship/iterate/split decisions"
+          ],
+          "pain_points": [
+            "Unclear completion criteria",
+            "Workflow drift across teams",
+            "Insufficient audit trace across agents"
+          ],
+          "usage_scenario": "Starts at B1 scope lock, enforces B1-B8 sequence, checks B5/B7 completion gate, then marks done or routes rework."
+        },
+        {
+          "name": "Secondary Persona: Implementer",
+          "demographics": "Engineer executing minimal code/doc edits against an approved design plan",
+          "goals": [
+            "Deliver minimal-diff implementation tied to declared files/contracts",
+            "Avoid unauthorized dependencies or surface area",
+            "Keep changes auditable and testable"
+          ],
+          "pain_points": [
+            "Scope creep during implementation",
+            "Ambiguous file ownership",
+            "Late-stage review findings"
+          ],
+          "usage_scenario": "Receives B3 plan, edits only approved files, then hands off to B5 verification and B6 review."
+        },
+        {
+          "name": "Tertiary Persona: QA/Reviewer/Docs",
+          "demographics": "Quality and documentation operators ensuring verification evidence and roadmap parity",
+          "goals": [
+            "Validate acceptance criteria and regressions",
+            "Catch risk vectors and unresolved findings",
+            "Update task docs and roadmap state with references"
+          ],
+          "pain_points": [
+            "Missing evidence artifacts",
+            "Unclear dependency symmetry",
+            "Documentation mismatch with shipped code"
+          ],
+          "usage_scenario": "Runs B5 verification, B6 review, B7 docs sync, and blocks B8 completion when gates are unmet."
+        }
+      ]
+    },
+    "4_key_features": {
+      "phase_organization": "Workflow phases map directly to blocks B1-B8, with runnable examples for Feature 12 (Code Explorer) and Feature 13 (Comparative Trace Analysis)",
+      "feature_template": [
+        {
+          "id": "4.1.1 Block Pipeline B1-B8",
+          "description": "A strict, repeatable sequence that processes one slice from scope lock to ship decision.",
+          "key_capabilities": [
+            "B1 scope lock with measurable goals/non-goals",
+            "B2 dependency readiness/blocked decision",
+            "B3 file-level implementation design",
+            "B4 minimal-diff implementation",
+            "B5 acceptance/regression/security verification",
+            "B6 review findings and required fixes",
+            "B7 documentation parity update",
+            "B8 ship/iterate/split decision"
+          ],
+          "success_metrics": [
+            "Each execution processes exactly one slice",
+            "Every execution reaches an explicit B8 outcome",
+            "No merge occurs without B5 pass and B7 sync"
+          ],
+          "supporting_components": [
+            "Roadmap task files",
+            "Feature task files",
+            "Verification evidence artifacts",
+            "Review findings records",
+            "Progress logs"
+          ]
+        },
+        {
+          "id": "4.1.2 Feature 12 Slice Workflow",
+          "description": "Concrete runbooks for Code Explorer incremental delivery (tab/state preservation, snapshot loader, file tree/selection).",
+          "key_capabilities": [
+            "Slice 1 acceptance gate for Code Explorer tab and state persistence",
+            "F12-MH-02 snapshot loading with normalized path contract",
+            "F12-MH-03 tree rendering with selection and refresh behavior"
+          ],
+          "success_metrics": [
+            "Code Explorer appears and preserves canvas/chat state",
+            "Snapshot refresh updates without full page reload",
+            "Build command passes for each implemented slice"
+          ],
+          "supporting_components": [
+            "docs/tasks/feature-12-code-explorer.md",
+            "lib/code-explorer-snapshot.ts",
+            "API endpoint /api/code-explorer/snapshot",
+            "Code Explorer panel UI"
+          ]
+        },
+        {
+          "id": "4.2.1 Feature 13 Scoped Fork Workflow",
+          "description": "Runbook for comparative trace scoped fork from Trace Viewer with lineage metadata and safety checks.",
+          "key_capabilities": [
+            "Node-level fork trigger from Trace Viewer",
+            "Scoped subtree reevaluation while preserving unaffected branches",
+            "Fork lineage metadata and mode visibility",
+            "Kill-switch-first endpoint behavior"
+          ],
+          "success_metrics": [
+            "Fork returns fork_execution_id with mode=scoped",
+            "Lineage metadata is present in forked trace",
+            "Source execution remains unmutated",
+            "Build command passes"
+          ],
+          "supporting_components": [
+            "docs/tasks/feature-13-comparative-trace-analysis.md",
+            "lib/trace-compare.ts",
+            "lib/trace-model.ts",
+            "POST /api/traces/fork",
+            "GET /api/traces/[executionId]"
+          ]
+        }
+      ]
+    },
+    "5_core_design_principles_non_negotiable": [
+      "Single-slice execution discipline: one runnable slice per run to maximize determinism and rollback clarity.",
+      "Gate-driven progression: no downstream block executes without predecessor completion evidence.",
+      "Verification-first shipping: B8 completion requires verified acceptance and synchronized documentation.",
+      "Least-privilege role boundaries: planner, architect, implementer, tester, reviewer, docs, and lead responsibilities remain distinct.",
+      "Dual-use awareness: every slice includes explicit misuse vector scan and mitigation notes."
+    ],
+    "6_mvp_success_criteria": [
+      "Workflow executes B1 through B8 in strict order for at least one slice without skipped gates.",
+      "Definition of Done checklist is fully satisfied per completed slice.",
+      "Feature 12 slice acceptance gate is validated (tab visibility, state persistence, empty-state behavior).",
+      "Feature 13 slice acceptance gate is validated (scoped fork behavior, lineage metadata, kill switch visibility).",
+      "Task documentation shows dated progress entry and evidence references for completed slices."
+    ],
+    "7_technical_requirements": {
+      "7_1_platform_and_stack": {
+        "frontend": "Existing AEI UI with top-level navigation, Trace Viewer actions, and Code Explorer panel",
+        "backend": "AEI API routes supporting snapshot and trace fork endpoints with shared execution storage",
+        "real_time_communication": "UI refresh-triggered fetch with optional real-time orchestration telemetry where available",
+        "storage": "Persistent roadmap/task docs plus trace/snapshot storage used by GET/POST workflow endpoints"
+      },
+      "7_2_performance_targets": [
+        "Slice verification cycle should complete within one execution attempt or reroute after two failed retries",
+        "Snapshot/tree refresh should update in-session without full page reload",
+        "Trace fork endpoint should return scoped result payload with affected node metadata"
+      ],
+      "7_3_integration_points": [
+        "Simulation pipeline artifact output (F03-MH-03, F04-MH-03)",
+        "Trace viewer action path (F05-MH-05)",
+        "Shared trace storage across POST /api/traces/fork and GET /api/traces/[executionId]",
+        "Build validation command npm run build"
+      ],
+      "7_4_security_and_compliance": [
+        "Path normalization removes dot segments and traversal vectors for snapshot files",
+        "Kill-switch checks execute before compute on compare/fork paths",
+        "Audit integrity includes execution/review/verification references in docs updates",
+        "High-risk findings require escalation and block approval"
+      ]
+    },
+    "8_success_metrics_and_kpis": {
+      "user_adoption": {
+        "nps": "Not yet defined for internal dogfood workflow",
+        "mau": "Track weekly active operators executing at least one complete B1-B8 run",
+        "churn_rate": "Track drop-off between B1 started and B8 concluded runs"
+      },
+      "efficiency": {
+        "project_task_completion_time": "Reduce roadmap task lead time by shipping one verifiable slice per run",
+        "productivity_metric": "Increase percent of runs ending with clear done/iterate/split decision"
+      },
+      "reliability": {
+        "failure_rate": "Limit runs requiring more than two retries before routing/abort",
+        "uptime": "Maintain availability of workflow-critical endpoints and build validation path"
+      },
+      "quality": {
+        "artifact_quality": "Measured by acceptance gate pass rates and reviewer finding severity trends",
+        "user_satisfaction": "Measured by operator confidence in traceability and rollback clarity"
+      }
+    },
+    "9_risk_mitigation": {
+      "risk_template": [
+        {
+          "description": "Dual-use repurposing of new slice capabilities",
+          "impact": "Potential misuse in offensive cyber, autonomous escalation, or information manipulation scenarios",
+          "mitigation": "Mandatory dual-use scan at B1 and B8, explicit risk rating, and escalation for high/critical findings"
+        },
+        {
+          "description": "Workflow drift or skipped gates",
+          "impact": "Unverified code reaches done state without required evidence",
+          "mitigation": "Strict B1-B8 ordering with R2/R7 enforcement and blocked completion when B5/B7 are missing"
+        },
+        {
+          "description": "Unsafe path or mutation behavior in Feature 12/13 slices",
+          "impact": "Path traversal, source-trace mutation leaks, or unstable state coupling",
+          "mitigation": "Path sanitization, immutable source clone checks, reviewer validation, and targeted regression checks"
+        }
+      ]
+    },
+    "10_timeline_and_roadmap": {
+      "quarters_or_milestones": {
+        "Milestone 1 - Phase 1 Completion": [
+          "Run single-task slices until all mapped P1-MH tasks are green",
+          "Prioritize full completion of one must-have before parallel partials"
+        ],
+        "Milestone 2 - Phase 2 Execution": [
+          "Split each Phase 2 item into infra slice then UX slice",
+          "Apply same B1-B8 template and acceptance gate pattern"
+        ],
+        "Milestone 3 - Phase 3 Delivery": [
+          "Execute architecture spike slice first",
+          "Follow with implementation slices using identical workflow controls"
+        ]
+      }
+    },
+    "11_next_immediate_steps": [
+      "Run B1-B8 for Feature 12 Slice 1 (F12-MH-01) and record verification evidence",
+      "Execute F12-MH-02 snapshot loader runbook once dependencies are confirmed",
+      "Execute F13-MH-03 + F13-MH-05 scoped fork slice after dependency check",
+      "Keep docs/tasks progress logs synchronized on every completed or iterated slice"
+    ]
+  },
+  "metadata_fields": {
+    "document_owner": "AEI Product/Engineering",
+    "last_updated": "2026-02-12",
+    "next_review": "2026-02-19"
+  }
+}

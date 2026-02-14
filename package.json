@@ -4,10 +4,14 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint",
-    "test": "vitest run"
+    "lint": "eslint .",
+    "test": "vitest run",
+    "dogfood:status": "node scripts/update-dogfood-status.mjs",
+    "docs:parity": "node scripts/check-docs-parity.mjs",
+    "roadmap:alias-map": "node scripts/update-roadmap-alias-map.mjs --write",
+    "killswitch:check": "bash scripts/check-trace-killswitch.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

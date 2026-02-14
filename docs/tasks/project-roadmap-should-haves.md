@@ -85,35 +85,35 @@
     - Audit logs scoped by project (with global view for compliance)
   - Est. effort: M
 
-- [ ] `P1-SH-07` Add Replit Familiar Mode telemetry and adoption KPIs
+- [x] `P1-SH-07` Add main workspace chat telemetry and adoption KPIs
   - Owner hint: Product / Analytics
   - Dependencies: `P1-MH-12`, `P1-MH-10`
   - Blocks: `none`
-  - Feature refs: `TBD`
+  - Feature refs: `F15-MH-01`, `F15-MH-02`
   - Acceptance criteria:
-    - Track usage split between Familiar Mode and full AEI
-    - Log time-to-first-output and completion rate for Familiar Mode users
+    - Track usage split between main workspace chat and full AEI
+    - Log time-to-first-output and completion rate for main workspace chat users
     - Dashboard view of mode usage trends (daily/weekly)
     - Metrics accessible without leaving main screen
   - Est. effort: S
 
-- [ ] `P1-SH-08` Add Replit migration guides and in-product helper tips
+- [x] `P1-SH-08` Add main workspace chat migration guides and in-product helper tips
   - Owner hint: Product / Design / Content
   - Dependencies: `P1-MH-12`, `P1-MH-15`
   - Blocks: `none`
-  - Feature refs: `TBD`
+  - Feature refs: `F15-MH-03`
   - Acceptance criteria:
-    - In-product tips map Replit concepts to AEI features (prompt -> canvas, preview -> simulator)
+    - In-product tips map main chat concepts to AEI features (chat -> canvas, preview -> simulator)
     - Migration guide available from onboarding and settings
     - Tips can be dismissed and never shown again
     - Links to tutorial flow for hands-on migration
   - Est. effort: S
 
-- [ ] `P1-SH-09` Polish Replit import UX with validation and error recovery
+- [x] `P1-SH-09` Polish Replit import UX with validation and error recovery
   - Owner hint: Frontend / Backend
   - Dependencies: `P1-MH-13`
   - Blocks: `none`
-  - Feature refs: `TBD`
+  - Feature refs: `F15-MH-04`
   - Acceptance criteria:
     - Import wizard validates input and previews detected project metadata
     - Clear error states for unsupported exports with next-step guidance
@@ -131,7 +131,7 @@
   - Owner hint: Backend / Frontend
   - Dependencies: `P2-MH-03`, `P1-MH-07`
   - Blocks: `P3-SH-01`
-  - Feature refs: `TBD`
+  - Feature refs: `F16-MH-01`, `F16-MH-02`, `F16-MH-03`, `F16-MH-04`
   - Acceptance criteria:
     - Multiple users edit same canvas concurrently with operational transform or CRDTs
     - Comment threads on canvas blocks and tasks
@@ -269,35 +269,35 @@
     - Conditional breakpoints (e.g., pause if confidence < 50%)
     - Memory/performance profiling during playback
   - Est. effort: L
-- [ ] `P1-SH-07` Add Replit Familiar Mode telemetry and adoption KPIs
+- [x] `P1-SH-07` Add main workspace chat telemetry and adoption KPIs
   - Owner hint: Product / Analytics
   - Dependencies: `P1-MH-12`, `P1-MH-10`
   - Blocks: `none`
-  - Feature refs: `TBD`
+  - Feature refs: `F15-MH-01`, `F15-MH-02`
   - Acceptance criteria:
-    - Track usage split between Familiar Mode and full AEI
-    - Log time-to-first-output and completion rate for Familiar Mode users
+    - Track usage split between main workspace chat and full AEI
+    - Log time-to-first-output and completion rate for main workspace chat users
     - Dashboard view of mode usage trends (daily/weekly)
     - Metrics accessible without leaving main screen
   - Est. effort: S
 
-- [ ] `P1-SH-08` Add Replit migration guides and in-product helper tips
+- [x] `P1-SH-08` Add main workspace chat migration guides and in-product helper tips
   - Owner hint: Product / Design / Content
   - Dependencies: `P1-MH-12`, `P1-MH-15`
   - Blocks: `none`
-  - Feature refs: `TBD`
+  - Feature refs: `F15-MH-03`
   - Acceptance criteria:
-    - In-product tips map Replit concepts to AEI features (prompt -> canvas, preview -> simulator)
+    - In-product tips map main chat concepts to AEI features (chat -> canvas, preview -> simulator)
     - Migration guide available from onboarding and settings
     - Tips can be dismissed and never shown again
     - Links to tutorial flow for hands-on migration
   - Est. effort: S
 
-- [ ] `P1-SH-09` Polish Replit import UX with validation and error recovery
+- [x] `P1-SH-09` Polish Replit import UX with validation and error recovery
   - Owner hint: Frontend / Backend
   - Dependencies: `P1-MH-13`
   - Blocks: `none`
-  - Feature refs: `TBD`
+  - Feature refs: `F15-MH-04`
   - Acceptance criteria:
     - Import wizard validates input and previews detected project metadata
     - Clear error states for unsupported exports with next-step guidance
@@ -312,8 +312,8 @@
 #### Phase 1 Should-Haves (Additions)
 | Task ID | Task Title (short) | Depends On | Blocks |
 |---------|-------------------|------------|--------|
-| `P1-SH-07` | Familiar Mode telemetry | `P1-MH-12`, `P1-MH-10` | `none` |
-| `P1-SH-08` | Replit migration guides | `P1-MH-12`, `P1-MH-15` | `none` |
+| `P1-SH-07` | Main workspace chat telemetry | `P1-MH-12`, `P1-MH-10` | `none` |
+| `P1-SH-08` | Main workspace chat migration guides | `P1-MH-12`, `P1-MH-15` | `none` |
 | `P1-SH-09` | Replit import UX polish | `P1-MH-13` | `none` |
 
 #### Phase 2 Should-Haves
@@ -340,7 +340,3 @@
 **Roadmap Owner:** Product Team
 **Generated:** February 10, 2026
 **Last Review:** February 10, 2026
-
-
-
-

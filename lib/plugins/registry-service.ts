@@ -26,6 +26,9 @@ export interface PluginVersionRecord {
 
 export interface PluginListItem extends PluginRecord {
   latest_version?: PluginVersionRecord;
+  rating_avg?: number | null;
+  rating_count?: number;
+  latest_version_certified?: boolean;
 }
 
 export async function listPlugins(options: {
@@ -59,7 +62,9 @@ export async function listPlugins(options: {
     `
     SELECT
       p.id, p.name, p.description, p.author, p.categories, p.status, p.created_at, p.updated_at,
-      v.id as version_id, v.version, v.manifest_json, v.compatibility, v.permissions, v.pricing, v.deprecated, v.created_at as version_created_at
+      v.id as version_id, v.version, v.manifest_json, v.compatibility, v.permissions, v.pricing, v.deprecated, v.created_at as version_created_at,
+      rr.rating_avg, rr.rating_count,
+      COALESCE(pc.is_certified, false) as latest_version_certified
     FROM plugins p
     LEFT JOIN LATERAL (
       SELECT id, version, manifest_json, compatibility, permissions, pricing, deprecated, created_at
@@ -68,6 +73,17 @@ export async function listPlugins(options: {
       ORDER BY created_at DESC
       LIMIT 1
     ) v ON true
+    LEFT JOIN LATERAL (
+      SELECT AVG(r.rating)::float as rating_avg, COUNT(*)::int as rating_count
+      FROM plugin_reviews r
+      WHERE r.plugin_id = p.id AND r.status = 'approved'
+    ) rr ON true
+    LEFT JOIN LATERAL (
+      SELECT true as is_certified
+      FROM plugin_certification_requests c
+      WHERE c.version_id = v.id AND c.status = 'approved'
+      LIMIT 1
+    ) pc ON true
     ${whereClause}
     ORDER BY p.updated_at DESC
     `,
@@ -83,6 +99,9 @@ export async function listPlugins(options: {
     status: row.status,
     created_at: row.created_at,
     updated_at: row.updated_at,
+    rating_avg: (row as any).rating_avg ?? null,
+    rating_count: (row as any).rating_count ?? 0,
+    latest_version_certified: Boolean((row as any).latest_version_certified),
     latest_version: row.version ? {
       id: (row as any).version_id,
       plugin_id: row.id,

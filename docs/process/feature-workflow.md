@@ -37,6 +37,7 @@ This document is the single source of truth for how feature planning artifacts a
    - After QA, set status to `complete` or `blocked` with notes.
 
 8. **Start work**
+   - Ensure implementation session model is `gpt-5.3-codex` for any `FXX-*` coding task.
    - Update the first `FXX-MH-*` task progress line with a dated entry when implementation begins.
 
 ## Automation Script (bash)
@@ -53,6 +54,11 @@ After the script runs, it prints a clear set of next-step prompts:
 3. Update roadmap refs or QA status
 
 Pick one in chat and I will proceed.
+
+### Implementation model requirement
+
+- For all feature implementation tasks (`FXX-*`), use model `gpt-5.3-codex`.
+- If current chat/session is on a different model, start a new Codex session with `gpt-5.3-codex` before editing code.
 
 ### Interactive / in-the-loop mode
 
@@ -86,3 +92,8 @@ bash scripts/feature-pipeline.sh -Feature 11
 - After creating a new feature file
 - After editing any `Dependencies` field
 - Before opening a PR that touches `docs/tasks/feature-*.md`
+
+## Dogfooding AEI with AEI
+
+- Template: `docs/process/dogfood-workflow-template.md`
+- Use this to run one roadmap slice through Prompt Canvas with explicit agent roles, orchestrator rules, and DoD gates.

@@ -31,7 +31,7 @@ By end of week 13, a real user can open the Orchestrator Hub, load an instructio
 - [x] `F04-MH-02` Build artifact preview panel UI with syntax highlighting and rendering
    - Owner: Frontend / Design
    - Dependencies: `F04-MH-01`, `F03-MH-03`
-  - Blocks: `F04-CH-02`, `F04-MH-03`, `F04-MH-04`, `F04-MH-05`, `F04-SH-01`, `F05-MH-01`, `F05-SH-01`, `F11-MH-04`
+  - Blocks: `F04-CH-02`, `F04-MH-03`, `F04-MH-04`, `F04-MH-05`, `F04-SH-01`, `F05-MH-01`, `F05-SH-01`, `F11-MH-04`, `F12-MH-05`
    - Roadmap ref: `P1-SH-05`
    - Acceptance criteria:
      - New pane in Orchestrator Hub: right sidebar artifact preview (collapsible, 40% width when expanded)
@@ -54,7 +54,7 @@ By end of week 13, a real user can open the Orchestrator Hub, load an instructio
 - [x] `F04-MH-03` Wire artifact generation from orchestrator simulation pipeline
   - Owner: Full-stack
   - Dependencies: `F04-MH-01`, `F04-MH-02`, `F03-MH-03`
-  - Blocks: `F04-MH-04`, `F04-SH-02`
+  - Blocks: `F04-MH-04`, `F04-SH-02`, `F12-MH-02`
   - Roadmap ref: `P1-SH-05`
   - Acceptance criteria:
     - Orchestrator rule engine extended: after task assignment, generate mock artifacts for each task
@@ -73,7 +73,7 @@ By end of week 13, a real user can open the Orchestrator Hub, load an instructio
 - [x] `F04-MH-04` Implement artifact validation and diff viewer
   - Owner: Frontend / Backend
   - Dependencies: `F04-MH-03`, `F04-MH-02`
-  - Blocks: `F04-CH-01`, `F04-CH-03`, `F04-SH-03`, `F05-MH-03`, `F05-SH-02`, `F11-CH-02`
+  - Blocks: `F04-CH-01`, `F04-CH-03`, `F04-SH-03`, `F05-MH-03`, `F05-SH-02`, `F11-CH-02`, `F12-CH-01`
   - Roadmap ref: `P1-SH-05`
   - Acceptance criteria:
     - Validation badge on each artifact: âœ… "Valid" or âš ï¸ "Warning" or âŒ "Error"
@@ -105,6 +105,25 @@ By end of week 13, a real user can open the Orchestrator Hub, load an instructio
   - Progress / Fixes / Updates:
     - 2026-02-08: Waiting on F04-MH-02. Will build artifact-search.tsx with filter controls.
     - 2026-02-08: âœ… COMPLETED. Created artifact-search.tsx with ArtifactSearch component (search box, type filter buttons, validation status filter, clear filters). Implements case-insensitive substring matching with line number tracking and highlight tracking. SearchResultDisplay component shows matching context with yellow highlighting. O(n*m) complexity acceptable for MVP with <50 artifacts. Build passes.
+
+- [ ] `F04-MH-06` Implement Output Simulator using Temporal activities
+  - Owner: Backend / AI
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P2-MH-02`
+  - Acceptance criteria:
+    - Simulator run is executed as a Temporal workflow (activities generate artifacts) rather than only in-process mock generation
+    - Outputs are normalized into the existing artifact model and displayed in the preview panel without UX regressions
+    - Retries/timeouts are configured and visible in Temporal history
+    - Dogfood workflow alignment:
+      - B5 Verify includes workflow history export + artifact preview evidence
+  - Evidence artifacts:
+    - Workflow history JSON export for a simulation run
+    - Screenshot(s) of artifact preview populated from the Temporal-backed simulator
+    - Build output: `npm run build` passing
+  - Effort: L
+  - Progress / Fixes / Updates:
+    - YYYY-MM-DD: Not started.
 
 ## Should-Have Tasks (makes preview flexible and discoverable)
 
@@ -219,20 +238,20 @@ By end of week 13, a real user can open the Orchestrator Hub, load an instructio
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Open Orchestrator Hub â†’ load instruction graph from Prompt Canvas (5â€“10 tasks)
-- [ ] Click "Simulate" â†’ orchestrator generates assignment plan + mock artifacts
-- [ ] Artifact preview panel appears: see tabs for Code, HTML, JSON, SQL (artifacts vary by task types)
-- [ ] Switch between tabs: click Code tab â†’ see Python function skeleton with proper syntax highlighting
-- [ ] Click HTML tab â†’ see rendered mockup (live iframe with HTML preview)
-- [ ] Click JSON tab â†’ see schema artifact with tree view expansion
-- [ ] Validation badges visible: green âœ… for valid artifacts, yellow âš ï¸ for warnings
-- [ ] Copy-to-clipboard works: click "Copy" button on code artifact â†’ paste into local editor â†’ verify exact content
-- [ ] Export artifact: click "Export as .py" â†’ download function skeleton â†’ save to desktop
-- [ ] Re-simulate with different constraints (adjust max_agents slider) â†’ artifacts regenerate â†’ click "Diff" tab â†’ see side-by-side comparison (added/removed lines highlighted)
-- [ ] Search artifacts: type "def " â†’ search highlights code artifact, filter shows only Code type
-- [ ] Attempt to execute with bad artifact: click "Execute" â†’ orchestrator validates artifacts before dispatch â†’ shows validation errors in preview panel
-- [ ] Create 3 executions with different rule sets â†’ compare artifact outputs â†’ verify rule set A produced larger codebase, rule set B more modular code
-- [ ] Performance: simulate 10-task plan â†’ preview renders within 3s, re-simulate with constraints â†’ artifacts regenerate within 2s
+- [x] Open Orchestrator Hub â†’ load instruction graph from Prompt Canvas (5â€“10 tasks)
+- [x] Click "Simulate" â†’ orchestrator generates assignment plan + mock artifacts
+- [x] Artifact preview panel appears: see tabs for Code, HTML, JSON, SQL (artifacts vary by task types)
+- [x] Switch between tabs: click Code tab â†’ see Python function skeleton with proper syntax highlighting
+- [x] Click HTML tab â†’ see rendered mockup (live iframe with HTML preview)
+- [x] Click JSON tab â†’ see schema artifact with tree view expansion
+- [x] Validation badges visible: green âœ… for valid artifacts, yellow âš ï¸ for warnings
+- [x] Copy-to-clipboard works: click "Copy" button on code artifact â†’ paste into local editor â†’ verify exact content
+- [x] Export artifact: click "Export as .py" â†’ download function skeleton â†’ save to desktop
+- [x] Re-simulate with different constraints (adjust max_agents slider) â†’ artifacts regenerate â†’ click "Diff" tab â†’ see side-by-side comparison (added/removed lines highlighted)
+- [x] Search artifacts: type "def " â†’ search highlights code artifact, filter shows only Code type
+- [x] Attempt to execute with bad artifact: click "Execute" â†’ orchestrator validates artifacts before dispatch â†’ shows validation errors in preview panel
+- [x] Create 3 executions with different rule sets â†’ compare artifact outputs â†’ verify rule set A produced larger codebase, rule set B more modular code
+- [x] Performance: simulate 10-task plan â†’ preview renders within 3s, re-simulate with constraints â†’ artifacts regenerate within 2s
 
 ## Cross-Feature Dependency Map
 

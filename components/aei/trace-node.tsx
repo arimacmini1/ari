@@ -15,6 +15,8 @@ interface TraceNodeProps {
   node: DecisionNode;
   depth?: number;
   onExpandContext?: (context: string, nodeId: string) => void;
+  onCompareAlternative?: (node: DecisionNode) => void;
+  compareDisabled?: boolean;
 }
 
 function ConfidenceBar({ value }: { value: number }) {
@@ -38,6 +40,8 @@ export function TraceNode({
   node,
   depth = 0,
   onExpandContext,
+  onCompareAlternative,
+  compareDisabled = false,
 }: TraceNodeProps) {
   const [isExpanded, setIsExpanded] = useState(depth === 0)
   const hasChildren = node.children && node.children.length > 0
@@ -125,6 +129,27 @@ export function TraceNode({
             Expand
           </span>
         )}
+
+        {node.alternatives_considered && node.alternatives_considered.length > 0 ? (
+          compareDisabled ? (
+            <span
+              title="Compare disabled by configuration"
+              className="text-xs text-muted-foreground ml-1 px-2 py-1 rounded bg-secondary/30 transition-colors shrink-0 cursor-not-allowed"
+            >
+              Compare
+            </span>
+          ) : (
+            <span
+              onClick={(e) => {
+                e.stopPropagation()
+                onCompareAlternative?.(node)
+              }}
+              className="text-xs text-emerald-400 hover:text-emerald-300 ml-1 px-2 py-1 rounded hover:bg-secondary/50 transition-colors shrink-0 cursor-pointer"
+            >
+              Compare
+            </span>
+          )
+        ) : null}
       </button>
 
       {/* Children */}
@@ -136,6 +161,8 @@ export function TraceNode({
               node={child}
               depth={depth + 1}
               onExpandContext={onExpandContext}
+              onCompareAlternative={onCompareAlternative}
+              compareDisabled={compareDisabled}
             />
           ))}
         </div>

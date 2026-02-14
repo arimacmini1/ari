@@ -213,18 +213,18 @@ By end of day 7 week 3, the canvas is a fully functional drag-drop workspace (Re
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Open canvas in browser, drag 5 blocks onto infinite workspace
-- [ ] Draw edges between blocks; see valid connections glow orange, invalid glow red
-- [ ] Select block â†’ properties panel appears on right â†’ edit label + type-specific field
-- [ ] Click undo 5 times â†’ canvas reverts to 5 blocks ago; click redo 5 times â†’ back to current state
-- [ ] Click "Export JSON" â†’ download canvas JSON file, inspect structure (nodes, edges, metadata)
-- [ ] Load exported JSON back via "Import JSON" â†’ canvas recreates identically
-- [ ] Click "Execute" â†’ see dashboard agents pick up tasks in real-time
-- [ ] Watch execution complete (~30â€“60s) â†’ see final artifact in right preview pane (HTML, code, JSON)
-- [ ] Click "View Trace" in preview pane â†’ navigate to `/traces/{execution_id}`, see decision tree (reuse F00 trace viewer)
-- [ ] Test keyboard shortcuts: Ctrl+Z, Ctrl+Y, Del, Escape, A (select all), zoom +/-, Home (fit-to-view)
-- [ ] Create complex canvas (nested loops, parallel branches, 20+ nodes) â†’ execute â†’ verify mock agents handle it
-- [ ] Verify localStorage persists canvas on page refresh
+- [x] Open canvas in browser, drag 5 blocks onto infinite workspace
+- [x] Draw edges between blocks; see valid connections glow orange, invalid glow red
+- [x] Select block â†’ properties panel appears on right â†’ edit label + type-specific field
+- [x] Click undo 5 times â†’ canvas reverts to 5 blocks ago; click redo 5 times â†’ back to current state
+- [x] Click "Export JSON" â†’ download canvas JSON file, inspect structure (nodes, edges, metadata)
+- [x] Load exported JSON back via "Import JSON" â†’ canvas recreates identically
+- [x] Click "Execute" â†’ see dashboard agents pick up tasks in real-time
+- [x] Watch execution complete (~30â€“60s) â†’ see final artifact in right preview pane (HTML, code, JSON)
+- [x] Click "View Trace" in preview pane â†’ navigate to `/traces/{execution_id}`, see decision tree (reuse F00 trace viewer)
+- [x] Test keyboard shortcuts: Ctrl+Z, Ctrl+Y, Del, Escape, A (select all), zoom +/-, Home (fit-to-view)
+- [x] Create complex canvas (nested loops, parallel branches, 20+ nodes) â†’ execute â†’ verify mock agents handle it
+- [x] Verify localStorage persists canvas on page refresh
 
 ## Cross-Feature Dependency Map
 

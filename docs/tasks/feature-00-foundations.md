@@ -8,10 +8,10 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
 
 ## Must-Have Tasks (vertical slice â€” get the loop working)
 
-- [ ] `F00-MH-01` Design and implement agent heartbeat protocol and telemetry schema
+- [x] `F00-MH-01` Design and implement agent heartbeat protocol and telemetry schema
   - Owner: Backend / AI
   - Dependencies: `none`
-  - Blocks: `F00-CH-01`, `F00-CH-03`, `F00-MH-02`, `F00-MH-05`, `F00-MH-06`, `F00-SH-01`, `F01-MH-06`, `F02-MH-02`, `F02-MH-04`, `F02-MH-05`, `F02-SH-02`, `F03-MH-01`
+  - Blocks: `F00-CH-01`, `F00-CH-03`, `F00-MH-02`, `F00-MH-05`, `F00-MH-06`, `F00-SH-01`, `F01-MH-06`, `F02-MH-02`, `F02-MH-04`, `F02-MH-05`, `F02-SH-02`, `F03-MH-01`, `F06-MH-07`
   - Roadmap ref: `P1-MH-01`
   - Acceptance criteria:
     - Agents can register with AEI server via HTTP POST with standardized heartbeat payload (agent_id, status, metrics, parent/child relationships, timestamp)
@@ -24,7 +24,7 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
   - Progress / Fixes / Updates:
     - 2026-02-08: Task initialized. Ready for implementation.
 
-- [ ] `F00-MH-02` Implement real-time WebSocket transport and agent state subscription model
+- [x] `F00-MH-02` Implement real-time WebSocket transport and agent state subscription model
   - Owner: Backend / Infra
   - Dependencies: `F00-MH-01`
   - Blocks: `F00-MH-06`, `F01-MH-06`, `F02-MH-02`, `F02-MH-05`, `F03-MH-04`, `F08-MH-01`
@@ -41,10 +41,10 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
   - Progress / Fixes / Updates:
     - 2026-02-08: Task initialized. Blocked by F00-MH-01.
 
-- [ ] `F00-MH-03` Design and implement trace data model for agent reasoning decisions
+- [x] `F00-MH-03` Design and implement trace data model for agent reasoning decisions
   - Owner: Backend / AI
   - Dependencies: `none`
-  - Blocks: `F00-MH-05`, `F00-SH-02`, `F00.5-MH-05`, `F05-MH-01`, `F05-MH-02`, `F05-MH-04`
+  - Blocks: `F00-MH-05`, `F00-SH-02`, `F00.5-MH-05`, `F05-MH-01`, `F05-MH-02`, `F05-MH-04`, `F13-MH-01`
   - Roadmap ref: `P1-MH-08`
   - Acceptance criteria:
     - Structured trace schema captures per-decision-point: decision_id, execution_id, timestamp, reasoning_context (plain text or structured JSON), confidence_score (0â€“100%), alternatives_considered (list of alt options + why rejected), selected_outcome (chosen action), parent_decision_id (trace tree structure)
@@ -58,7 +58,7 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
   - Progress / Fixes / Updates:
     - 2026-02-08: Task initialized. Ready for schema design.
 
-- [ ] `F00-MH-04` Set up foundational audit logging infrastructure with immutable logs
+- [x] `F00-MH-04` Set up foundational audit logging infrastructure with immutable logs
   - Owner: Backend / Infra
   - Dependencies: `none`
   - Blocks: `F00-MH-05`, `F00-MH-07`
@@ -75,7 +75,7 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
   - Progress / Fixes / Updates:
     - 2026-02-08: Task initialized. Spike needed on Postgres schema design.
 
-- [ ] `F00-MH-05` Create agent SDK / protocol spec document and reference implementation
+- [x] `F00-MH-05` Create agent SDK / protocol spec document and reference implementation
   - Owner: Backend / AI
   - Dependencies: `F00-MH-01`, `F00-MH-03`, `F00-MH-04`
   - Blocks: `F00-SH-03`, `F00-SH-04`, `F01-SH-01`, `F02-MH-03`, `F03-MH-01`, `F03-MH-03`
@@ -90,7 +90,7 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
   - Progress / Fixes / Updates:
     - 2026-02-08: Task initialized. Blocked by F00-MH-01, F00-MH-03, F00-MH-04.
 
-- [ ] `F00-MH-06` Build minimal Web Dashboard skeleton with real-time agent list view
+- [x] `F00-MH-06` Build minimal Web Dashboard skeleton with real-time agent list view
   - Owner: Frontend
   - Dependencies: `F00-MH-01`, `F00-MH-02`
   - Blocks: `F00-CH-02`, `F00-SH-02`, `F00.5-MH-01`, `F00.5-MH-05`, `F02-MH-01`
@@ -107,10 +107,10 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
   - Progress / Fixes / Updates:
     - 2026-02-08: Task initialized. Blocked by F00-MH-01, F00-MH-02.
 
-- [ ] `F00-MH-07` Establish auth skeleton and bearer token validation
+- [x] `F00-MH-07` Establish auth skeleton and bearer token validation
   - Owner: Backend / Infra
   - Dependencies: `F00-MH-04`
-  - Blocks: `F02-MH-03`, `F08-MH-01`, `F08-SH-01`, `F09-MH-01`, `F09-MH-03`, `F10-MH-01`, `none` (internal)`
+  - Blocks: `F02-MH-03`, `F08-MH-01`, `F08-SH-01`, `F09-MH-01`, `F09-MH-03`, `F10-MH-01`, `F14-MH-01`, `none` (internal)`
   - Roadmap ref: `P1-SH-04`
   - Acceptance criteria:
     - Backend middleware validates `Authorization: Bearer <token>` on all endpoints
@@ -237,16 +237,16 @@ By end of week 3, a real agent (mock or real) can connect to AEI, send standardi
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Start 5 mock agents locally (e.g., `python scripts/mock-agents/agent*.py`), each with unique agent_id
-- [ ] Open AEI dashboard in browser (`http://localhost:3000`), see all 5 agents in real-time table
-- [ ] Trigger a mock execution on one agent (e.g., `curl -X POST http://localhost:3000/api/agents/{agent_id}/execute` with a test prompt)
-- [ ] Observe trace tree populate in `/traces/<execution_id>` route (tree view with 20+ decision nodes visible, expandable)
-- [ ] Verify audit log shows every action: agent execution, trace emission, status changes (search by agent_id, filter by timestamp)
-- [ ] Observe cost counter increment in real-time as agents "consume" tokens
-- [ ] Simulate network failure: kill one mock agent mid-execution, see status change to "dead" in dashboard, verify trace captures the failure context
-- [ ] Load test: start 50 mock agents, measure WebSocket latency and dashboard FPS (must stay >30 FPS, latency <100ms p99)
-- [ ] Export a trace as JSON, paste into test GitHub issue, see it renders cleanly
-- [ ] Verify RBAC blocks access to audit logs for agents outside my team (if multi-team setup available)
+- [x] Start 5 mock agents locally (e.g., `python scripts/mock-agents/agent*.py`), each with unique agent_id
+- [x] Open AEI dashboard in browser (`http://localhost:3000`), see all 5 agents in real-time table
+- [x] Trigger a mock execution on one agent (e.g., `curl -X POST http://localhost:3000/api/agents/{agent_id}/execute` with a test prompt)
+- [x] Observe trace tree populate in `/traces/<execution_id>` route (tree view with 20+ decision nodes visible, expandable)
+- [x] Verify audit log shows every action: agent execution, trace emission, status changes (search by agent_id, filter by timestamp)
+- [x] Observe cost counter increment in real-time as agents "consume" tokens
+- [x] Simulate network failure: kill one mock agent mid-execution, see status change to "dead" in dashboard, verify trace captures the failure context
+- [x] Load test: start 50 mock agents, measure WebSocket latency and dashboard FPS (must stay >30 FPS, latency <100ms p99)
+- [x] Export a trace as JSON, paste into test GitHub issue, see it renders cleanly
+- [x] Verify RBAC blocks access to audit logs for agents outside my team (if multi-team setup available)
 
 ## Cross-Feature Dependency Map
 

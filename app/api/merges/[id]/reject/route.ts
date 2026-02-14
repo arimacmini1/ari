@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { rejectMergeRequest } from "@/lib/merge-requests"
-import { enforcePermission } from "@/lib/rbac/enforce"
 import { createAuditLog } from "@/lib/audit/audit-service"
+import { resolveProjectContext } from "@/lib/project-context"
+import { enforceProjectPermission } from "@/lib/project-rbac"
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const result = await enforcePermission(req, {
+  const projectContext = resolveProjectContext(req)
+  if (!projectContext.ok) {
+    return projectContext.response
+  }
+
+  const result = await enforceProjectPermission(req, {
+    projectId: projectContext.projectId,
     permission: "approve_merge",
     action: "delete",
     resourceType: "workflow",
@@ -22,7 +29,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     action: "delete",
     resource_type: "workflow",
     resource_id: merge.id,
-    context: { status: "rejected" },
+    context: { status: "rejected", project_id: projectContext.projectId },
   })
 
   return NextResponse.json({ merge })

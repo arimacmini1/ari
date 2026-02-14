@@ -8,6 +8,7 @@ NO_STUBS=0
 DRY_RUN=0
 PROMPT=0
 YES=0
+REQUIRED_IMPLEMENTATION_MODEL="gpt-5.3-codex"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -46,7 +47,7 @@ while [[ $# -gt 0 ]]; do
   esac
  done
 
-export FEATURE NO_INDEX NO_BLOCKS NO_STUBS DRY_RUN PROMPT YES
+export FEATURE NO_INDEX NO_BLOCKS NO_STUBS DRY_RUN PROMPT YES REQUIRED_IMPLEMENTATION_MODEL
 
 python3 - <<"PY"
 import os
@@ -61,6 +62,7 @@ no_stubs = os.environ.get("NO_STUBS") == "1"
 dry_run = os.environ.get("DRY_RUN") == "1"
 prompt = os.environ.get("PROMPT") == "1"
 yes = os.environ.get("YES") == "1"
+required_model = os.environ.get("REQUIRED_IMPLEMENTATION_MODEL") or "gpt-5.3-codex"
 
 root = Path(os.getcwd()).resolve()
 task_dir = root / "docs" / "tasks"
@@ -394,7 +396,7 @@ Describe the high-level architecture for Feature {s['feature_id']}.
 print("Feature pipeline complete.")
 print("")
 print("Next steps (choose one):")
-print("1) Start Feature implementation (e.g., F11-MH-01)")
+print(f"1) Start Feature implementation with model {required_model} (e.g., F11-MH-01)")
 print("2) Generate onboarding + architecture content for the feature")
 print("3) Update roadmap refs or QA status")
 PY

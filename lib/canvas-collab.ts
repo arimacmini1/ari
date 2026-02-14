@@ -22,6 +22,8 @@ export interface CollabOperation {
 export interface CollabVersions {
   nodeTs: Map<string, number>
   edgeTs: Map<string, number>
+  nodeClock: Map<string, string>
+  edgeClock: Map<string, string>
 }
 
 export function createOpId() {
@@ -86,13 +88,26 @@ export function applyOperations(state: CanvasState, ops: CollabOperation[], vers
   const nodes = new Map(state.nodes.map((n) => [nodeKey(n), n]))
   const edges = new Map(state.edges.map((e) => [edgeKey(e), e]))
 
-  for (const op of ops) {
+  // Deterministic ordering inside a batch ensures every client converges even on equal timestamps.
+  const orderedOps = [...ops].sort((a, b) => {
+    if (a.ts !== b.ts) return a.ts - b.ts
+    if (a.clientId !== b.clientId) return a.clientId.localeCompare(b.clientId)
+    return a.id.localeCompare(b.id)
+  })
+
+  const clockFor = (op: CollabOperation) => `${String(op.ts).padStart(20, "0")}:${op.clientId}:${op.id}`
+
+  for (const op of orderedOps) {
     if (op.type.startsWith("node")) {
       const targetId = op.node?.id ?? op.targetId
       if (!targetId) continue
+      const incomingClock = clockFor(op)
+      const lastClock = versions.nodeClock.get(targetId)
+      if (lastClock && incomingClock <= lastClock) continue
       const lastTs = versions.nodeTs.get(targetId) ?? 0
       if (op.ts < lastTs) continue
       versions.nodeTs.set(targetId, op.ts)
+      versions.nodeClock.set(targetId, incomingClock)
       if (op.type === "node:remove") {
         nodes.delete(targetId)
       } else if (op.node) {
@@ -103,9 +118,13 @@ export function applyOperations(state: CanvasState, ops: CollabOperation[], vers
     if (op.type.startsWith("edge")) {
       const targetId = op.edge?.id ?? op.targetId
       if (!targetId) continue
+      const incomingClock = clockFor(op)
+      const lastClock = versions.edgeClock.get(targetId)
+      if (lastClock && incomingClock <= lastClock) continue
       const lastTs = versions.edgeTs.get(targetId) ?? 0
       if (op.ts < lastTs) continue
       versions.edgeTs.set(targetId, op.ts)
+      versions.edgeClock.set(targetId, incomingClock)
       if (op.type === "edge:remove") {
         edges.delete(targetId)
       } else if (op.edge) {

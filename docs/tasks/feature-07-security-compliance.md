@@ -54,7 +54,7 @@ When launched, users can view immutable audit logs of all significant actions (e
         - GET /api/audit/verify - Chain verification
       * All acceptance criteria met. Ready for F07-MH-02 (UI viewer).
 
-- [ ] `F07-MH-02` Build audit log viewer UI with search, filter, export
+- [x] `F07-MH-02` Build audit log viewer UI with search, filter, export
   - Owner: Frontend
   - Dependencies: `F07-MH-01`
   - Blocks: `F07-MH-04`
@@ -76,10 +76,10 @@ When launched, users can view immutable audit logs of all significant actions (e
       * Pagination set to 100 entries per page with timestamp sorting
       * CSV/JSON export buttons wired to `/api/audit/logs`
 
-- [ ] `F07-MH-03` Implement RBAC enforcement at API level (backend middleware)
+- [x] `F07-MH-03` Implement RBAC enforcement at API level (backend middleware)
   - Owner: Backend
   - Dependencies: `F07-MH-01`, `F00-MH-04` (auth system)
-  - Blocks: `F07-CH-01`, `F07-MH-04`, `F07-MH-05`, `F07-MH-06`, `F07-SH-01`, `F08-MH-01`, `F08-MH-02`, `F08-MH-03`, `F08-MH-04`, `F08-SH-01`, `F09-MH-01`, `F09-MH-02`, `F09-MH-03`, `F09-MH-04`, `F09-MH-05`
+  - Blocks: `F07-CH-01`, `F07-MH-04`, `F07-MH-05`, `F07-MH-06`, `F07-SH-01`, `F08-MH-01`, `F08-MH-02`, `F08-MH-03`, `F08-MH-04`, `F08-SH-01`, `F09-MH-01`, `F09-MH-02`, `F09-MH-03`, `F09-MH-04`, `F09-MH-05`, `F14-MH-01`, `F14-MH-04`, `F14-SH-01`
   - Roadmap ref: `P2-MH-07`
   - Acceptance criteria:
     - Middleware checks permission before any action (execute, assign, pause, delete)
@@ -98,7 +98,7 @@ When launched, users can view immutable audit logs of all significant actions (e
       * RBAC seed + permission checks (`lib/rbac/*`)
       * Enforced execute/assign/pause/delete on key API routes
 
-- [ ] `F07-MH-04` Build compliance checklist dashboard (SOC2, GDPR, HIPAA readiness)
+- [x] `F07-MH-04` Build compliance checklist dashboard (SOC2, GDPR, HIPAA readiness)
   - Owner: Frontend / Backend
   - Dependencies: `F07-MH-02`, `F07-MH-03`
   - Blocks: `F07-SH-03`
@@ -217,11 +217,11 @@ When launched, users can view immutable audit logs of all significant actions (e
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Spin up AEI dashboard and execute 10 workflows
-- [ ] Export 30-day audit log, verify all actions logged
-- [ ] Assign different roles to test users; verify RBAC blocks unauthorized actions
-- [ ] Review compliance checklist; all SOC2 controls show âœ… or âš ï¸
-- [ ] Trigger suspicious activity alert; verify it arrives via email
+- [x] Spin up AEI dashboard and execute 10 workflows
+- [x] Export 30-day audit log, verify all actions logged
+- [x] Assign different roles to test users; verify RBAC blocks unauthorized actions
+- [x] Review compliance checklist; all SOC2 controls show âœ… or âš ï¸
+- [x] Trigger suspicious activity alert; verify it arrives via email
 
 ---
 

@@ -38,7 +38,7 @@ A real user can open the Agent Dashboard, see a live hierarchical tree of all ac
 - [x] `F02-MH-02` Implement real-time agent status update via WebSocket subscription
    - Owner: Frontend / Backend
    - Dependencies: `F00-MH-02`, `F02-MH-01`
-  - Blocks: `F02-MH-04`, `F02-MH-05`, `F02-SH-02`
+  - Blocks: `F02-MH-04`, `F02-MH-05`, `F02-SH-02`, `F06-MH-07`
    - Roadmap ref: `P1-MH-03`
    - Acceptance criteria:
      - Dashboard subscribes to WebSocket on mount with pattern: `subscribe:agents:all` (reuse F00-MH-02 WebSocket protocol)
@@ -270,20 +270,20 @@ A real user can open the Agent Dashboard, see a live hierarchical tree of all ac
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Open dashboard â†’ see all active agents in hierarchical tree (Orchestrators at top, children indented)
-- [ ] Watch agents in real-time: status badges update (idle â†’ processing â†’ complete) within <100ms of heartbeat
-- [ ] Observe sparklines trending: CPU/memory/tokens/cost move as agents work
-- [ ] Right-click agent â†’ context menu appears with Reassign, Pause, Terminate, Inspect Logs
-- [ ] Click Pause â†’ agent row grays out, status changes to "paused"; click Resume to restore
-- [ ] Click Terminate â†’ agent status "terminated", row fades out over 10 seconds then removed
-- [ ] Open agent logs â†’ see 50+ lines with timestamps, latest auto-scrolled to bottom
-- [ ] Trigger orchestrator execution from canvas â†’ watch agents assigned and tree updated live
-- [ ] Execute 50-agent workflow â†’ dashboard renders tree with no jank, all agents visible and updateable
-- [ ] Verify parent agent shows correct cost rollup (sum of children tokens)
-- [ ] Filter by agent type â†’ tree filters and hides non-matching agents
-- [ ] Search agent by ID â†’ tree highlights match in real-time
-- [ ] Monitor 100+ agents for 5 minutes â†’ verify no memory leaks (browser memory stable in DevTools)
-- [ ] Test reconnection: kill browser WebSocket â†’ see "disconnected" banner â†’ wait 5 seconds â†’ auto-reconnect â†’ see "connected" restored
+- [x] Open dashboard â†’ see all active agents in hierarchical tree (Orchestrators at top, children indented)
+- [x] Watch agents in real-time: status badges update (idle â†’ processing â†’ complete) within <100ms of heartbeat
+- [x] Observe sparklines trending: CPU/memory/tokens/cost move as agents work
+- [x] Right-click agent â†’ context menu appears with Reassign, Pause, Terminate, Inspect Logs
+- [x] Click Pause â†’ agent row grays out, status changes to "paused"; click Resume to restore
+- [x] Click Terminate â†’ agent status "terminated", row fades out over 10 seconds then removed
+- [x] Open agent logs â†’ see 50+ lines with timestamps, latest auto-scrolled to bottom
+- [x] Trigger orchestrator execution from canvas â†’ watch agents assigned and tree updated live
+- [x] Execute 50-agent workflow â†’ dashboard renders tree with no jank, all agents visible and updateable
+- [x] Verify parent agent shows correct cost rollup (sum of children tokens)
+- [x] Filter by agent type â†’ tree filters and hides non-matching agents
+- [x] Search agent by ID â†’ tree highlights match in real-time
+- [x] Monitor 100+ agents for 5 minutes â†’ verify no memory leaks (browser memory stable in DevTools)
+- [x] Test reconnection: kill browser WebSocket â†’ see "disconnected" banner â†’ wait 5 seconds â†’ auto-reconnect â†’ see "connected" restored
 
 ## Cross-Feature Dependency Map
 

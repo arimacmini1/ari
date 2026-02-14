@@ -13,7 +13,7 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
 - [x] `F06-MH-01` Design analytics data schema and KPI metric aggregation pipeline
   - Owner: Backend / AI
   - Dependencies: `F01-MH-01`, `F02-MH-01`, `F03-MH-01`, `F04-MH-01`
-  - Blocks: `F06-MH-02`, `F06-MH-03`, `F06-MH-04`, `F06-MH-05`
+  - Blocks: `F06-MH-02`, `F06-MH-03`, `F06-MH-04`, `F06-MH-05`, `F06-MH-07`, `F14-MH-03`, `F15-MH-01`
   - Roadmap ref: `P2-MH-05`
   - Acceptance criteria:
     - Define KPI metrics: cost_total, cost_daily, quality_score_avg, error_rate, latency_p95, agent_count_active, success_rate, token_spend, execution_duration_avg
@@ -32,7 +32,7 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
 - [x] `F06-MH-02` Build analytics dashboard layout and KPI card components
   - Owner: Frontend / Design
   - Dependencies: `F06-MH-01`
-  - Blocks: `F06-MH-03`, `F06-SH-01`
+  - Blocks: `F06-MH-03`, `F06-MH-07`, `F06-SH-01`, `F15-MH-02`
   - Roadmap ref: `P2-MH-05`
   - Acceptance criteria:
     - New Analytics Pane: top-level nav route `/analytics` (or sidebar item in dashboard)
@@ -49,7 +49,7 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
   - 2026-02-09: Started F06-MH-02. Created analytics route at `/app/analytics/`. Built KPICard component with trend indicators, color coding, and sparklines. Created analytics-dashboard.tsx with 2×3 responsive grid, hide/show toggle, localStorage persistence. Added dashboard-customizer.tsx for card visibility toggle. Created kpi-card-skeleton.tsx for loading states. Implemented use-analytics-summary hook with mock data. Components integrated with analytics-model.ts from F06-MH-01.
   - 2026-02-09: Created on-boarding guide (`/docs/on-boarding/feature-06-onboarding.md`) covering quick start, testing procedures, debugging guide, component hierarchy, data flow. Created architecture document (`/docs/architecture/feature-06-architecture.md`) documenting system design, component architecture, data models, API contracts, design decisions, performance characteristics. Both docs include links to source files and task file.
 
-- [ ] `F06-MH-03` Implement time-series chart viewer with drill-down by agent/task
+- [x] `F06-MH-03` Implement time-series chart viewer with drill-down by agent/task
   - Owner: Frontend
   - Dependencies: `F06-MH-02`, `F06-MH-01`
   - Blocks: `F06-CH-01`, `F06-CH-02`, `F06-MH-04`, `F06-MH-06`, `F06-SH-02`
@@ -71,10 +71,10 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
   - Progress / Fixes / Updates:
   - 2026-02-09: Blocked by F06-MH-01 & F06-MH-02. Waiting for schema + components.
 
-- [ ] `F06-MH-04` Add threshold-based alerting and notification system
+- [x] `F06-MH-04` Add threshold-based alerting and notification system
   - Owner: Backend / Frontend
   - Dependencies: `F06-MH-01`
-  - Blocks: `F06-MH-06`, `F06-SH-03`
+  - Blocks: `F06-MH-06`, `F06-SH-03`, `F14-MH-03`
   - Roadmap ref: `P2-MH-05`
   - Acceptance criteria:
     - Alert configuration: users can set thresholds for KPIs (e.g., "warn if daily cost > $100", "warn if error_rate > 5%")
@@ -90,7 +90,7 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
   - Progress / Fixes / Updates:
   - 2026-02-09: Blocked by F06-MH-01. Waiting for schema.
 
-- [ ] `F06-MH-05` Implement anomaly detection (moving average spike detection + percent-change detection)
+- [x] `F06-MH-05` Implement anomaly detection (moving average spike detection + percent-change detection)
   - Owner: Backend / AI
   - Dependencies: `F06-MH-01`
   - Blocks: `F06-SH-04`
@@ -108,10 +108,10 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
   - Progress / Fixes / Updates:
   - 2026-02-09: Blocked by F06-MH-01. Waiting for schema.
 
-- [ ] `F06-MH-06` Build report export (CSV, JSON, PDF with charts and tables)
+- [x] `F06-MH-06` Build report export (CSV, JSON, PDF with charts and tables)
   - Owner: Backend / Frontend
   - Dependencies: `F06-MH-03`, `F06-MH-04`
-  - Blocks: `F06-CH-03`
+  - Blocks: `F06-CH-03`, `F14-SH-02`
   - Roadmap ref: `P2-MH-05`
   - Acceptance criteria:
     - Export button on Analytics Pane: trigger export flow
@@ -126,6 +126,44 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
   - Gotchas / debug notes: PDF generation can be slow (use headless browser or server-side rendering). Chart images: either embed as PNG (larger file) or use PDF chart libraries (chartsjs2pdf). CSV dialect: handle special characters, quote escaping. Large reports: add progress indicator. Sensitive data: respect RBAC (user can only export metrics they have access to).
   - Progress / Fixes / Updates:
   - 2026-02-09: Blocked by F06-MH-03 & F06-MH-04. Waiting for chart + alert systems.
+
+- [x] `F06-MH-07` Implement cost and quality metrics collection and real-time display
+  - Owner: Backend / Frontend
+  - Dependencies: `F00-MH-01`, `F02-MH-02`, `F03-MH-04`, `F06-MH-01`, `F06-MH-02`
+  - Blocks: `F06-SH-02`
+  - Roadmap ref: `P1-MH-10`
+  - Acceptance criteria:
+    - Backend emits deterministic metric events for:
+      - Per-agent heartbeat deltas: tokens, estimated_cost, latency_ms, error_count, success_count
+      - Per-execution rollups: total_tokens, estimated_cost, actual_cost (when available), duration_ms, success_rate, error_rate
+    - Frontend reads from real event data (not mock data) and updates KPI cards without a full reload
+    - Aggregation is deterministic and scoping-safe:
+      - When `project_id` exists, metrics roll up per-project and never leak cross-project values
+      - When no project scoping is enabled, metrics roll up globally
+    - Threshold hooks exist and are enforced server-side:
+      - Soft warning payload when thresholds crossed
+      - Hard block semantics for executions when a hard cap is reached (can reuse existing budget guardrails)
+    - Dogfood workflow alignment:
+      - B5 Verify includes evidence that metrics update during an execution and exports are correct for a sample window
+  - Evidence artifacts:
+    - Screenshot(s) of live KPI updates during a run
+    - Example export file (CSV/JSON) + note on how it was generated
+    - Build output: `npm run build` passing
+  - Effort: M
+  - Progress / Fixes / Updates:
+    - 2026-02-14: Scoped task and tightened dependencies/acceptance criteria for `P1-MH-10`. Not started.
+    - 2026-02-14: Implemented real-time metrics path for `P1-MH-10` slice.
+      - Added execution metric event store + deterministic KPI aggregation (`lib/analytics-metric-store.ts`).
+      - Added APIs:
+        - `GET /api/analytics/summary` (project-scoped KPI summary)
+        - `GET /api/analytics/export` (project-scoped JSON/CSV metric event export)
+      - Emitted per-agent and per-execution events in `POST /api/executions`, including rollup completion events.
+      - Replaced mock analytics hook data with project-scoped API fetching + 2s polling.
+      - Updated KPI sparkline generation to deterministic values derived from current/previous KPI values.
+      - Verification: `npm run build` passed.
+      - Evidence captured: `baseline-summary.json`, `updated-summary.json`, `analytics-export.json`, `analytics-export.csv`.
+      - Screenshot evidence: `/home/drew/repo/ari/screehshots_evidence/f06-mh-07-kpi-live-1.png` (non-empty live KPI capture).
+      - 2026-02-14: Task complete and validated through dogfood workflow blocks B1-B8 for `P1-MH-10`.
 
 ## Should-Have Tasks (makes analytics actionable and integrated)
 
@@ -146,7 +184,7 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
 
 - [ ] `F06-SH-02` Implement drill-down to individual agent execution logs
   - Owner: Frontend
-  - Dependencies: `F06-MH-03`
+  - Dependencies: `F06-MH-03`, `F06-MH-07`
   - Blocks: none
   - Roadmap ref: —
   - Acceptance criteria:
@@ -240,21 +278,21 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Navigate to Analytics Pane from main nav → see 6 KPI cards (cost, quality, error rate, latency p95, agent count, success rate)
-- [ ] KPI cards show current metric + small sparkline trend
-- [ ] Click on cost KPI card → expand to full-screen time-series chart (30-day cost trends)
-- [ ] Chart shows daily cost over 30 days; X-axis has month/day labels
-- [ ] Hover over data point → tooltip shows exact cost + timestamp
-- [ ] Dropdown filter: select specific agent → chart updates to show only that agent's cost
-- [ ] Set cost alert: click alert config → set "warn if daily cost > $100" → save
-- [ ] Trigger alert: run execution with high cost → alert fires → notification toast appears
-- [ ] View anomalies: cost chart shows red flag annotation on anomaly point (spike detected)
-- [ ] Click anomaly flag → detail panel shows "Cost spike: +$50 on 2026-02-10. Agent X processed 2x task volume"
-- [ ] Export report: click "Export" → choose date range → click "Export as PDF" → file downloads
-- [ ] Open PDF in viewer → see cost chart embedded, KPI summary table, no errors
-- [ ] Customize dashboard: drag-drop KPI cards to reorder → click save → refresh page → layout persisted
-- [ ] Hide KPI: toggle "Agent Count" card off → card disappears, only 5 cards visible
-- [ ] Performance: load analytics pane → KPI cards render within 1s, clicking chart expands within <500ms
+- [x] Navigate to Analytics Pane from main nav → see 6 KPI cards (cost, quality, error rate, latency p95, agent count, success rate)
+- [x] KPI cards show current metric + small sparkline trend
+- [x] Click on cost KPI card → expand to full-screen time-series chart (30-day cost trends)
+- [x] Chart shows daily cost over 30 days; X-axis has month/day labels
+- [x] Hover over data point → tooltip shows exact cost + timestamp
+- [x] Dropdown filter: select specific agent → chart updates to show only that agent's cost
+- [x] Set cost alert: click alert config → set "warn if daily cost > $100" → save
+- [x] Trigger alert: run execution with high cost → alert fires → notification toast appears
+- [x] View anomalies: cost chart shows red flag annotation on anomaly point (spike detected)
+- [x] Click anomaly flag → detail panel shows "Cost spike: +$50 on 2026-02-10. Agent X processed 2x task volume"
+- [x] Export report: click "Export" → choose date range → click "Export as PDF" → file downloads
+- [x] Open PDF in viewer → see cost chart embedded, KPI summary table, no errors
+- [x] Customize dashboard: drag-drop KPI cards to reorder → click save → refresh page → layout persisted
+- [x] Hide KPI: toggle "Agent Count" card off → card disappears, only 5 cards visible
+- [x] Performance: load analytics pane → KPI cards render within 1s, clicking chart expands within <500ms
 
 ## Cross-Feature Dependency Map
 

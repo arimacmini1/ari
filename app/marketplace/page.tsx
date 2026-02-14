@@ -5,6 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 interface PluginVersion {
@@ -22,6 +31,9 @@ interface PluginListItem {
   categories: string[];
   status: string;
   latest_version?: PluginVersion;
+  rating_avg?: number | null;
+  rating_count?: number;
+  latest_version_certified?: boolean;
 }
 
 interface Installation {
@@ -38,6 +50,10 @@ export default function MarketplacePage() {
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [busyMap, setBusyMap] = useState<Record<string, string>>({});
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewPlugin, setReviewPlugin] = useState<PluginListItem | null>(null);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewText, setReviewText] = useState('');
   const { toast } = useToast();
 
   const installationMap = useMemo(() => {
@@ -73,6 +89,61 @@ export default function MarketplacePage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const openReview = (plugin: PluginListItem) => {
+    setReviewPlugin(plugin);
+    setReviewRating(5);
+    setReviewText('');
+    setReviewOpen(true);
+  };
+
+  const submitReview = async () => {
+    if (!reviewPlugin) return;
+    const latest = reviewPlugin.latest_version;
+    if (!latest?.id) {
+      toast({
+        title: 'Review unavailable',
+        description: 'This plugin has no published versions yet.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setBusyMap((prev) => ({ ...prev, [reviewPlugin.id]: 'Submitting review' }));
+    try {
+      const response = await fetch(`/api/plugins/${reviewPlugin.id}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          versionId: latest.id,
+          rating: reviewRating,
+          reviewText,
+        }),
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.error || 'Review submit failed');
+      }
+      toast({
+        title: 'Review submitted',
+        description: 'Thanks — your review is pending moderation.',
+      });
+      setReviewOpen(false);
+      await loadData();
+    } catch (error: any) {
+      toast({
+        title: 'Review failed',
+        description: error?.message || 'Unknown error',
+        variant: 'destructive',
+      });
+    } finally {
+      setBusyMap((prev) => {
+        const next = { ...prev };
+        delete next[reviewPlugin.id];
+        return next;
+      });
+    }
+  };
 
   const handleInstall = async (pluginId: string, versionId?: string) => {
     setBusyMap((prev) => ({ ...prev, [pluginId]: versionId ? 'Updating' : 'Installing' }));
@@ -172,6 +243,16 @@ export default function MarketplacePage() {
         <div className="mb-8">
           <h1 className="text-3xl font-semibold">Plugin Marketplace</h1>
           <p className="text-slate-400">Discover, install, and manage AEI plugins.</p>
+          <div className="mt-2 text-sm text-slate-400">
+            Moderation queue:{' '}
+            <a className="underline hover:text-slate-200" href="/marketplace/moderation">
+              /marketplace/moderation
+            </a>
+            {' '}• Certification queue:{' '}
+            <a className="underline hover:text-slate-200" href="/marketplace/certification">
+              /marketplace/certification
+            </a>
+          </div>
         </div>
 
         <Card className="bg-slate-900/60 border-slate-800 mb-6">
@@ -228,6 +309,11 @@ export default function MarketplacePage() {
                               Deprecated
                             </Badge>
                           ) : null}
+                          {plugin.latest_version_certified ? (
+                            <Badge className="bg-emerald-600/20 text-emerald-200 border border-emerald-500/40">
+                              Certified
+                            </Badge>
+                          ) : null}
                           {isDisabled ? (
                             <Badge className="bg-slate-700 text-slate-200 border border-slate-600">
                               Disabled
@@ -240,6 +326,13 @@ export default function MarketplacePage() {
                           {latest?.version ? <span>Version {latest.version}</span> : null}
                           {plugin.categories?.length ? (
                             <span>Categories: {plugin.categories.join(', ')}</span>
+                          ) : null}
+                          {typeof plugin.rating_count === 'number' ? (
+                            <span>
+                              Rating:{' '}
+                              {plugin.rating_avg != null ? plugin.rating_avg.toFixed(1) : '—'} (
+                              {plugin.rating_count})
+                            </span>
                           ) : null}
                         </div>
                       </div>
@@ -272,6 +365,13 @@ export default function MarketplacePage() {
                               {busyLabel ?? (isDisabled ? 'Enable' : 'Disable')}
                             </Button>
                             <Button
+                              variant="outline"
+                              onClick={() => openReview(plugin)}
+                              disabled={isBusy}
+                            >
+                              {busyLabel ?? 'Review'}
+                            </Button>
+                            <Button
                               variant="destructive"
                               onClick={() => handleUninstall(plugin.id)}
                               disabled={isBusy}
@@ -289,6 +389,58 @@ export default function MarketplacePage() {
           </div>
         )}
       </div>
+
+      <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
+        <DialogContent className="bg-slate-950 border-slate-800 text-slate-50">
+          <DialogHeader>
+            <DialogTitle>Leave a review</DialogTitle>
+            <DialogDescription>
+              Reviews are moderated before appearing publicly.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <div className="text-sm text-slate-300">
+              Plugin: <span className="font-medium">{reviewPlugin?.name ?? '—'}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-sm text-slate-300" htmlFor="rating">
+                Rating
+              </label>
+              <Input
+                id="rating"
+                type="number"
+                min={1}
+                max={5}
+                value={reviewRating}
+                onChange={(e) => setReviewRating(Number(e.target.value))}
+                className="w-24 bg-slate-950 border-slate-800"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-slate-300" htmlFor="reviewText">
+                Review
+              </label>
+              <Textarea
+                id="reviewText"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+                className="mt-1 bg-slate-950 border-slate-800"
+                placeholder="What did you like or dislike?"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReviewOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700" onClick={submitReview}>
+              Submit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

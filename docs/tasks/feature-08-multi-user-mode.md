@@ -8,7 +8,7 @@ A real user can invite another teammate into the same Prompt Canvas, see their l
 
 ## Must-Have Tasks (vertical slice - real-time co-edit + branching)
 
-- [ ] `F08-MH-01` Implement real-time co-editing sync with presence and cursors
+- [x] `F08-MH-01` Implement real-time co-editing sync with presence and cursors
   - Owner: Frontend / Backend
   - Dependencies: `F01-MH-06`, `F00-MH-02`, `F00-MH-07`, `F07-MH-03`
   - Blocks: `F08-CH-01`, `F08-CH-02`, `F08-MH-02`, `F08-SH-01`, `F08-SH-03`
@@ -27,7 +27,7 @@ A real user can invite another teammate into the same Prompt Canvas, see their l
   - Progress / Fixes / Updates:
     - 2026-02-10: Started implementation. Added collaboration ops diff/apply engine and BroadcastChannel-based presence/cursor sync. Wired Prompt Canvas to broadcast ops/cursors and render collaborator presence/cursors (multi-tab support). Pending: conflict UI + branch/merge.
 
-- [ ] `F08-MH-02` Add conflict detection and resolution UI for simultaneous edits
+- [x] `F08-MH-02` Add conflict detection and resolution UI for simultaneous edits
   - Owner: Frontend
   - Dependencies: `F08-MH-01`, `F01-MH-03`, `F07-MH-01`, `F07-MH-03`
   - Blocks: `F08-MH-03`
@@ -43,7 +43,7 @@ A real user can invite another teammate into the same Prompt Canvas, see their l
   - Progress / Fixes / Updates:
     - 2026-02-10: Refined conflict UX. Added multi-conflict banner and merge conflict resolution dialog with per-item selections.
 
-- [ ] `F08-MH-03` Implement branching and merging for prompt workflows (Git-like)
+- [x] `F08-MH-03` Implement branching and merging for prompt workflows (Git-like)
   - Owner: Backend / Frontend
   - Dependencies: `F01-MH-03`, `F07-MH-01`, `F07-MH-03`, `F08-MH-02`
   - Blocks: `F08-MH-04`, `F08-SH-02`
@@ -175,12 +175,12 @@ A real user can invite another teammate into the same Prompt Canvas, see their l
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Open same canvas in two browsers; see both cursors and edits live
-- [ ] Trigger a conflict (edit same node label) and resolve it successfully
-- [ ] Create a branch, make changes, and merge back to main
-- [ ] Merge conflict appears and is resolved via merge UI
-- [ ] Approve merge as Admin; reject merge as Viewer
-- [ ] Activity feed shows last 10 collaboration events
+- [x] Open same canvas in two browsers; see both cursors and edits live
+- [x] Trigger a conflict (edit same node label) and resolve it successfully
+- [x] Create a branch, make changes, and merge back to main
+- [x] Merge conflict appears and is resolved via merge UI
+- [x] Approve merge as Admin; reject merge as Viewer
+- [x] Activity feed shows last 10 collaboration events
 
 ## Cross-Feature Dependency Map
 
@@ -217,4 +217,3 @@ updated to include references to tasks in THIS file.
 | feature-01-prompt-canvas.md | `F01-MH-06` | `F08-MH-01` |
 | feature-07-security-compliance.md | `F07-MH-01` | `F08-MH-03`, `F08-MH-04`, `F08-SH-03` |
 | feature-07-security-compliance.md | `F07-MH-03` | `F08-MH-01`, `F08-MH-03`, `F08-MH-04`, `F08-SH-01` |
-

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, RefreshCw } from 'lucide-react';
+import { Eye, ExternalLink, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { TraceViewerModal } from '@/components/aei/trace-viewer-modal';
 
@@ -195,6 +195,12 @@ export default function ExecutionsPage() {
                       >
                         <Eye className="w-3 h-3 mr-1" />
                         View Details
+                      </Button>
+                    </Link>
+                    <Link href={`/traces/${execution.execution_id}`} target="_blank">
+                      <Button size="sm" variant="outline" className="text-xs">
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Open Trace
                       </Button>
                     </Link>
                     <Button

@@ -5,6 +5,11 @@ export interface CanvasVersion {
   canvas_id: string
   timestamp: string
   user_id: string
+  actor_name: string
+  save_source: "manual" | "autosave" | "rollback"
+  collaborator_count: number
+  collaborator_names: string[]
+  rollback_from_version_id: string | null
   canvas_json: CanvasState
   parent_version_id: string | null
   diff_summary: {
@@ -68,8 +73,19 @@ export function computeDiffSummary(
 
 export class CanvasVersionStore {
   private versions: Map<string, CanvasVersion[]> = new Map()
+  private static readonly MAX_VERSIONS = 250
 
-  save(canvasId: string, state: CanvasState, userId?: string): CanvasVersion {
+  save(
+    canvasId: string,
+    state: CanvasState,
+    options?: {
+      userId?: string
+      actorName?: string
+      saveSource?: "manual" | "autosave" | "rollback"
+      collaboratorNames?: string[]
+      rollbackFromVersionId?: string | null
+    }
+  ): CanvasVersion {
     const existing = this.versions.get(canvasId) ?? []
     const lastVersion = existing.length > 0 ? existing[existing.length - 1] : null
 
@@ -80,13 +96,21 @@ export class CanvasVersionStore {
       version_id: `v-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
       canvas_id: canvasId,
       timestamp: new Date().toISOString(),
-      user_id: userId ?? 'anonymous',
+      user_id: options?.userId ?? "anonymous",
+      actor_name: options?.actorName ?? "anonymous",
+      save_source: options?.saveSource ?? "manual",
+      collaborator_count: options?.collaboratorNames?.length ?? 0,
+      collaborator_names: options?.collaboratorNames ?? [],
+      rollback_from_version_id: options?.rollbackFromVersionId ?? null,
       canvas_json: structuredClone(state),
       parent_version_id: lastVersion?.version_id ?? null,
       diff_summary: computeDiffSummary(prevState, state),
     }
 
     existing.push(version)
+    if (existing.length > CanvasVersionStore.MAX_VERSIONS) {
+      existing.splice(0, existing.length - CanvasVersionStore.MAX_VERSIONS)
+    }
     this.versions.set(canvasId, existing)
     return version
   }

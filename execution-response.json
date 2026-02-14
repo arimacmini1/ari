@@ -1,0 +1,12 @@
+{
+    "execution_id": "exec-1771048092826-q07opo0ok",
+    "project_id": "project-9c87157c",
+    "status": "dispatched",
+    "assigned_agents": [
+        "agent-a",
+        "agent-b"
+    ],
+    "task_count": 2,
+    "budget_warning": null,
+    "message": "Execution dispatched to 2 agents"
+}

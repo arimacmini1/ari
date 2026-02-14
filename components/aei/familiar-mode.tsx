@@ -2,14 +2,26 @@
 
 import { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { ConsoleChat, type ConsoleChatHandle, type DraftStatus } from "@/components/aei/console-chat"
+import {
+  ConsoleChat,
+  type ConsoleChatHandle,
+  type DraftStatus,
+  type ChatMessage,
+} from "@/components/aei/console-chat"
 import { DraftCanvasPreview } from "@/components/aei/draft-canvas-preview"
 import { Sparkles, ArrowRight, RefreshCcw, Undo2, Trash2 } from "lucide-react"
 import type { CanvasState } from "@/lib/canvas-state"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const DRAFT_STATE_KEY = "aei.familiar.draft"
 const DRAFT_HISTORY_KEY = "aei.familiar.draft.history"
 const DRAFT_META_KEY = "aei.familiar.draft.meta"
+const CHAT_HISTORY_KEY = "aei.familiar.chats"
 
 interface DraftMeta {
   source: string
@@ -18,12 +30,23 @@ interface DraftMeta {
   opsCount: number
 }
 
+interface ChatArchive {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  messages: ChatMessage[]
+  draftState: CanvasState | null
+}
+
 interface FamiliarModeProps {
   showGuidance: boolean
   onDismissGuidance: () => void
   onEnterFull: () => void
   lastExpansionSource?: string | null
   lastExpansionModel?: string | null
+  isExpanding?: boolean
+  expansionNotice?: string | null
 }
 
 export function FamiliarMode({
@@ -32,6 +55,8 @@ export function FamiliarMode({
   onEnterFull,
   lastExpansionSource,
   lastExpansionModel,
+  isExpanding = false,
+  expansionNotice,
 }: FamiliarModeProps) {
   const chatRef = useRef<ConsoleChatHandle | null>(null)
   const draftStateRef = useRef<CanvasState | null>(null)
@@ -39,6 +64,7 @@ export function FamiliarMode({
   const [draftHistory, setDraftHistory] = useState<CanvasState[]>([])
   const [draftMeta, setDraftMeta] = useState<DraftMeta | null>(null)
   const [draftStatus, setDraftStatus] = useState<DraftStatus>({ state: "idle" })
+  const [chatArchives, setChatArchives] = useState<ChatArchive[]>([])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -70,6 +96,15 @@ export function FamiliarMode({
         }
       } catch {}
     }
+    const storedArchives = localStorage.getItem(CHAT_HISTORY_KEY)
+    if (storedArchives) {
+      try {
+        const parsed = JSON.parse(storedArchives) as ChatArchive[]
+        if (Array.isArray(parsed)) {
+          setChatArchives(parsed)
+        }
+      } catch {}
+    }
   }, [])
 
   useEffect(() => {
@@ -82,7 +117,8 @@ export function FamiliarMode({
     if (draftMeta) {
       localStorage.setItem(DRAFT_META_KEY, JSON.stringify(draftMeta))
     }
-  }, [draftHistory, draftMeta, draftState])
+    localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(chatArchives))
+  }, [chatArchives, draftHistory, draftMeta, draftState])
 
   const handleDraftUpdate = (nextState: CanvasState, meta: DraftMeta) => {
     const current = draftStateRef.current
@@ -101,9 +137,7 @@ export function FamiliarMode({
       if (last) {
         setDraftState(last)
         setDraftMeta((current) =>
-          current
-            ? { ...current, source: "undo", updatedAt: new Date().toISOString() }
-            : null
+          current ? { ...current, source: "undo", updatedAt: new Date().toISOString() } : null
         )
       }
       return next
@@ -120,9 +154,7 @@ export function FamiliarMode({
     chatRef.current?.clearChat()
   }
 
-  const handleResetDraft = () => {
-    const confirmed = window.confirm("Reset draft canvas preview? This does not delete your chat.")
-    if (!confirmed) return
+  const clearDraftState = () => {
     setDraftState(null)
     setDraftHistory([])
     setDraftMeta(null)
@@ -134,10 +166,58 @@ export function FamiliarMode({
     }
   }
 
+  const handleResetDraft = () => {
+    const confirmed = window.confirm("Reset draft canvas preview? This does not delete your chat.")
+    if (!confirmed) return
+    clearDraftState()
+  }
+
+  const buildArchiveTitle = (messages: ChatMessage[]) => {
+    const firstUser = messages.find((message) => message.role === "user")?.content?.trim()
+    if (!firstUser) return "Untitled chat"
+    return firstUser.split(/\s+/).slice(0, 6).join(" ")
+  }
+
+  const archiveCurrentSession = () => {
+    const messages = chatRef.current?.getMessages() ?? []
+    if (messages.length === 0) return
+    const now = new Date().toISOString()
+    const archive: ChatArchive = {
+      id: `chat-${Date.now()}`,
+      title: buildArchiveTitle(messages),
+      createdAt: now,
+      updatedAt: now,
+      messages,
+      draftState,
+    }
+    setChatArchives((prev) => [archive, ...prev].slice(0, 20))
+  }
+
+  const handleNewChat = () => {
+    archiveCurrentSession()
+    chatRef.current?.clearChat()
+    clearDraftState()
+  }
+
+  const restoreChat = (archiveId: string) => {
+    const archive = chatArchives.find((entry) => entry.id === archiveId)
+    if (!archive) return
+    chatRef.current?.loadChat(archive.messages)
+    setDraftState(archive.draftState)
+    draftStateRef.current = archive.draftState
+    setDraftHistory([])
+    setDraftMeta({
+      source: "restore",
+      model: "history",
+      updatedAt: new Date().toISOString(),
+      opsCount: 0,
+    })
+  }
+
   const draftUpdatedLabel = draftMeta?.updatedAt
     ? new Date(draftMeta.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null
-  const draftModelLabel = draftMeta?.model ? ` · ${draftMeta.model}` : ""
+  const draftModelLabel = draftMeta?.model ? ` - ${draftMeta.model}` : ""
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -158,7 +238,7 @@ export function FamiliarMode({
                 Last expansion:{" "}
                 <span className="font-semibold text-foreground">
                   {lastExpansionSource}
-                  {lastExpansionModel ? ` · ${lastExpansionModel}` : ""}
+                  {lastExpansionModel ? ` - ${lastExpansionModel}` : ""}
                 </span>
               </span>
             ) : null}
@@ -166,27 +246,52 @@ export function FamiliarMode({
               Clear Chat
               <Trash2 className="w-4 h-4" />
             </Button>
-            <Button onClick={onEnterFull} className="gap-2">
-              Open Full Workspace
+            <Button variant="outline" onClick={handleNewChat}>
+              New Chat
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">History</Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                {chatArchives.length === 0 ? (
+                  <DropdownMenuItem disabled>No archived chats</DropdownMenuItem>
+                ) : (
+                  chatArchives.map((archive) => (
+                    <DropdownMenuItem key={archive.id} onSelect={() => restoreChat(archive.id)}>
+                      {archive.title}
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button onClick={onEnterFull} className="gap-2" disabled={isExpanding}>
+              {isExpanding ? "Expanding..." : "Open Full Workspace"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
         </header>
 
+        {expansionNotice ? (
+          <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            {expansionNotice}
+          </div>
+        ) : null}
+
         {showGuidance ? (
           <div className="rounded-lg border border-border bg-secondary/30 p-4 text-sm text-muted-foreground">
             <div className="font-semibold text-foreground">First time here?</div>
             <p className="mt-1">
-              Start by describing your project in chat. When you&apos;re ready,
-              switch to the full workspace to see the Prompt Canvas, Agents, and
-              Orchestrator in action. Your chat context stays with you.
+              Start by describing your project in chat. When you&apos;re ready, switch to the full
+              workspace to see the Prompt Canvas, Agents, and Orchestrator in action. Your chat
+              context stays with you.
             </p>
             <div className="mt-3 flex items-center gap-2">
               <Button variant="secondary" onClick={onDismissGuidance}>
                 Got it
               </Button>
-              <Button variant="outline" onClick={onEnterFull}>
-                Show me the full workspace
+              <Button variant="outline" onClick={onEnterFull} disabled={isExpanding}>
+                {isExpanding ? "Expanding..." : "Show me the full workspace"}
               </Button>
             </div>
           </div>
@@ -214,7 +319,7 @@ export function FamiliarMode({
                   {draftUpdatedLabel
                     ? `Updated ${draftUpdatedLabel} via ${draftMeta?.source ?? "llm"}${draftModelLabel} (${draftMeta?.opsCount ?? 0} ops)`
                     : "Updates after 3 user turns"}
-                  {draftStatus.state === "loading" ? " · Updating..." : null}
+                  {draftStatus.state === "loading" ? " - Updating..." : null}
                 </div>
               </div>
               <div className="flex items-center gap-2">

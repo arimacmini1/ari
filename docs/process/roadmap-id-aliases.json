@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "updated_at": "2026-02-14",
+  "policy": {
+    "mode": "manual_only",
+    "allow_inference": false,
+    "include_tiers": ["MH"],
+    "unresolved_behavior": "warn",
+    "require_reason": true,
+    "require_updated_at": true,
+    "require_to_in_roadmap": true
+  },
+  "aliases": [],
+  "exceptions": [
+    {
+      "pid": "P1-MH-06",
+      "note": "Historical roadmap ID referenced by legacy feature files; keep for traceability and do not alias."
+    },
+    {
+      "pid": "P2-MH-05",
+      "note": "Historical roadmap ID referenced by legacy feature files; keep for traceability and do not alias."
+    },
+    {
+      "pid": "P2-MH-06",
+      "note": "Historical roadmap ID referenced by legacy feature files; keep for traceability and do not alias."
+    },
+    {
+      "pid": "P2-MH-07",
+      "note": "Historical roadmap ID referenced by legacy feature files; keep for traceability and do not alias."
+    },
+    {
+      "pid": "P3-MH-04",
+      "note": "Historical roadmap ID referenced by legacy feature files; keep for traceability and do not alias."
+    }
+  ]
+}

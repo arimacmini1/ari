@@ -1,8 +1,8 @@
-# AI Engineering Interface (AEI) – Master Product Requirements Document (PRD)
+# AI Engineering Interface (AEI / ARI) – Master Product Requirements Document (PRD)
 
-**Version:** 2.0 – Actionable & Prioritized
-**Date:** February 2026
-**Product Name:** AI Engineering Interface (AEI)
+**Version:** 2.2 – Consolidated & Updated (v2.0 base + v2.1 Replit bridge & enhancements)  
+**Date:** February 13, 2026  
+**Product Name:** AI Engineering Interface (AEI / ARI)  
 **Status:** Active Development
 
 ---
@@ -11,7 +11,7 @@
 
 ### 1.1 Purpose
 
-This PRD outlines the requirements for a new user interface (UI) designed for AI engineering in a post-IDE world where AI agents autonomously generate, test, and deploy code. Traditional Integrated Development Environments (IDEs) like Visual Studio Code or IntelliJ are rendered obsolete as code writing shifts to AI agents. Instead, developers (now "AI engineers") will focus on directing, monitoring, and optimizing AI-driven workflows via this UI, the **AI Engineering Interface (AEI)**.
+This PRD outlines the requirements for a new user interface (UI) designed for AI engineering in a post-IDE world where AI agents autonomously generate, test, and deploy code. Traditional Integrated Development Environments (IDEs) like Visual Studio Code or IntelliJ are rendered obsolete as code writing shifts to AI agents. Instead, developers (now "AI engineers") will focus on directing, monitoring, and optimizing AI-driven workflows via this UI, the **AI Engineering Interface (AEI / ARI)**.
 
 The AEI serves as a mission control dashboard for AI agents and higher-level Orchestrator AIs, which coordinate multiple agents. It emphasizes high-level abstraction, real-time collaboration between human and AI, and intuitive visualization of complex AI behaviors—reimagining legacy IDE features as AI-centric tools.
 
@@ -23,6 +23,7 @@ The AEI serves as a mission control dashboard for AI agents and higher-level Orc
 - Integration with AI models and agent APIs
 - Multi-user collaboration and extensibility
 - Security, audit, and compliance features
+- Replit continuity & migration bridge (added in v2.1)
 
 **Out of Scope**
 - Backend AI model training or fine-tuning
@@ -40,7 +41,9 @@ The AEI serves as a mission control dashboard for AI agents and higher-level Orc
 ### 1.4 Version History
 
 - **Version 1.0:** Initial draft with comprehensive conceptual framework (strategic)
-- **Version 2.0:** Action-oriented prioritization with phase-based roadmap (current)
+- **Version 2.0:** Action-oriented prioritization with phase-based roadmap (February 8, 2026)
+- **Version 2.1:** Added Replit continuity & migration bridge strategy (sections 2.1 & 2.2), minor enhancements to Prompt Canvas, MVP success criteria, risk mitigation, timeline, next steps
+- **Version 2.2 (Current):** Consolidated merge of v2.0 base + v2.1 enhancements; cleaned duplicates, updated for clarity
 - **Target Release:** MVP by Q3 2026, full v1.0 by Q4 2026
 
 ---
@@ -51,26 +54,62 @@ In a world where AI agents write, test, and deploy all code, developers transiti
 
 ### Core Frictions to Solve
 
-1. **No native way to visually compose, version, and iterate high-level instructions to AI agents**
+1. No native way to visually compose, version, and iterate high-level instructions to AI agents
    - Users are stuck writing prompts in text boxes or through chat interfaces
    - No structured, reusable prompt workflows
    - Version control doesn't track prompt evolution
 
-2. **No transparency into how agent swarms reason, collaborate, fail, or scale**
+2. No transparency into how agent swarms reason, collaborate, fail, or scale
    - Black-box AI outputs without insight into decision-making
    - Difficult to debug agent failures or unexpected behavior
    - No visibility into agent-to-agent interactions
 
-3. **No centralized command center for managing Orchestrator AIs**
+3. No centralized command center for managing Orchestrator AIs
    - Orchestrator AIs (the "conductors") lack supervisory tools
    - Managing dozens/hundreds of specialized agents is chaotic
    - No visual representation of swarm health or coordination
 
-4. **Debugging happens at the level of agent behavior and decisions—not source code lines**
+4. Debugging happens at the level of agent behavior and decisions—not source code lines
    - Traditional breakpoint debugging is irrelevant
    - Need to inspect reasoning paths, confidence scores, alternative outputs
 
 **The AEI reimagines the IDE as an AI mission control dashboard.**
+
+### 2.1 Positioning & Market Continuity: Evolving Beyond Tools Like Replit
+
+**AEI is positioned as the natural successor to leading 2026 AI-first platforms like Replit**, which have popularized natural-language app creation, zero-setup browser environments, and instant full-stack deploys.
+
+Replit Agent 3 (as of February 2026) excels at autonomous full-stack building from prompts: it handles code generation, self-testing/fixing loops, database setup, auth, one-click deploys, real-time previews, and even basic automations/connectors — often in minutes with extended run times and reflection-based improvements.
+
+AEI preserves this accessibility and speed as the default entry experience while solving Replit's key emerging limitations:
+- Single-agent opacity and context loss on complex tasks → replaced by visual multi-agent orchestration and full reasoning traces
+- Ad-hoc prompting without structured reuse/versioning → replaced by versioned Prompt Canvas and reusable coordination rules
+- Limited swarm coordination and observability at scale → replaced by Orchestrator Hub, Agent Dashboard, and Analytics Pane for 10–1,000 agents
+- Reactive debugging → proactive simulation, heatmaps, and rewind/fork capabilities
+
+**Result:** Replit users get the familiar "describe → build → preview → deploy" flow instantly, then unlock AEI's superior efficiency, governance, and transparency as needs grow.
+
+### 2.2 Replit Continuity & Migration Bridge
+
+**Adopted & Enhanced Replit Strengths in AEI**
+
+| Replit Strength (Feb 2026)                  | AEI Adoption / Equivalent                              | Improvement in AEI                                                                 |
+|---------------------------------------------|--------------------------------------------------------|------------------------------------------------------------------------------------|
+| Zero-setup browser IDE + instant start      | Fully web-based modular dashboard; new project in seconds | Same instant onboarding + progressive disclosure (novice chat-like start → full canvas/swarm) |
+| Natural language → autonomous full-stack app | Prompt Canvas with chat fallback + Orchestrator decomposition | Parallel specialized agents; structured visual flows for better reuse & scalability |
+| Self-testing, fixing, reflection loops      | Output Simulator + AI Trace Viewer                     | Reasoning traces, bottleneck heatmaps, rewind/fork decisions (beyond code fixes)   |
+| Real-time preview & one-click deploy        | Output Simulator + deployment triggers via Orchestrator | Cheaper simulations, pre-deploy issue detection (bias/security/perf), cost gates   |
+| Real-time collaboration                     | Multi-User Mode (Phase 3) + shared canvases            | Workflow branching/merging at prompt/agent level, not just code                    |
+| Built-in infra (DB, auth, hosting)          | Orchestrator auto-provisions + integrations            | Adds audit logs, compliance pauses, and rollback before prod                       |
+| Beginner/educational onboarding             | Novice mode + guided tours (tertiary persona)          | "From Prompt to Swarm" tutorials mirroring Replit workflows then scaling up        |
+
+**Migration Tactics (to implement in MVP/Phase 1):**
+- One-click import: Convert existing Replit repls/projects into AEI Prompt Canvas flows (parse description → generate initial canvas graph)
+- "Replit Familiar Mode": Optional toggle starts with a simple chat prompt box (like Replit Agent) that auto-expands to visual canvas + dashboard as complexity increases
+- Onboarding tutorials: "Build the same Todo/MVP app you would in Replit — then optimize it with swarms and traces"
+- Optional "Code Peek" panel: Toggle to view generated artifacts (satisfies users who want to inspect code without making it central)
+
+These ensure low-friction adoption for Replit's core audience (prototypers, solos, small teams, educators) while guiding them toward AEI's swarm-scale advantages.
 
 ---
 
@@ -119,7 +158,8 @@ Managing 5 concurrent projects, each with 20+ agents: monitors team dashboards, 
 
 **Demographics**
 - Age: 18–30 years old
-- Background: Students or hobbyists entering the field
+- Background: Students or hobbyists entering the field  
+  **Note:** Many come from Replit-style tools; onboarding starts with familiar prompt → preview flow before introducing orchestration.
 
 **Goals**
 - Learn AI engineering through guided, intuitive interfaces
@@ -145,6 +185,7 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 
 **Key Capabilities**
 - Parse entire canvas (text, blocks, connections, voice transcript)
+- Support simple chat fallback for Replit-like entry (auto-converts to visual flow)
 - Decompose high-level goals into atomic sub-tasks
 - Assign sub-tasks to agent types based on semantics and context
 - Generate code/artifacts for each assigned task
@@ -162,8 +203,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Route subtasks to optimal agent types
 - Generate previews without full execution
 - Track canvas lineage for audit/revert
-
----
 
 #### 4.1.2 Agent Dashboard
 **Description:** Hierarchical real-time view of all active agents & Orchestrators with status, metrics, and relationships.
@@ -192,8 +231,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Maintain live agent graph topology
 - Stream telemetry to dashboard with backpressure handling
 
----
-
 #### 4.1.3 Orchestrator Hub
 **Description:** Control panel for defining and supervising Orchestrator AIs (the "conductors" that coordinate agent swarms).
 
@@ -221,8 +258,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Dispatch tasks with priority/dependency awareness
 - Monitor swarm metrics and trigger scaling decisions
 - Detect conflicts and suggest resolutions
-
----
 
 ### Phase 2 – High Urgency (Transparency & Trust – Ship Soon After MVP)
 
@@ -253,8 +288,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Compute bottleneck heatmaps
 - Export traces in standard formats (JSON, GraphML)
 
----
-
 #### 4.2.2 Output Simulator
 **Description:** Fast, cheap simulation of AI-generated artifacts (UI mockups, API responses, DB schemas) before full execution.
 
@@ -279,8 +312,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Run issue detection pipelines (security, bias, perf)
 - Track and compare sim predictions vs. real outcomes
 - Suggest optimizations based on simulation results
-
----
 
 #### 4.2.3 Analytics Pane
 **Description:** Real-time & historical metrics dashboard for AI performance, cost, quality, latency, and robustness.
@@ -315,8 +346,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Detect anomalies and trigger alerts
 - Generate reports on demand
 
----
-
 #### 4.2.4 Security & Compliance Layer
 **Description:** Always-on audit, role-based access control (RBAC), and ethical AI checks.
 
@@ -344,8 +373,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Route high-risk decisions to approval queue
 - Generate audit reports
 
----
-
 ### Phase 3 – Medium Urgency (Scale & Polish)
 
 #### 4.3.1 Multi-User Mode
@@ -357,8 +384,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Merge strategies for conflicting agent outputs
 - Diff viewer for versions/branches
 
----
-
 #### 4.3.2 Plugin Marketplace
 **Concept:** Extend with third-party AI models, specialized agents, custom compliance scanners.
 
@@ -366,8 +391,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 - Plugin registry with discovery & versioning
 - Sandboxed plugin execution
 - Revenue sharing for plugin creators
-
----
 
 #### 4.3.3 Accessibility & Adaptive UI
 **Concept:** Voice-first control, novice mode, high-contrast / large-text options.
@@ -381,29 +404,22 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 
 ## 5. Core Design Principles (Non-Negotiable)
 
-1. **No persistent code editor window** — Code is an artifact, not the primary interface. Users manipulate prompts, not text.
-
-2. **Visual-first: graphs, flows, simulations > text** — Leverage human visual cortex for agent swarms and decision flows.
-
-3. **Proactive intelligence** — Orchestrators & dashboard suggest next best actions; don't wait for user input.
-
-4. **Trust through transparency** — Every important decision should be inspectable (why did agent X choose Y?).
-
-5. **Swarm-native** — Designed for 10–1,000 agents, not 1 human + 1 crutch IDE.
-
-6. **Progressive disclosure** — Overwhelming novices with 20 panels defeats the purpose. Adaptive UI reveals complexity only when needed.
+1. No persistent code editor window — Code is an artifact, not the primary interface. Users manipulate prompts, not text.
+2. Visual-first: graphs, flows, simulations > text — Leverage human visual cortex for agent swarms and decision flows.
+3. Proactive intelligence — Orchestrators & dashboard suggest next best actions; don't wait for user input.
+4. Trust through transparency — Every important decision should be inspectable (why did agent X choose Y?).
+5. Swarm-native — Designed for 10–1,000 agents, not 1 human + 1 crutch IDE.
+6. Progressive disclosure — Overwhelming novices with 20 panels defeats the purpose. Adaptive UI reveals complexity only when needed.
 
 ---
 
 ## 6. MVP Success Criteria (Must Hit to Move to Phase 2)
 
-✅ A user can describe a small full-stack app in natural language + canvas → agents produce working prototype in <15 min wall-clock time
-
-✅ User can watch live agent swarm coordination & intervene meaningfully in <3 clicks
-
-✅ Basic cost & quality metrics are visible without leaving main screen
-
-✅ Zero critical security/compliance gaps in audit trail
+- A user can describe a small full-stack app in natural language + canvas → agents produce working prototype in <15 min wall-clock time
+- User can watch live agent swarm coordination & intervene meaningfully in <3 clicks
+- Basic cost & quality metrics are visible without leaving main screen
+- Zero critical security/compliance gaps in audit trail
+- Replit-experienced user can complete a familiar prototype workflow in <15 min with equivalent or better results
 
 ---
 
@@ -411,99 +427,103 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 
 ### 7.1 Platform & Stack
 
-- **Frontend:** React 19+ with TypeScript; modular, plugin-ready architecture
-- **Backend:** Node.js / Python; GraphQL API recommended for real-time subscriptions
-- **Real-time Communication:** WebSockets for dashboard updates, agent heartbeats
-- **Storage:** Postgres for audit logs, S3 for artifacts, Redis for caching
+- Frontend: React 19+ with TypeScript; modular, plugin-ready architecture
+- Backend: Node.js / Python; GraphQL API recommended for real-time subscriptions
+- Real-time Communication: WebSockets for dashboard updates, agent heartbeats
+- Storage: Postgres for audit logs, S3 for artifacts, Redis for caching
 
 ### 7.2 Performance Targets
 
-- **Dashboard Latency:** <500ms for 100+ agents
-- **Trace Rendering:** <2s for 1,000+ decision nodes
-- **Simulation:** <5s per artifact
-- **Metric Updates:** Real-time with <1s latency
-- **Concurrent Users:** 50+ per deployment
+- Dashboard Latency: <500ms for 100+ agents
+- Trace Rendering: <2s for 1,000+ decision nodes
+- Simulation: <5s per artifact
+- Metric Updates: Real-time with <1s latency
+- Concurrent Users: 50+ per deployment
 
 ### 7.3 Integration Points
 
-- **LLM APIs:** OpenAI, Anthropic, local models (LLaMA, Mistral)
-- **Agent SDKs:** Standardized heartbeat/telemetry protocol
-- **CI/CD:** Webhooks for deployment triggers and status updates
-- **Monitoring:** Prometheus, Datadog, CloudWatch integration
+- LLM APIs: OpenAI, Anthropic, local models (LLaMA, Mistral)
+- Agent SDKs: Standardized heartbeat/telemetry protocol
+- CI/CD: Webhooks for deployment triggers and status updates
+- Monitoring: Prometheus, Datadog, CloudWatch integration
 
 ### 7.4 Security & Compliance
 
-- **Authentication:** OAuth2 + JWT; SSO support (SAML)
-- **Authorization:** RBAC with fine-grained permissions
-- **Encryption:** TLS for transport, AES-256 for sensitive data at rest
-- **Audit Logging:** Immutable, tamper-evident logs with cryptographic verification
-- **Compliance:** SOC2, GDPR, HIPAA-ready (data retention, consent mechanisms)
+- Authentication: OAuth2 + JWT; SSO support (SAML)
+- Authorization: RBAC with fine-grained permissions
+- Encryption: TLS for transport, AES-256 for sensitive data at rest
+- Audit Logging: Immutable, tamper-evident logs with cryptographic verification
+- Compliance: SOC2, GDPR, HIPAA-ready (data retention, consent mechanisms)
 
 ---
 
 ## 8. Success Metrics & KPIs
 
 ### 8.1 User Adoption
-
-- **NPS:** ≥80 in beta; target ≥70 in GA
-- **MAU (Monthly Active Users):** 5,000+ by end of year
-- **Churn Rate:** <5% monthly
+- NPS: ≥80 in beta; target ≥70 in GA
+- MAU (Monthly Active Users): 5,000+ by end of year
+- Churn Rate: <5% monthly
 
 ### 8.2 Efficiency
-
-- **Project Completion Time:** ≥50% reduction vs. legacy IDEs
-- **Agent Productivity:** Avg lines-of-code-per-hour generated
-- **Cost Efficiency:** $ spent / value delivered (NPS correlation)
+- Project Completion Time: ≥50% reduction vs. legacy IDEs
+- Agent Productivity: Avg lines-of-code-per-hour generated
+- Cost Efficiency: $ spent / value delivered (NPS correlation)
 
 ### 8.3 Reliability
-
-- **AI Workflow Failure Rate:** <5% due to oversight gaps
-- **Swarm Coordination Success:** 98%+ of multi-agent tasks complete without manual override
-- **Dashboard Uptime:** 99.95%
+- AI Workflow Failure Rate: <5% due to oversight gaps
+- Swarm Coordination Success: 98%+ of multi-agent tasks complete without manual override
+- Dashboard Uptime: 99.95%
 
 ### 8.4 Quality
-
-- **Generated Code Quality:** Automated tests pass, security scans pass
-- **User Satisfaction:** Task completion rate, error rate reduction over time
+- Generated Code Quality: Automated tests pass, security scans pass
+- User Satisfaction: Task completion rate, error rate reduction over time
 
 ---
 
 ## 9. Risk Mitigation
 
 ### Risk: AI Agent Unreliability
-- **Impact:** Users lose trust in automation
-- **Mitigation:**
+- Impact: Users lose trust in automation
+- Mitigation:
   - Implement manual override paths for all high-risk actions
   - Confidence thresholds; only auto-execute above 90% confidence
   - Detailed audit logs for every decision
 
 ### Risk: Resistance to No-Code Paradigm
-- **Impact:** Early adopters struggle; high churn
-- **Mitigation:**
+- Impact: Early adopters struggle; high churn
+- Mitigation:
   - Gradual onboarding with guided tutorial (first 3 projects)
   - Optional "code review" view showing generated artifacts
   - Clear documentation on mental model shift
 
 ### Risk: Interface Overload
-- **Impact:** Novices overwhelmed; low adoption among non-tech users
-- **Mitigation:**
+- Impact: Novices overwhelmed; low adoption among non-tech users
+- Mitigation:
   - Progressive disclosure: novice mode hides 70% of features initially
   - Customizable layouts; power users unlock more panels
   - AI copilot suggests relevant features contextually
 
 ### Risk: Scalability Bottleneck
-- **Impact:** Dashboard degrades with 100+ agents
-- **Mitigation:**
+- Impact: Dashboard degrades with 100+ agents
+- Mitigation:
   - Architecture for distributed, real-time metrics (time-series DB)
   - Agent grouping/virtualization in UI (show top N by metric)
   - Load testing with 1,000+ agents before MVP release
 
 ### Risk: Compliance & Audit Gaps
-- **Impact:** Enterprise adoption blocked; legal liability
-- **Mitigation:**
+- Impact: Enterprise adoption blocked; legal liability
+- Mitigation:
   - Immutable audit logs from day 1
   - RBAC enforcement in code review (not just UI)
   - Third-party security audit before GA
+
+### Risk: Resistance from Replit users expecting single-agent simplicity
+- Impact: Slower adoption among prototypers and solo builders
+- Mitigation:
+  - Replit Familiar Mode toggle
+  - One-click Replit project import
+  - Phased onboarding tutorials that mirror Replit workflows initially
+  - Measure adoption via "mode usage" telemetry and early feedback loops
 
 ---
 
@@ -517,6 +537,7 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 ### Q2 2026
 - Build MVP core: Prompt Canvas, Agent Dashboard, Orchestrator Hub
 - Implement basic Orchestrator rules and simulation
+- Prototype Replit import + Familiar Mode
 - Run internal dogfooding: build 3–5 small real apps entirely through AEI
 - Collect qualitative feedback on mental model fit
 
@@ -539,14 +560,15 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 ## 11. Next Immediate Steps
 
 ### Immediate (This Week)
-1. ✅ Finalize and share master PRD (this document)
-2. Kick off design system & component library
-3. Allocate engineering teams to Phase 1 features
+1. Finalize and share consolidated master PRD (v2.2)
+2. Kick off design system & component library (ongoing)
+3. Allocate engineering teams to remaining Phase 1 features
 
 ### Short-term (Next 2 Weeks)
-1. Build clickable prototype: Prompt Canvas + Agent Dashboard basic layout
-2. Implement mock agent heartbeat/telemetry system
-3. Design database schema for audit logs + telemetry
+1. Build clickable prototype: Prompt Canvas + Agent Dashboard basic layout (ongoing)
+2. Implement mock agent heartbeat/telemetry system (ongoing)
+3. Design database schema for audit logs + telemetry (ongoing)
+4. Scope Replit import prototype and Familiar Mode wireframes (ongoing)
 
 ### Medium-term (Next 4 Weeks)
 1. Implement working Prompt Canvas with drag-drop
@@ -587,6 +609,6 @@ The AEI reimagines legacy IDE elements as AI-focused tools. Features are modular
 
 ---
 
-**Document Owner:** Product Team
-**Last Updated:** February 8, 2026
-**Next Review:** Q2 2026
+**Document Owner:** Drew (Product / Lead Engineer)  
+**Last Updated:** February 13, 2026  
+**Next Review:** After remaining Phase 1 tasks are completed

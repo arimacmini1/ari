@@ -3,7 +3,7 @@
 ## feature-00-foundations.md
 - F00-MH-01 | Design and implement agent heartbeat protocol and telemetry schema
   - Dependencies: `none`
-  - Blocks: `F00-CH-01`, `F00-CH-03`, `F00-MH-02`, `F00-MH-05`, `F00-MH-06`, `F00-SH-01`, `F01-MH-06`, `F02-MH-02`, `F02-MH-04`, `F02-MH-05`, `F02-SH-02`, `F03-MH-01`
+  - Blocks: `F00-CH-01`, `F00-CH-03`, `F00-MH-02`, `F00-MH-05`, `F00-MH-06`, `F00-SH-01`, `F01-MH-06`, `F02-MH-02`, `F02-MH-04`, `F02-MH-05`, `F02-SH-02`, `F03-MH-01`, `F06-MH-07`
   - Roadmap ref: `P1-MH-01`
 - F00-MH-02 | Implement real-time WebSocket transport and agent state subscription model
   - Dependencies: `F00-MH-01`
@@ -11,7 +11,7 @@
   - Roadmap ref: `P1-MH-02`
 - F00-MH-03 | Design and implement trace data model for agent reasoning decisions
   - Dependencies: `none`
-  - Blocks: `F00-MH-05`, `F00-SH-02`, `F00.5-MH-05`, `F05-MH-01`, `F05-MH-02`, `F05-MH-04`
+  - Blocks: `F00-MH-05`, `F00-SH-02`, `F00.5-MH-05`, `F05-MH-01`, `F05-MH-02`, `F05-MH-04`, `F13-MH-01`
   - Roadmap ref: `P1-MH-08`
 - F00-MH-04 | Set up foundational audit logging infrastructure with immutable logs
   - Dependencies: `none`
@@ -27,7 +27,7 @@
   - Roadmap ref: `P1-MH-03`
 - F00-MH-07 | Establish auth skeleton and bearer token validation
   - Dependencies: `F00-MH-04`
-  - Blocks: `F02-MH-03`, `F08-MH-01`, `F08-SH-01`, `F09-MH-01`, `F09-MH-03`, `F10-MH-01`, `none` (internal)`
+  - Blocks: `F02-MH-03`, `F08-MH-01`, `F08-SH-01`, `F09-MH-01`, `F09-MH-03`, `F10-MH-01`, `F14-MH-01`, `none` (internal)`
   - Roadmap ref: `P1-SH-04`
 - F00-SH-01 | Implement graceful agent heartbeat timeout and health status
   - Dependencies: `F00-MH-01`
@@ -119,7 +119,7 @@
   - Roadmap ref: `P1-MH-04`
 - F01-MH-02 | Build block template library with drag-from-sidebar palette
   - Dependencies: `F00.5-MH-01`, `F00.5-MH-03`
-  - Blocks: `F01-MH-04`, `F01-SH-01`, `F01-SH-02`, `F11-MH-02`
+  - Blocks: `F01-MH-04`, `F01-SH-01`, `F01-SH-02`, `F11-MH-02`, `F11-MH-07`
   - Roadmap ref: `P1-MH-04`
 - F01-MH-03 | Implement canvas versioning and state snapshots
   - Dependencies: `F00.5-MH-01`, `F00.5-MH-04`
@@ -135,7 +135,7 @@
   - Roadmap ref: `P1-MH-04`
 - F01-MH-06 | Wire canvas lifecycle end-to-end: create â†’ compose â†’ validate â†’ parse â†’ preview â†’ execute
   - Dependencies: `F01-MH-01`, `F01-MH-03`, `F01-MH-04`, `F00-MH-01`, `F00-MH-02`
-  - Blocks: `F02-MH-01`, `F02-MH-05`, `F03-MH-03`, `F04-MH-01`, `F08-MH-01`, `F10-MH-02`, `F10-MH-03`, `F11-MH-01`, `F11-MH-03`
+  - Blocks: `F02-MH-01`, `F02-MH-05`, `F03-MH-03`, `F04-MH-01`, `F08-MH-01`, `F10-MH-02`, `F10-MH-03`, `F11-MH-01`, `F11-MH-03`, `F12-MH-01`
   - Roadmap ref: `P1-MH-04`, `P1-MH-06`
 - F01-SH-01 | Add voice input for canvas block generation (speech-to-blocks)
   - Dependencies: `F01-MH-02`, `F00-MH-05`
@@ -173,7 +173,7 @@
   - Roadmap ref: `P1-MH-03`
 - F02-MH-02 | Implement real-time agent status update via WebSocket subscription
   - Dependencies: `F00-MH-02`, `F02-MH-01`
-  - Blocks: `F02-MH-04`, `F02-MH-05`, `F02-SH-02`
+  - Blocks: `F02-MH-04`, `F02-MH-05`, `F02-SH-02`, `F06-MH-07`
   - Roadmap ref: `P1-MH-03`
 - F02-MH-03 | Build agent context menu with reassign, pause, terminate actions
   - Dependencies: `F02-MH-01`, `F00-MH-05`
@@ -235,16 +235,44 @@
   - Roadmap ref: `P1-MH-11`
 - F03-MH-03 | Wire instruction graph input and simulation pipeline end-to-end
   - Dependencies: `F03-MH-01`, `F01-MH-04`, `F00-MH-05`
-  - Blocks: `F03-MH-04`, `F03-MH-05`, `F04-MH-02`, `F04-MH-03`, `F11-MH-04`, `F11-MH-05`
+  - Blocks: `F03-MH-04`, `F03-MH-05`, `F04-MH-02`, `F04-MH-03`, `F11-MH-04`, `F11-MH-05`, `F12-MH-02`, `F13-MH-03`, `F14-MH-02`
   - Roadmap ref: `P1-MH-11`
 - F03-MH-04 | Implement task dispatch from orchestrator to agent dashboard
   - Dependencies: `F03-MH-03`, `F00-MH-02`, `F02-MH-01`
-  - Blocks: `F03-MH-05`, `F03-SH-02`, `F03-SH-03`
+  - Blocks: `F03-MH-05`, `F03-SH-02`, `F03-SH-03`, `F06-MH-07`
   - Roadmap ref: `P1-MH-06`
 - F03-MH-05 | Build execution history and replay viewer
   - Dependencies: `F03-MH-04`, `F01-MH-03`
   - Blocks: `F03-CH-01`, `F03-CH-02`, `F03-CH-03`, `F03-SH-04`, `F04-SH-03`, `F05-MH-05`, `F05-SH-02`
   - Roadmap ref: â€”
+- F03-MH-06 | Install & configure Temporal dev + production-ready setup
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-01`
+- F03-MH-07 | Refactor mock execution pipeline to Temporal workflows
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-02`
+- F03-MH-08 | Port dogfood workflow (B1â€“B8) into Temporal workflow
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-03`
+- F03-MH-09 | Enable Ari self-bootstrapping proof-of-concept
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P1.5-MH-04`
+- F03-MH-10 | Enhance Orchestrator Hub â€“ visual editor for Temporal workflows
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P2-MH-04`
+- F03-MH-11 | Enable Ari to run dogfood workflow on itself continuously
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P2-MH-10`
+- F03-MH-12 | Mendix â†’ PostgreSQL data migration workflow
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P3-MH-06`
 - F03-SH-01 | Add advanced rule editor with conditional logic (if-then-else rules)
   - Dependencies: `F03-MH-02`
   - Blocks: `none`
@@ -281,20 +309,24 @@
   - Roadmap ref: `P1-SH-05`
 - F04-MH-02 | Build artifact preview panel UI with syntax highlighting and rendering
   - Dependencies: `F04-MH-01`, `F03-MH-03`
-  - Blocks: `F04-CH-02`, `F04-MH-03`, `F04-MH-04`, `F04-MH-05`, `F04-SH-01`, `F05-MH-01`, `F05-SH-01`, `F11-MH-04`
+  - Blocks: `F04-CH-02`, `F04-MH-03`, `F04-MH-04`, `F04-MH-05`, `F04-SH-01`, `F05-MH-01`, `F05-SH-01`, `F11-MH-04`, `F12-MH-05`
   - Roadmap ref: `P1-SH-05`
 - F04-MH-03 | Wire artifact generation from orchestrator simulation pipeline
   - Dependencies: `F04-MH-01`, `F04-MH-02`, `F03-MH-03`
-  - Blocks: `F04-MH-04`, `F04-SH-02`
+  - Blocks: `F04-MH-04`, `F04-SH-02`, `F12-MH-02`
   - Roadmap ref: `P1-SH-05`
 - F04-MH-04 | Implement artifact validation and diff viewer
   - Dependencies: `F04-MH-03`, `F04-MH-02`
-  - Blocks: `F04-CH-01`, `F04-CH-03`, `F04-SH-03`, `F05-MH-03`, `F05-SH-02`, `F11-CH-02`
+  - Blocks: `F04-CH-01`, `F04-CH-03`, `F04-SH-03`, `F05-MH-03`, `F05-SH-02`, `F11-CH-02`, `F12-CH-01`
   - Roadmap ref: `P1-SH-05`
 - F04-MH-05 | Add artifact search and filtering in preview panel
   - Dependencies: `F04-MH-02`
   - Blocks: `F04-SH-04`
   - Roadmap ref: â€”
+- F04-MH-06 | Implement Output Simulator using Temporal activities
+  - Dependencies: `none`
+  - Blocks: `none`
+  - Roadmap ref: `P2-MH-02`
 - F04-SH-01 | Add artifact import and composition (user can seed canvas with generated code)
   - Dependencies: `F04-MH-02`
   - Blocks: `none`
@@ -327,7 +359,7 @@
 ## feature-05-ai-trace-viewer.md
 - F05-MH-01 | Build trace viewer modal with collapsible decision tree rendering
   - Dependencies: `F00-MH-03`, `F04-MH-02`
-  - Blocks: `F05-CH-02`, `F05-MH-02`, `F05-MH-03`, `F05-MH-05`, `F05-SH-01`
+  - Blocks: `F05-CH-02`, `F05-MH-02`, `F05-MH-03`, `F05-MH-05`, `F05-SH-01`, `F13-MH-01`, `F13-MH-02`, `F14-MH-02`
   - Roadmap ref: `P1-MH-09`
 - F05-MH-02 | Implement confidence threshold filtering and search within traces
   - Dependencies: `F05-MH-01`
@@ -335,7 +367,7 @@
   - Roadmap ref: —
 - F05-MH-03 | Build alternative path expansion and diff viewer for forked decisions
   - Dependencies: `F05-MH-01`, `F04-MH-04`
-  - Blocks: `F05-CH-03`, `F05-MH-04`, `F05-SH-03`
+  - Blocks: `F05-CH-03`, `F05-MH-04`, `F05-SH-03`, `F13-MH-03`
   - Roadmap ref: `P1-MH-09`
 - F05-MH-04 | Implement timeline scrubber for decision point navigation and playback
   - Dependencies: `F05-MH-02`
@@ -343,7 +375,7 @@
   - Roadmap ref: —
 - F05-MH-05 | Wire trace viewer into execution history and dashboard context menus
   - Dependencies: `F05-MH-01`, `F02-MH-03`, `F03-MH-05`
-  - Blocks: `none`
+  - Blocks: `F12-CH-02`, `F13-MH-05`
   - Roadmap ref: —
 - F05-SH-01 | Add confidence aggregation and swarm health heatmap visualization
   - Dependencies: `F05-MH-01`, `F02-MH-04`
@@ -377,11 +409,11 @@
 ## feature-06-analytics-pane.md
 - F06-MH-01 | Design analytics data schema and KPI metric aggregation pipeline
   - Dependencies: `F01-MH-01`, `F02-MH-01`, `F03-MH-01`, `F04-MH-01`
-  - Blocks: `F06-MH-02`, `F06-MH-03`, `F06-MH-04`, `F06-MH-05`
+  - Blocks: `F06-MH-02`, `F06-MH-03`, `F06-MH-04`, `F06-MH-05`, `F06-MH-07`, `F14-MH-03`, `F15-MH-01`
   - Roadmap ref: `P2-MH-05`
 - F06-MH-02 | Build analytics dashboard layout and KPI card components
   - Dependencies: `F06-MH-01`
-  - Blocks: `F06-MH-03`, `F06-SH-01`
+  - Blocks: `F06-MH-03`, `F06-MH-07`, `F06-SH-01`, `F15-MH-02`
   - Roadmap ref: `P2-MH-05`
 - F06-MH-03 | Implement time-series chart viewer with drill-down by agent/task
   - Dependencies: `F06-MH-02`, `F06-MH-01`
@@ -389,7 +421,7 @@
   - Roadmap ref: `P2-MH-05`
 - F06-MH-04 | Add threshold-based alerting and notification system
   - Dependencies: `F06-MH-01`
-  - Blocks: `F06-MH-06`, `F06-SH-03`
+  - Blocks: `F06-MH-06`, `F06-SH-03`, `F14-MH-03`
   - Roadmap ref: `P2-MH-05`
 - F06-MH-05 | Implement anomaly detection (moving average spike detection + percent-change detection)
   - Dependencies: `F06-MH-01`
@@ -397,14 +429,18 @@
   - Roadmap ref: `P2-MH-05`
 - F06-MH-06 | Build report export (CSV, JSON, PDF with charts and tables)
   - Dependencies: `F06-MH-03`, `F06-MH-04`
-  - Blocks: `F06-CH-03`
+  - Blocks: `F06-CH-03`, `F14-SH-02`
   - Roadmap ref: `P2-MH-05`
+- F06-MH-07 | Implement cost and quality metrics collection and real-time display
+  - Dependencies: `F00-MH-01`, `F02-MH-02`, `F03-MH-04`, `F06-MH-01`, `F06-MH-02`
+  - Blocks: `F06-SH-02`
+  - Roadmap ref: `P1-MH-10`
 - F06-SH-01 | Add dashboard layout customization and saved views
   - Dependencies: `F06-MH-02`
   - Blocks: none
   - Roadmap ref: —
 - F06-SH-02 | Implement drill-down to individual agent execution logs
-  - Dependencies: `F06-MH-03`
+  - Dependencies: `F06-MH-03`, `F06-MH-07`
   - Blocks: none
   - Roadmap ref: —
 - F06-SH-03 | Add alert rule templates (cost budget, quality SLA, error threshold)
@@ -439,7 +475,7 @@
   - Roadmap ref: `P2-MH-07`
 - F07-MH-03 | Implement RBAC enforcement at API level (backend middleware)
   - Dependencies: `F07-MH-01`, `F00-MH-04` (auth system)
-  - Blocks: `F07-CH-01`, `F07-MH-04`, `F07-MH-05`, `F07-MH-06`, `F07-SH-01`, `F08-MH-01`, `F08-MH-02`, `F08-MH-03`, `F08-MH-04`, `F08-SH-01`, `F09-MH-01`, `F09-MH-02`, `F09-MH-03`, `F09-MH-04`, `F09-MH-05`
+  - Blocks: `F07-CH-01`, `F07-MH-04`, `F07-MH-05`, `F07-MH-06`, `F07-SH-01`, `F08-MH-01`, `F08-MH-02`, `F08-MH-03`, `F08-MH-04`, `F08-SH-01`, `F09-MH-01`, `F09-MH-02`, `F09-MH-03`, `F09-MH-04`, `F09-MH-05`, `F14-MH-01`, `F14-MH-04`, `F14-SH-01`
   - Roadmap ref: `P2-MH-07`
 - F07-MH-04 | Build compliance checklist dashboard (SOC2, GDPR, HIPAA readiness)
   - Dependencies: `F07-MH-02`, `F07-MH-03`
@@ -575,19 +611,27 @@
 ## feature-11-familiar-mode-onboarding.md
 - F11-MH-01 | Build Familiar Mode entry flow (chat-first start + minimal chrome)
   - Dependencies: `F01-MH-06`, `F02-MH-01`
-  - Blocks: `F11-MH-02`, `F11-MH-05`, `F11-SH-01`
+  - Blocks: `F11-MH-02`, `F11-MH-05`, `F11-MH-06`, `F11-SH-01`, `F15-MH-01`, `F15-MH-03`
   - Roadmap ref: `P1-MH-12`
 - F11-MH-02 | Implement chat-to-canvas expansion with context preservation
   - Dependencies: `F11-MH-01`, `F01-MH-02`, `F01-MH-04`
   - Blocks: `F11-MH-03`, `F11-MH-05`
   - Roadmap ref: `P1-MH-12`
+- F11-MH-06 | Add real-time LLM participation in Familiar Mode chat (fast model)
+  - Dependencies: `F11-MH-01`
+  - Blocks: `F11-MH-02`, `F11-MH-07`
+  - Roadmap ref: `P1-MH-12`
+- F11-MH-07 | Implement incremental draft canvas preview during chat (JSON patch)
+  - Dependencies: `F11-MH-06`, `F01-MH-02`
+  - Blocks: `F11-MH-02`
+  - Roadmap ref: `P1-MH-12`
 - F11-MH-03 | Prototype Replit project import → canvas flow
   - Dependencies: `F01-MH-04`, `F01-MH-06`, `F03-MH-01`
-  - Blocks: `F11-CH-01`
+  - Blocks: `F11-CH-01`, `F12-SH-02`, `F15-MH-04`
   - Roadmap ref: `P1-MH-13`
 - F11-MH-04 | Add Code Peek panel for generated artifacts (read-only)
   - Dependencies: `F03-MH-03`, `F04-MH-02`
-  - Blocks: `F11-CH-02`, `F11-MH-05`
+  - Blocks: `F11-CH-02`, `F11-MH-05`, `F12-CH-02`, `F15-MH-01`, `F15-MH-03`
   - Roadmap ref: `P1-MH-14`
 - F11-MH-05 | Ship Replit-style onboarding tutorial flow
   - Dependencies: `F11-MH-01`, `F11-MH-02`, `F03-MH-03`
@@ -607,6 +651,172 @@
   - Roadmap ref: —
 - F11-CH-02 | Add Code Peek diff view between executions
   - Dependencies: `F11-MH-04`, `F04-MH-04`
+  - Blocks: none
+  - Roadmap ref: —
+
+## feature-12-code-explorer.md
+- F12-MH-01 | Add Code Explorer tab and route/view-state isolation
+  - Dependencies: `F01-MH-06`
+  - Blocks: `F12-CH-02`, `F12-MH-02`, `F12-MH-03`
+  - Roadmap ref: `P1-MH-16`
+- F12-MH-02 | Implement codebase snapshot loader for latest execution artifacts
+  - Dependencies: `F03-MH-03`, `F04-MH-03`
+  - Blocks: `F12-MH-03`, `F12-MH-04`, `F12-MH-06`, `F12-SH-02`, `F14-MH-02`
+  - Roadmap ref: `P1-MH-16`
+- F12-MH-03 | Build file tree sidebar with expand/collapse and selection model
+  - Dependencies: `F12-MH-01`, `F12-MH-02`
+  - Blocks: `F12-MH-04`, `F12-MH-06`, `F12-SH-01`
+  - Roadmap ref: `P1-MH-16`
+- F12-MH-04 | Integrate read-only Monaco editor for file viewing
+  - Dependencies: `F12-MH-03`
+  - Blocks: `F12-CH-01`, `F12-MH-05`, `F12-MH-06`
+  - Roadmap ref: `P1-MH-16`
+- F12-MH-05 | Add preview pane and Code Context placeholder in right sidebar
+  - Dependencies: `F12-MH-04`, `F04-MH-02`
+  - Blocks: `F12-MH-06`
+  - Roadmap ref: `P1-MH-16`
+- F12-MH-06 | Performance + persistence hardening for Code Explorer
+  - Dependencies: `F12-MH-02`, `F12-MH-03`, `F12-MH-04`, `F12-MH-05`
+  - Blocks: `F12-SH-01`
+  - Roadmap ref: `P1-MH-16`
+- F12-SH-01 | Add quick-open and filename search
+  - Dependencies: `F12-MH-03`, `F12-MH-06`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F12-SH-02 | Load Code Explorer from imported repos when present
+  - Dependencies: `F11-MH-03`, `F12-MH-02`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F12-CH-01 | Add side-by-side diff view within Code Explorer
+  - Dependencies: `F12-MH-04`, `F04-MH-04`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F12-CH-02 | Deep-link to Code Explorer from Code Peek / Trace Viewer
+  - Dependencies: `F11-MH-04`, `F05-MH-05`, `F12-MH-01`
+  - Blocks: none
+  - Roadmap ref: `—`
+
+## feature-13-comparative-trace-analysis.md
+- F13-MH-01 | Define comparative trace contract and backend APIs
+  - Dependencies: `F00-MH-03`, `F05-MH-01`
+  - Blocks: `F13-MH-02`, `F13-MH-03`, `F13-MH-04`, `F13-MH-06`
+  - Roadmap ref: `P2-MH-01`
+- F13-MH-02 | Build side-by-side decision path comparison view
+  - Dependencies: `F13-MH-01`, `F05-MH-01`
+  - Blocks: `F13-MH-04`, `F13-SH-01`
+  - Roadmap ref: `P2-MH-01`
+- F13-MH-03 | Implement decision-point fork and scoped re-execution flow
+  - Dependencies: `F13-MH-01`, `F03-MH-03`, `F05-MH-03`
+  - Blocks: `F13-MH-04`, `F13-MH-05`, `F13-SH-02`
+  - Roadmap ref: `P2-MH-01`
+- F13-MH-04 | Add quantified trade-off panel (confidence, cost, latency deltas)
+  - Dependencies: `F13-MH-01`, `F13-MH-02`, `F13-MH-03`
+  - Blocks: `F13-CH-01`, `F13-MH-06`, `F13-SH-03`
+  - Roadmap ref: `P2-MH-01`
+- F13-MH-05 | Wire comparative analysis entry points into Trace Viewer
+  - Dependencies: `F05-MH-05`, `F13-MH-03`
+  - Blocks: `F13-CH-02`, `F13-SH-01`
+  - Roadmap ref: `P2-MH-01`
+- F13-MH-06 | Performance and scale hardening for comparative traces
+  - Dependencies: `F13-MH-01`, `F13-MH-04`
+  - Blocks: `F13-SH-02`
+  - Roadmap ref: `P2-MH-01`
+- F13-SH-01 | Add comparison presets and saved scenarios
+  - Dependencies: `F13-MH-02`, `F13-MH-05`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F13-SH-02 | Support batch alternative simulation runs for a single execution
+  - Dependencies: `F13-MH-03`, `F13-MH-06`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F13-SH-03 | Add confidence-quality correlation overlays
+  - Dependencies: `F13-MH-04`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F13-CH-01 | Add AI-assisted explanation cards for major path deltas
+  - Dependencies: `F13-MH-04`
+  - Blocks: none
+  - Roadmap ref: `—`
+- F13-CH-02 | Shareable comparison report links with access controls
+  - Dependencies: `F13-MH-05`
+  - Blocks: none
+  - Roadmap ref: `—`
+
+## feature-14-projects-workspaces.md
+- F14-MH-01 | Add Project model + active-project context (UI + API)
+  - Dependencies: `F00-MH-07`, `F07-MH-03`
+  - Blocks: `F14-CH-01`, `F14-MH-02`, `F14-MH-03`, `F14-MH-04`, `F15-MH-02`
+  - Roadmap ref: `P1-SH-06`
+- F14-MH-02 | Scope executions, traces, and snapshots to active project
+  - Dependencies: `F14-MH-01`, `F03-MH-03`, `F05-MH-01`, `F12-MH-02`
+  - Blocks: `F14-MH-03`, `F14-SH-01`
+  - Roadmap ref: `P1-SH-06`
+- F14-MH-03 | Add budget enforcement and alerts per project
+  - Dependencies: `F14-MH-01`, `F06-MH-01`, `F06-MH-04`
+  - Blocks: `F14-SH-02`
+  - Roadmap ref: `P2-SH-03`
+- F14-MH-04 | Implement project invites with project-scoped roles
+  - Dependencies: `F14-MH-01`, `F07-MH-03`
+  - Blocks: none
+  - Roadmap ref: `P1-SH-06`
+- F14-SH-01 | Add admin global view and cross-project filters
+  - Dependencies: `F14-MH-02`, `F07-MH-03`
+  - Blocks: none
+  - Roadmap ref: `P1-SH-06`
+- F14-SH-02 | Add scheduled budget reports per project
+  - Dependencies: `F14-MH-03`, `F06-MH-06`
+  - Blocks: none
+  - Roadmap ref: `P2-SH-03`
+- F14-CH-01 | Add project templates (starter policies, budgets, dashboards)
+  - Dependencies: `F14-MH-01`
+  - Blocks: none
+  - Roadmap ref: —
+
+## feature-15-main-workspace-chat-adoption.md
+- F15-MH-01 | Implement main workspace chat telemetry event contract and ingestion pipeline
+  - Dependencies: `F11-MH-01`, `F11-MH-05`, `F06-MH-01`
+  - Blocks: `F15-MH-02`, `F15-MH-03`
+  - Roadmap ref: `P1-SH-07`
+- F15-MH-02 | Build main workspace chat adoption KPI dashboard and trend widgets
+  - Dependencies: `F15-MH-01`, `F06-MH-02`, `F14-MH-01`
+  - Blocks: none
+  - Roadmap ref: `P1-SH-07`
+- F15-MH-03 | Add in-product migration helper tips and guided handoff into full workspace
+  - Dependencies: `F11-MH-01`, `F11-MH-05`, `F15-MH-01`
+  - Blocks: none
+  - Roadmap ref: `P1-SH-08`
+- F15-MH-04 | Polish Replit import UX with validation preview and error recovery flow
+  - Dependencies: `F11-MH-03`, `F01-MH-04`
+  - Blocks: none
+  - Roadmap ref: `P1-SH-09`
+
+## feature-16-team-collaboration.md
+- F16-MH-01 | Add block-level comment threads and mention activity feed to Prompt Canvas
+  - Dependencies: `F01-MH-06`, `F14-MH-01`, `F08-MH-01`
+  - Blocks: `F16-MH-02`, `F16-MH-03`
+  - Roadmap ref: `P2-SH-01`
+- F16-MH-02 | Harden shared canvas live-edit contracts for multi-user consistency
+  - Dependencies: `F08-MH-01`, `F01-MH-06`, `F16-MH-01`
+  - Blocks: `F16-MH-03`, `F16-MH-04`
+  - Roadmap ref: `P2-SH-01`
+- F16-MH-03 | Ship project-scoped collaboration activity stream with mention filtering
+  - Dependencies: `F16-MH-01`, `F14-MH-01`
+  - Blocks: `F16-MH-04`
+  - Roadmap ref: `P2-SH-01`
+- F16-MH-04 | Unify canvas version history + rollback with collaboration metadata
+  - Dependencies: `F01-MH-03`, `F16-MH-02`, `F16-MH-03`
+  - Blocks: none
+  - Roadmap ref: `P2-SH-01`
+- F16-SH-01 | Add inline comment anchors directly on canvas nodes
+  - Dependencies: `F16-MH-01`
+  - Blocks: none
+  - Roadmap ref: `P2-SH-01`
+- F16-SH-02 | Add mention autocomplete for active collaborators
+  - Dependencies: `F16-MH-01`, `F08-MH-01`
+  - Blocks: none
+  - Roadmap ref: `P2-SH-01`
+- F16-CH-01 | Add comment resolve/reopen workflow with lightweight moderation controls
+  - Dependencies: `F16-MH-01`
   - Blocks: none
   - Roadmap ref: —
 

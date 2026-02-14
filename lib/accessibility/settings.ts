@@ -2,7 +2,6 @@ export type AccessibilitySettings = {
   highContrast: boolean;
   largeText: boolean;
   reducedMotion: boolean;
-  voiceEnabled: boolean;
   uiMode: 'novice' | 'expert';
 };
 
@@ -10,7 +9,6 @@ export const DEFAULT_ACCESSIBILITY_SETTINGS: AccessibilitySettings = {
   highContrast: false,
   largeText: false,
   reducedMotion: false,
-  voiceEnabled: false,
   uiMode: 'expert',
 };
 
@@ -36,7 +34,6 @@ export function loadAccessibilitySettings(userId: string): AccessibilitySettings
       highContrast: Boolean(parsed?.highContrast),
       largeText: Boolean(parsed?.largeText),
       reducedMotion: Boolean(parsed?.reducedMotion),
-      voiceEnabled: Boolean(parsed?.voiceEnabled),
       uiMode: parsed?.uiMode === 'novice' ? 'novice' : 'expert',
     };
   } catch {

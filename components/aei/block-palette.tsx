@@ -24,11 +24,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import { cn } from "@/lib/utils"
 import type { BlockType } from "@/lib/canvas-state"
 
@@ -163,7 +158,7 @@ export function BlockPalette({ onAddBlock }: BlockPaletteProps) {
       <div
         className={cn(
           "flex flex-col border-r border-border bg-card/50 shrink-0 transition-all duration-200",
-          collapsed ? "w-12" : "w-56"
+          collapsed ? "w-12" : "w-40"
         )}
       >
         <div className="flex items-center justify-between px-2 py-2 border-b border-border shrink-0">
@@ -172,13 +167,13 @@ export function BlockPalette({ onAddBlock }: BlockPaletteProps) {
           )}
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className={cn("h-7 w-7 p-0", collapsed && "mx-auto")}
-                onClick={() => setCollapsed(!collapsed)}
-                aria-label={collapsed ? "Expand block palette" : "Collapse block palette"}
-              >
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={cn("h-7 w-7 p-0", collapsed && "mx-auto")}
+                  onClick={() => setCollapsed((prev) => !prev)}
+                  aria-label={collapsed ? "Expand block palette" : "Collapse block palette"}
+                >
                 {collapsed ? (
                   <PanelLeftOpen className="w-3.5 h-3.5" />
                 ) : (

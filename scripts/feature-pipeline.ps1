@@ -8,6 +8,7 @@
 )
 
 $ErrorActionPreference = "Stop";
+$RequiredImplementationModel = "gpt-5.3-codex"
 
 $root = Resolve-Path (Join-Path $PSScriptRoot "..");
 $taskDir = Join-Path $root "docs/tasks";
@@ -374,3 +375,8 @@ Describe the high-level architecture for Feature $($stub.FeatureId).
 }
 
 Write-Host "Feature pipeline complete.";
+Write-Host "";
+Write-Host "Next steps (choose one):";
+Write-Host "1) Start Feature implementation with model $RequiredImplementationModel (e.g., F11-MH-01)";
+Write-Host "2) Generate onboarding + architecture content for the feature";
+Write-Host "3) Update roadmap refs or QA status";

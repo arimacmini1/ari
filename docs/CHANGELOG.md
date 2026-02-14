@@ -6,6 +6,32 @@ All notable feature completions are documented here.
 
 ---
 
+## [2026-02-13] Feature 15 - Main Workspace Chat Adoption Completed
+
+**Status:** All Must-Have tasks complete; verification script added and passing.
+
+### What's New
+- Main workspace chat telemetry contract + ingestion API with idempotent event writes.
+- Adoption KPI summary endpoint and dashboard section (project-scoped, period-filtered).
+- In-product migration tips in main workspace with dismiss + deep-link actions.
+- Import UX preflight + retry flow with input persistence.
+
+### Verification
+- Script added: `scripts/verify-feature-15.sh`
+- Verified checks include:
+  - telemetry ingestion coverage
+  - adoption summary response shape
+  - import preflight fail/success
+  - import execution payload shape
+
+### Files
+- Task file: `docs/tasks/feature-15-main-workspace-chat-adoption.md`
+- Architecture: `docs/architecture/feature-15-architecture.md`
+- On-boarding: `docs/on-boarding/feature-15-onboarding.md`
+- Dogfood status: `docs/tasks/dogfood-status.md`
+
+---
+
 ## [2026-02-08] Feature 03 – Orchestrator Hub Documentation Complete
 
 **Status:** ✅ On-boarding guide and architecture documentation created

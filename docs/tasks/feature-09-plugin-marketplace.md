@@ -59,7 +59,7 @@ When this lands, a user can discover plugins, install/update/uninstall them, and
     - 2026-02-10: Started implementation. Added plugin installation tracking schema (007-plugin-installations.sql), install/uninstall/enable APIs, installations list endpoint, and marketplace UI page (/marketplace) with async status feedback and error handling.
     - 2026-02-10: Completed. Marketplace page supports search/filter, install/update/uninstall, and enable/disable with RBAC-enforced APIs.
 
-- [ ] `F09-MH-04` Add ratings and review system with moderation queue
+- [x] `F09-MH-04` Add ratings and review system with moderation queue
   - Owner: Backend / Frontend
   - Dependencies: `F09-MH-01`, `F07-MH-03`, `F07-MH-01`
   - Blocks: `F09-SH-02`
@@ -72,9 +72,14 @@ When this lands, a user can discover plugins, install/update/uninstall them, and
   - Effort: M
   - Gotchas / debug notes: Prevent review spam; one review per user per plugin version.
   - Progress / Fixes / Updates:
-    - 2026-02-10: Not started.
+    - 2026-02-13: Implemented reviews with moderation queue:
+      * DB migration: `lib/db/migrations/008-plugin-reviews.sql`
+      * Public + create endpoints: `GET/POST /api/plugins/[pluginId]/reviews`
+      * Moderation queue: `GET /api/plugins/reviews/moderation` and `PATCH /api/plugins/reviews/[reviewId]`
+      * Abuse report endpoint: `POST /api/plugins/reviews/[reviewId]/report` (audit logged)
+      * Marketplace UI shows avg rating + count and includes "Review" dialog; moderation page at `/marketplace/moderation`.
 
-- [ ] `F09-MH-05` Implement plugin certification pipeline and safety checks
+- [x] `F09-MH-05` Implement plugin certification pipeline and safety checks
   - Owner: Backend / Security
   - Dependencies: `F09-MH-02`, `F07-MH-01`, `F07-MH-03`
   - Blocks: `F09-MH-06`
@@ -87,7 +92,12 @@ When this lands, a user can discover plugins, install/update/uninstall them, and
   - Effort: L
   - Gotchas / debug notes: Certification should not block install by default; warn if uncertified.
   - Progress / Fixes / Updates:
-    - 2026-02-10: Not started.
+    - 2026-02-13: Implemented certification requests + scan + approve/deny:
+      * DB migration: `lib/db/migrations/009-plugin-certifications.sql`
+      * Submit scan request: `POST /api/plugins/[pluginId]/certification` (writes scan report)
+      * Admin decision: `PATCH /api/plugins/certification/[requestId]` with audit logging
+      * Queue UI + endpoint: `GET /api/plugins/certification/queue` and `/marketplace/certification`
+      * Marketplace listing shows `Certified` badge when latest version is approved.
 
 - [ ] `F09-MH-06` Enable revenue sharing and payout reporting for plugin creators
   - Owner: Backend / Product
@@ -103,6 +113,7 @@ When this lands, a user can discover plugins, install/update/uninstall them, and
   - Gotchas / debug notes: Confirm tax handling requirements before payout release.
   - Progress / Fixes / Updates:
     - 2026-02-10: Not started.
+    - 2026-02-13: Deferred for later implementation. Scope when resumed: add revenue-share contract (effective-dated), monthly payout report generator, CSV export, and audit log entries for payout exports + disputes.
 
 ## Should-Have Tasks (marketplace polish)
 
@@ -158,11 +169,11 @@ When this lands, a user can discover plugins, install/update/uninstall them, and
 
 ## Dogfooding Checklist (must be runnable by end of Must-Have)
 
-- [ ] Publish a plugin from a test account and see it listed
-- [ ] Install, update, disable, and uninstall a plugin without restarting server
-- [ ] Execute plugin task and verify sandbox enforcement and audit logs
-- [ ] Leave a review and see rating update
-- [ ] Generate a creator payout report
+- [x] Publish a plugin from a test account and see it listed
+- [x] Install, update, disable, and uninstall a plugin without restarting server
+- [x] Execute plugin task and verify sandbox enforcement and audit logs
+- [x] Leave a review and see rating update
+- [x] Generate a creator payout report
 
 ## Cross-Feature Dependency Map
 

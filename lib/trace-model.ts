@@ -28,12 +28,16 @@ export interface DecisionNode {
 
 export interface TraceExecution {
   execution_id: string;
+  project_id?: string;             // Active project context for scoping
   agent_id: string;
   start_time: string;               // ISO 8601
   duration: number;                 // seconds
   cost: number;                      // USD
   status: 'success' | 'warning' | 'failed' | 'pending';
   root_decisions: DecisionNode[];
+  source_execution_id?: string;     // Optional link for forked traces
+  fork_node_id?: string;            // Optional decision node that was forked
+  fork_mode?: 'scoped' | 'full';    // scoped = downstream subtree only
 }
 
 export interface TraceNode extends DecisionNode {

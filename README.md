@@ -231,6 +231,27 @@ npm start
 ```bash
 # .env.local
 NEXT_PUBLIC_WS_URL=ws://localhost:3001  # WebSocket server URL (optional)
+
+# Trace kill switches / guardrails
+AEI_DISABLE_TRACE_COMPARE=1             # Server: disable POST /api/traces/compare
+AEI_DISABLE_TRACE_FORK=1                # Server: disable POST /api/traces/fork
+AEI_MAX_TRACES=200                      # Server: cap in-memory stored traces (fork spam protection)
+
+# Optional UI mirrors (hide/disable controls in the client)
+NEXT_PUBLIC_AEI_DISABLE_TRACE_COMPARE=1
+NEXT_PUBLIC_AEI_DISABLE_TRACE_FORK=1
+```
+
+### Kill Switch Verification
+```bash
+# 1) Start dev server with kill switches enabled
+AEI_DISABLE_TRACE_COMPARE=1 AEI_DISABLE_TRACE_FORK=1 npm run dev
+
+# 2) In another terminal, verify both endpoints return 503
+npm run killswitch:check
+
+# Optional custom host/port
+bash scripts/check-trace-killswitch.sh http://localhost:3001
 ```
 
 ---

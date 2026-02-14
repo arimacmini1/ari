@@ -1,0 +1,59 @@
+{
+  "version": "1",
+  "nodes": [
+    {
+      "id": "node-1",
+      "type": "block",
+      "position": { "x": 120, "y": 120 },
+      "data": {
+        "label": "Start",
+        "description": "Describe the initial goal or input",
+        "blockType": "text"
+      }
+    },
+    {
+      "id": "node-2",
+      "type": "block",
+      "position": { "x": 420, "y": 120 },
+      "data": {
+        "label": "First Task",
+        "description": "Main task to run next",
+        "blockType": "task"
+      }
+    },
+    {
+      "id": "node-3",
+      "type": "block",
+      "position": { "x": 720, "y": 120 },
+      "data": {
+        "label": "Output",
+        "description": "Expected artifact or preview step",
+        "blockType": "artifact"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "source": "node-1",
+      "target": "node-2",
+      "label": "feeds"
+    },
+    {
+      "id": "edge-2",
+      "source": "node-2",
+      "target": "node-3",
+      "label": "produces"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  },
+  "metadata": {
+    "created": "2026-02-11T00:00:00.000Z",
+    "modified": "2026-02-11T00:00:00.000Z",
+    "user": "template"
+  }
+}

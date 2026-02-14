@@ -1,0 +1,148 @@
+{
+  "title": "Generic PRD Template – Software Product",
+  "critical_rules": {
+    "output_requirements": {
+      "format": "Markdown document with all sections below (or adapt to preferred format)",
+      "scope": "Comprehensive product specification for the product"
+    },
+    "core_philosophy": [
+      "Designed as a mission control / command center for the core domain/problem — NOT a traditional replacement for existing tools unless explicitly required",
+      "Prioritize intuitive, visual-first interfaces where appropriate (graphs, flows, dashboards, simulations over pure text)",
+      "Every major feature should enable observability, feedback loops, and trust",
+      "Transparency: key decisions and system behavior must be inspectable/explainable",
+      "Scale-native design: built to handle realistic production volumes from early design (quantity, throughput, concurrency appropriate to domain)"
+    ],
+    "strict_structure": [
+      "Document Overview (purpose, scope, assumptions)",
+      "Problem Statement (highest priority — what the product solves)",
+      "User Personas (ordered by priority)",
+      "Key Features (organized by Phase 1/2/3 or equivalent milestones)",
+      "Core Design Principles",
+      "MVP Success Criteria",
+      "Technical Requirements",
+      "Success Metrics & KPIs",
+      "Risk Mitigation",
+      "Timeline & Roadmap",
+      "Next Immediate Steps"
+    ],
+    "core_rules": [
+      "Domain-native from day 1: design around the primary usage scale and patterns",
+      "Observable system behavior: show users what the system/agents/components are doing (progress, decisions, costs, errors)",
+      "Closed feedback loops: observe → act → observe results → iterate",
+      "Visual-first where it adds clarity: prioritize visual representations over text when effective",
+      "Transparency & inspectability: avoid black boxes for critical decisions",
+      "Phase clarity: clearly separate MVP from later expansions",
+      "Real-time where appropriate: plan for timely updates from early design"
+    ]
+  },
+  "sections": {
+    "1_document_overview": {
+      "purpose": "1–2 sentences: What is the product and why does it exist?",
+      "scope": {
+        "in_scope": ["List key areas covered"],
+        "out_of_scope": ["List what's explicitly NOT covered"]
+      },
+      "assumptions": ["Key assumptions about users, infrastructure, dependencies, etc."],
+      "version_history": ["Track versions, dates, authors"]
+    },
+    "2_problem_statement": {
+      "context": "How is the world/domain changing? Why does this product matter now?",
+      "core_frictions_to_solve": [
+        "Friction 1",
+        "Friction 2",
+        "Friction 3",
+        "Friction 4 (etc.)"
+      ],
+      "how_the_product_solves_this": "1–2 sentences: core value proposition"
+    },
+    "3_user_personas_ordered_by_priority": {
+      "persona_template": {
+        "name": "Primary / Secondary / Tertiary Persona Name",
+        "demographics": "Age range, experience level, role, background",
+        "goals": ["What they want to accomplish"],
+        "pain_points": ["What frustrates them today"],
+        "usage_scenario": "Typical / high-value way they would use the product"
+      }
+    },
+    "4_key_features": {
+      "phase_organization": "Phase 1 (MVP / Immediate Urgency), Phase 2 (High Urgency), Phase 3 (Medium Urgency / Scale & Polish)",
+      "feature_template": {
+        "id": "4.x.y Feature Name",
+        "description": "1–2 sentences",
+        "key_capabilities": ["Bulleted list of what users can do"],
+        "success_metrics": ["How do we know this works? (measurable if possible)"],
+        "supporting_components": ["What backend/system/agent/other parts must do to enable this (if applicable)"]
+      }
+    },
+    "5_core_design_principles_non_negotiable": [
+      "Principle 1 – one sentence + 1–2 sentence explanation",
+      "Principle 2 – …"
+    ],
+    "6_mvp_success_criteria": [
+      "✅ Testable criterion 1",
+      "✅ Testable criterion 2",
+      "etc. (must be met to consider MVP done)"
+    ],
+    "7_technical_requirements": {
+      "7_1_platform_and_stack": {
+        "frontend": "Recommended tech",
+        "backend": "Recommended tech",
+        "real_time_communication": "WebSockets / SSE / polling / etc.",
+        "storage": "Database, cache, file/artifact storage"
+      },
+      "7_2_performance_targets": [
+        "Metric 1: <target>",
+        "Metric 2: <target>"
+      ],
+      "7_3_integration_points": [
+        "External API/service 1",
+        "External API/service 2"
+      ],
+      "7_4_security_and_compliance": [
+        "Requirement 1",
+        "Requirement 2"
+      ]
+    },
+    "8_success_metrics_and_kpis": {
+      "user_adoption": {
+        "nps": "Target",
+        "mau": "Target",
+        "churn_rate": "Target"
+      },
+      "efficiency": {
+        "project_task_completion_time": "Target improvement",
+        "productivity_metric": "..."
+      },
+      "reliability": {
+        "failure_rate": "Target",
+        "uptime": "Target"
+      },
+      "quality": {
+        "artifact_quality": "How measured",
+        "user_satisfaction": "How measured"
+      }
+    },
+    "9_risk_mitigation": {
+      "risk_template": {
+        "description": "Risk name/description",
+        "impact": "Consequence if unmitigated",
+        "mitigation": "Concrete steps"
+      }
+    },
+    "10_timeline_and_roadmap": {
+      "quarters_or_milestones": {
+        "Q1 YYYY": ["Key milestones"],
+        "Q2 YYYY": ["Key milestones"]
+      }
+    },
+    "11_next_immediate_steps": [
+      "Action 1",
+      "Action 2"
+    ]
+  },
+  "metadata_fields": {
+    "document_owner": "Name/Role",
+    "last_updated": "Date",
+    "next_review": "Date"
+  }
+}

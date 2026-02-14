@@ -21,6 +21,12 @@ docs/
 
 ## 🤖 Agent Types & Responsibilities
 
+## Model Policy (Feature Implementation)
+
+- Any implementation task with ID pattern `FXX-*` (for example `F14-MH-01`) must be executed in a Codex session configured to use model `gpt-5.3-codex`.
+- Planning, documentation drafting, and parity/index generation may run on other models, but code implementation must switch before edits begin.
+- This policy applies to all feature files under `docs/tasks/feature-*.md`.
+
 ### 1. Architecture & Design Agents
 
 **What they do:**

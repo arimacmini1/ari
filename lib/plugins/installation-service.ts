@@ -29,6 +29,20 @@ export async function listInstallations(): Promise<PluginInstallationListItem[]>
   return result.rows;
 }
 
+export async function getInstallationForUser(
+  pluginId: string,
+  userId: string
+): Promise<PluginInstallationRecord | null> {
+  const result = await query<PluginInstallationRecord>(
+    `SELECT id, plugin_id, version_id, installed_by, status, installed_at, updated_at
+     FROM plugin_installations
+     WHERE plugin_id = $1 AND installed_by = $2
+     LIMIT 1`,
+    [pluginId, userId]
+  )
+  return result.rows[0] ?? null
+}
+
 export async function installPlugin(
   pluginId: string,
   actor: string,

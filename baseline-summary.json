@@ -1,0 +1,69 @@
+{
+    "summary": {
+        "timestamp": "2026-02-14T05:48:12.789Z",
+        "period": "last_30d",
+        "kpis": {
+            "cost_total": 0,
+            "cost_daily": 0,
+            "quality_score_avg": 0,
+            "error_rate": 0,
+            "latency_p95": 0,
+            "agent_count_active": 0,
+            "success_rate": 0,
+            "token_spend": 0,
+            "execution_duration_avg": 0
+        },
+        "trends": {
+            "cost_total": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "cost_daily": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "quality_score_avg": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "error_rate": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "latency_p95": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "agent_count_active": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "success_rate": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "token_spend": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            },
+            "execution_duration_avg": {
+                "current": 0,
+                "previous": 0,
+                "percent_change": 0
+            }
+        },
+        "metadata": {
+            "total_executions": 0,
+            "total_agents": 0,
+            "total_projects": 0
+        }
+    }
+}
