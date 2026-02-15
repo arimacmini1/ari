@@ -78,6 +78,25 @@ def parse_args() -> argparse.Namespace:
         help="Use mock connector records for this slice.",
     )
     parser.add_argument(
+        "--connector-live",
+        dest="connector_live",
+        action="store_true",
+        help="Enable live connector HTTP fetch mode (disables mock records).",
+    )
+    parser.add_argument(
+        "--connector-allow-http",
+        dest="connector_allow_http",
+        action="store_true",
+        help="Allow non-HTTPS connector endpoint for local development only.",
+    )
+    parser.add_argument(
+        "--connector-timeout-seconds",
+        dest="connector_timeout_seconds",
+        type=int,
+        default=10,
+        help="Connector HTTP timeout in seconds (default: 10).",
+    )
+    parser.add_argument(
         "--connector-mock-path",
         dest="connector_mock_path",
         help="Optional JSON file containing connector mock records array or {records:[...]} object.",
@@ -153,10 +172,15 @@ def load_payload(args: argparse.Namespace) -> dict[str, Any]:
     payload["source_mode"] = mode
 
     if mode == "connector":
+        use_mock = not args.connector_live
+        if args.connector_use_mock:
+            use_mock = True
         connector: dict[str, Any] = {
             "endpoint": args.connector_endpoint or "https://mock.mendix.local/api/v1/records",
             "token_env": args.connector_token_env or "MENDIX_CONNECTOR_TOKEN",
-            "use_mock": bool(args.connector_use_mock or args.connector_mock_path),
+            "use_mock": use_mock,
+            "allow_http": bool(args.connector_allow_http),
+            "timeout_seconds": max(1, int(args.connector_timeout_seconds)),
         }
         if args.connector_mock_path:
             raw = Path(args.connector_mock_path).read_text(encoding="utf-8")

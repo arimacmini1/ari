@@ -1,0 +1,31 @@
+# F03-MH-12 Slice 4 B5 Verify Evidence
+
+date: 2026-02-15
+feature_task: F03-MH-12 (slice 4 live connector path)
+
+$ python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py
+result: PASS
+
+Live connector path dry-run (credentialed local endpoint):
+- local connector server enforces Authorization: Bearer token
+- migration run command used --connector-live with --connector-token-env and --connector-allow-http
+result: PASS
+workflow_id: ari-migration-f03-mh-12-slice4-live-connector-2026-02-15-66824d27
+report_path: /home/drew/repo/ari/screehshots_evidence/migration-report-f03-mh-12-slice4-live-connector-2026-02-15.json
+
+File fallback dry-run:
+result: PASS
+workflow_id: ari-migration-f03-mh-12-slice4-file-fallback-2026-02-15-bc382d46
+report_path: /home/drew/repo/ari/screehshots_evidence/migration-report-f03-mh-12-slice4-file-fallback-2026-02-15.json
+
+Assertions:
+- connector fetch path exercised (not mock-record injection)
+- token env validation required for connector fetch path
+- per-record audit rows present for both modes
+- dry_run_guard_ok=true and write_performed=false for both modes
+
+Artifacts:
+- screehshots_evidence/migration-report-f03-mh-12-slice4-live-connector-2026-02-15.json
+- screehshots_evidence/migration-report-f03-mh-12-slice4-file-fallback-2026-02-15.json
+- screehshots_evidence/temporal-migration-f03-mh-12-slice4-live-connector-history-2026-02-15.json
+- screehshots_evidence/temporal-migration-f03-mh-12-slice4-file-fallback-history-2026-02-15.json

@@ -1,0 +1,69 @@
+{
+  "checkpoints": [
+    {
+      "error_count": 0,
+      "record_count": 2,
+      "stage": "extract",
+      "status": "complete"
+    },
+    {
+      "record_count": 2,
+      "stage": "transform",
+      "status": "complete"
+    },
+    {
+      "dry_run": true,
+      "record_count": 2,
+      "stage": "load",
+      "status": "complete"
+    },
+    {
+      "row_count_match": true,
+      "stage": "validate",
+      "status": "complete"
+    }
+  ],
+  "dry_run": true,
+  "extraction_errors": [],
+  "migration_id": "f03-mh-12-slice4-file-fallback-2026-02-15",
+  "output_dir": "screehshots_evidence",
+  "record_audit_rows": [
+    {
+      "error": "",
+      "load_status": "dry_run_skipped",
+      "source_identifier": "mx-fixture-001",
+      "transform_status": "success"
+    },
+    {
+      "error": "",
+      "load_status": "dry_run_skipped",
+      "source_identifier": "mx-fixture-002",
+      "transform_status": "success"
+    }
+  ],
+  "repo_root": ".",
+  "resume_from_checkpoint": "extract",
+  "summary": {
+    "dry_run_guard_ok": true,
+    "extracted_count": 2,
+    "extraction_error_count": 0,
+    "loaded_count": 0,
+    "row_count_match": true,
+    "sample_verified_count": 2,
+    "skipped_loads": 2,
+    "transformed_count": 2,
+    "write_performed": false
+  },
+  "validation": {
+    "extracted_count": 2,
+    "loaded_count": 0,
+    "row_count_match": true,
+    "sample_verified_count": 2,
+    "sample_verified_ids": [
+      "mx-fixture-001",
+      "mx-fixture-002"
+    ],
+    "transformed_count": 2
+  },
+  "workflow": "MendixMigrationWorkflow"
+}

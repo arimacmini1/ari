@@ -6,6 +6,8 @@ import re
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
+from urllib import error as urllib_error
+from urllib import request as urllib_request
 
 from temporalio import activity
 from temporalio.client import Client
@@ -101,11 +103,14 @@ def _build_connector_source_records(payload: dict[str, Any]) -> tuple[list[dict[
     token_env = str(connector.get("token_env", "")).strip()
     use_mock = bool(connector.get("use_mock", True))
     mock_records = connector.get("mock_records")
+    allow_http = bool(connector.get("allow_http", False))
+    timeout_seconds = int(connector.get("timeout_seconds", 10))
 
     if not endpoint:
         raise ValueError("source_connector.endpoint is required for connector mode")
     if not endpoint.startswith("https://"):
-        raise ValueError("source_connector.endpoint must use https://")
+        if not (allow_http and endpoint.startswith("http://")):
+            raise ValueError("source_connector.endpoint must use https:// (or set allow_http=true for local dev)")
     if not token_env:
         raise ValueError("source_connector.token_env is required for connector mode")
     token = (os.environ.get(token_env) or "").strip()
@@ -116,16 +121,41 @@ def _build_connector_source_records(payload: dict[str, Any]) -> tuple[list[dict[
     if len(token) < 8:
         raise ValueError("source_connector token is too short")
 
-    if not use_mock:
-        raise ValueError(
-            "Connector live fetch is not enabled in this slice; set use_mock=true and provide mock_records"
+    records: list[dict[str, Any]]
+    if use_mock:
+        if not isinstance(mock_records, list):
+            raise ValueError("source_connector.mock_records must be an array for mock connector mode")
+        records = [item for item in mock_records if isinstance(item, dict)]
+    else:
+        req = urllib_request.Request(
+            endpoint,
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Accept": "application/json",
+            },
+            method="GET",
         )
-    if not isinstance(mock_records, list):
-        raise ValueError("source_connector.mock_records must be an array for mock connector mode")
+        try:
+            with urllib_request.urlopen(req, timeout=max(1, timeout_seconds)) as response:
+                body = response.read().decode("utf-8")
+        except urllib_error.HTTPError as exc:
+            raise ValueError(f"Connector request failed with HTTP {exc.code}") from exc
+        except urllib_error.URLError as exc:
+            raise ValueError(f"Connector request failed: {exc.reason}") from exc
+        parsed = json.loads(body)
+        if isinstance(parsed, dict):
+            candidate = parsed.get("records")
+            if not isinstance(candidate, list):
+                raise ValueError("Connector response object must contain records array")
+            records = [item for item in candidate if isinstance(item, dict)]
+        elif isinstance(parsed, list):
+            records = [item for item in parsed if isinstance(item, dict)]
+        else:
+            raise ValueError("Connector response must be JSON array or object with records array")
 
     normalized = [
         _normalize_source_record(item, index)
-        for index, item in enumerate(mock_records)
+        for index, item in enumerate(records)
         if isinstance(item, dict)
     ]
     return normalized, f"connector:{endpoint}"

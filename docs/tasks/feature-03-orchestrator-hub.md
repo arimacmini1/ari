@@ -740,6 +740,52 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
       - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
     - 2026-02-15: `B8` ship decision (slice 3).
       - Decision: `ITERATE` (connector contract shipped with mock mode; next slice should wire live credentialed source connector).
+    - 2026-02-15: `B1` scope lock completed (slice 4 live connector path).
+      - In-scope:
+        - Implement credentialed HTTP fetch path for connector mode (no longer mock-record-only).
+        - Keep strict validation for endpoint/token and preserve file fallback path.
+        - Validate live connector path with auth-checked local endpoint.
+      - Out-of-scope:
+        - Production Mendix endpoint onboarding and secret management rollout.
+      - Success metrics:
+        - Connector-live mode succeeds with authenticated fetch and produces standard audit/report output.
+        - File fallback still succeeds with same report/audit contract.
+    - 2026-02-15: `B2` dependency check completed (slice 4).
+      - Temporal runtime, worker, and report export path already stable.
+      - Local connector server available for live-path verification.
+      - Decision: `READY` for `B3` design pass (slice 4).
+    - 2026-02-15: `B3` design pass completed (slice 4).
+      - Planned changes:
+        - `temporal_worker/worker.py`: add live connector fetch branch with Authorization header and timeout handling.
+        - `temporal_worker/run_migration.py`: expose flags for `--connector-live`, `--connector-allow-http`, and connector timeout.
+      - Preserve fallback behavior and existing report schema.
+    - 2026-02-15: `B4` implement pass completed (slice 4).
+      - Added live connector HTTP fetch in connector extraction branch.
+      - Added connector CLI controls:
+        - `--connector-live`, `--connector-allow-http`, `--connector-timeout-seconds`.
+      - Kept strict default posture: HTTPS required unless explicit local-dev `allow_http=true`.
+    - 2026-02-15: `B5` verify pass completed (slice 4).
+      - Compile check passed.
+      - Live connector-path dry-run passed against auth-checked local endpoint:
+        - workflow id: `ari-migration-f03-mh-12-slice4-live-connector-2026-02-15-66824d27`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-slice4-live-connector-2026-02-15.json`
+      - File fallback dry-run passed:
+        - workflow id: `ari-migration-f03-mh-12-slice4-file-fallback-2026-02-15-bc382d46`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-slice4-file-fallback-2026-02-15.json`
+      - History exports:
+        - `screehshots_evidence/temporal-migration-f03-mh-12-slice4-live-connector-history-2026-02-15.json`
+        - `screehshots_evidence/temporal-migration-f03-mh-12-slice4-file-fallback-history-2026-02-15.json`
+      - Evidence index:
+        - `screehshots_evidence/f03-mh-12-slice4-b5-verify-2026-02-15.txt`
+    - 2026-02-15: `B6` review pass completed (slice 4).
+      - No blocking findings in live connector path for this slice.
+      - Residual risk: production endpoint/secret lifecycle integration remains pending rollout.
+    - 2026-02-15: `B7` docs sync completed (slice 4).
+      - Updated `F03-MH-12` records with slice-4 outcomes and evidence links.
+      - Ran docs parity and dogfood status refresh.
+      - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
+    - 2026-02-15: `B8` ship decision (slice 4).
+      - Decision: `DONE` for current `F03-MH-12` migration workflow scope.
 
 ## Should-Have Tasks (makes orchestrator flexible and observable)
 
