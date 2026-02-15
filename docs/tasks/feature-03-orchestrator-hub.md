@@ -393,7 +393,7 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - 2026-02-14: `B8` ship decision.
       - Decision: `DONE` for `F03-MH-09` minimal POC slice (self-run + approval gate + bundle stub + docs parity gate).
 
-- [ ] `F03-MH-10` Enhance Orchestrator Hub â€“ visual editor for Temporal workflows
+- [x] `F03-MH-10` Enhance Orchestrator Hub â€“ visual editor for Temporal workflows
   - Owner: Frontend / Backend
   - Dependencies: `none`
   - Blocks: `none`
@@ -478,8 +478,8 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
       - Evidence:
         - `screehshots_evidence/f03-mh-10-b5-validation-2026-02-15.txt`
         - `screehshots_evidence/f03-mh-10-b5-api-2026-02-15.json`
-      - UI screenshot note:
-        - Manual screenshot capture is deferred to follow-on pass due no browser screenshot tool available in this shell.
+      - UI screenshot evidence captured:
+        - `screehshots_evidence/f03-mh-10-editor-2026-02-15.png`
     - 2026-02-15: `B6` review pass completed.
       - Unsafe execution knob review performed:
         - blocked key guard verified (`script` rejected with 400).
@@ -490,7 +490,7 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
       - Ran docs parity and dogfood status refresh.
       - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
     - 2026-02-15: `B8` ship decision.
-      - Decision: `ITERATE` (core constrained editor and validation shipped; manual UI screenshot evidence still pending capture).
+      - Decision: `DONE` for this `F03-MH-10` constrained editor slice.
 
 - [x] `F03-MH-11` Enable Ari to run dogfood workflow on itself continuously
   - Owner: Product / Backend
