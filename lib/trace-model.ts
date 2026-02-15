@@ -6,6 +6,8 @@
  * executions, alternatives considered, and confidence scoring.
  */
 
+import type { SourceRepo } from '@/lib/execution-store'
+
 export interface Alternative {
   outcome: string;
   rejection_reason: string;
@@ -38,6 +40,7 @@ export interface TraceExecution {
   source_execution_id?: string;     // Optional link for forked traces
   fork_node_id?: string;            // Optional decision node that was forked
   fork_mode?: 'scoped' | 'full';    // scoped = downstream subtree only
+  source_repo?: SourceRepo;
 }
 
 export interface TraceNode extends DecisionNode {

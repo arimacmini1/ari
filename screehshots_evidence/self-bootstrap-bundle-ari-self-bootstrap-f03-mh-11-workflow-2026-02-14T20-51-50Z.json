@@ -1,0 +1,18 @@
+{
+  "workflow_id": "ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20-51-50Z",
+  "repo_root": ".",
+  "status": "stubbed",
+  "merge_ready": true,
+  "note": "This is a deterministic stub bundle; applying/merging is out-of-scope for F03-MH-09 slice 1.",
+  "docs_parity_evidence_path": "",
+  "diff_summary": {
+    "files_changed": 0,
+    "insertions": 0,
+    "deletions": 0,
+    "note": "No actual code changes generated in this stub."
+  },
+  "artifacts": {
+    "bundle_json": "/home/drew/repo/ari/screehshots_evidence/self-bootstrap-bundle-ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20-51-50Z.json",
+    "bundle_patch": "/home/drew/repo/ari/screehshots_evidence/self-bootstrap-bundle-ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20-51-50Z.patch"
+  }
+}

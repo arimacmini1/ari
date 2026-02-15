@@ -1,0 +1,115 @@
+# F03-MH-05 B5 Verify Evidence
+date: 2026-02-15T03:14:44-06:00
+
+$ npx tsc --noEmit
+
+$ npx vitest run lib/compliance/compliance-service.test.ts lib/rbac/enforce.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/drew/repo/ari
+
+ ✓ lib/compliance/compliance-service.test.ts (1 test) 3ms
+ ✓ lib/rbac/enforce.test.ts (2 tests) 5ms
+
+ Test Files  2 passed (2)
+      Tests  3 passed (3)
+   Start at  03:14:55
+   Duration  683ms (transform 113ms, setup 0ms, collect 198ms, tests 8ms, environment 1ms, prepare 156ms)
+
+
+$ npm run build
+
+> my-project@0.1.0 build
+> next build --webpack
+
+▲ Next.js 16.1.6 (webpack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.7s
+  Skipping validation of types
+  Collecting page data using 15 workers ...
+  Generating static pages using 15 workers (0/45) ...
+  Generating static pages using 15 workers (11/45) 
+  Generating static pages using 15 workers (22/45) 
+  Generating static pages using 15 workers (33/45) 
+✓ Generating static pages using 15 workers (45/45) in 476.5ms
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /accessibility
+├ ○ /analytics
+├ ƒ /api/agents/[agentId]/logs
+├ ƒ /api/agents/[agentId]/pause
+├ ƒ /api/agents/[agentId]/reassign
+├ ƒ /api/agents/[agentId]/terminate
+├ ƒ /api/analytics/adoption/summary
+├ ƒ /api/analytics/export
+├ ƒ /api/analytics/summary
+├ ƒ /api/audit/logs
+├ ƒ /api/audit/verify
+├ ƒ /api/canvases/parse
+├ ƒ /api/canvases/parse/delta
+├ ƒ /api/canvases/versions
+├ ƒ /api/code-explorer/snapshot
+├ ƒ /api/compliance
+├ ƒ /api/executions
+├ ƒ /api/executions/[executionId]
+├ ƒ /api/familiar/chat
+├ ƒ /api/familiar/draft
+├ ƒ /api/familiar/expand
+├ ƒ /api/familiar/health
+├ ƒ /api/familiar/import
+├ ƒ /api/familiar/prompts
+├ ƒ /api/merges
+├ ƒ /api/merges/[id]/approve
+├ ƒ /api/merges/[id]/reject
+├ ƒ /api/orchestrator
+├ ƒ /api/orchestrator/[ruleId]
+├ ƒ /api/orchestrator/simulate
+├ ƒ /api/plugins
+├ ƒ /api/plugins/[pluginId]
+├ ƒ /api/plugins/[pluginId]/certification
+├ ƒ /api/plugins/[pluginId]/execute
+├ ƒ /api/plugins/[pluginId]/install
+├ ƒ /api/plugins/[pluginId]/reviews
+├ ƒ /api/plugins/[pluginId]/toggle
+├ ƒ /api/plugins/[pluginId]/uninstall
+├ ƒ /api/plugins/[pluginId]/versions
+├ ƒ /api/plugins/[pluginId]/versions/[versionId]
+├ ƒ /api/plugins/certification/[requestId]
+├ ƒ /api/plugins/certification/queue
+├ ƒ /api/plugins/installations
+├ ƒ /api/plugins/reviews/[reviewId]
+├ ƒ /api/plugins/reviews/[reviewId]/report
+├ ƒ /api/plugins/reviews/moderation
+├ ƒ /api/prd/export-canvas
+├ ƒ /api/projects
+├ ƒ /api/projects/[projectId]/members
+├ ƒ /api/projects/[projectId]/members/[userId]
+├ ƒ /api/projects/active
+├ ƒ /api/telemetry/events
+├ ƒ /api/temporal/workflow-editor
+├ ƒ /api/traces/[executionId]
+├ ƒ /api/traces/compare
+├ ƒ /api/traces/flags
+├ ƒ /api/traces/fork
+├ ƒ /api/traces/fork/[forkId]
+├ ƒ /api/ws
+├ ○ /compliance
+├ ○ /executions
+├ ƒ /executions/[executionId]
+├ ○ /marketplace
+├ ○ /marketplace/certification
+├ ○ /marketplace/moderation
+├ ○ /orchestrator
+├ ○ /trace
+└ ƒ /traces/[executionId]
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

@@ -97,3 +97,27 @@ bash scripts/feature-pipeline.sh -Feature 11
 
 - Template: `docs/process/dogfood-workflow-template.md`
 - Use this to run one roadmap slice through Prompt Canvas with explicit agent roles, orchestrator rules, and DoD gates.
+
+## UX Progression Loop (Stage-by-Stage Usability)
+
+- Template: `docs/process/ux-progression-workflow-template.md`
+- Run file template: `docs/templates/05-template-ux-progression-loop.md`
+- Tracking log: `docs/tasks/ux-progression-log.md`
+
+Use this loop when the goal is improving one user-journey stage (`A..G`) at a time with explicit baseline, hypothesis, validation, and promote/iterate/defer decision.
+
+### Strict Compliance Mode (Required)
+
+Every implementation slice across all features must follow strict dogfood compliance:
+
+1. Execute blocks in order: `B1 -> B2 -> B3 -> B4 -> B5 -> B6 -> B7 -> B8`
+2. Log explicit `B1..B8` entries in the feature task `Progress / Fixes / Updates` for the in-scope task.
+3. Attach concrete evidence paths for verification/docs blocks:
+   - `B5`: verification evidence (test/build output, workflow history, transcript, etc.)
+   - `B7`: docs parity evidence and updated references
+4. Run and pass docs parity before `B8`:
+   - `npm run docs:parity`
+5. Regenerate dogfood status when task/checklist state changes:
+   - `node scripts/update-dogfood-status.mjs`
+
+Hard gate: do not mark any task as done unless `B5` and `B7` are both explicitly recorded with evidence.

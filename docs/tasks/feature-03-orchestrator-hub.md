@@ -570,7 +570,7 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - 2026-02-14: `B8` ship decision.
       - Decision: `DONE` for minimal `F03-MH-11` slice (continuous trigger + mandatory gates + discoverable run records).
 
-- [ ] `F03-MH-12` Mendix â†’ PostgreSQL data migration workflow
+- [x] `F03-MH-12` Mendix â†’ PostgreSQL data migration workflow
   - Owner: Backend / Data
   - Dependencies: `none`
   - Blocks: `none`

@@ -62,7 +62,7 @@ Goal: Achieve self-bootstrapping (Ari builds Ari) + Mendix → PostgreSQL data m
     - Retries/timeouts/human approval stubs in place
   - Est. effort: L–XL
 
-- [ ] `P1.5-MH-03` Port dogfood workflow (B1–B8) into Temporal workflow
+- [x] `P1.5-MH-03` Port dogfood workflow (B1–B8) into Temporal workflow
   - Owner hint: Backend / AI
   - Dependencies: `P1.5-MH-02`
   - Blocks: `P1.5-MH-04`
@@ -74,7 +74,7 @@ Goal: Achieve self-bootstrapping (Ari builds Ari) + Mendix → PostgreSQL data m
     - First self-run: Ari uses itself to complete one small task
   - Est. effort: M–L
 
-- [ ] `P1.5-MH-04` Enable Ari self-bootstrapping proof-of-concept
+- [x] `P1.5-MH-04` Enable Ari self-bootstrapping proof-of-concept
   - Owner hint: Product / Backend
   - Dependencies: `P1.5-MH-03`
   - Blocks: Phase 2+
@@ -94,8 +94,8 @@ Goal: Achieve self-bootstrapping (Ari builds Ari) + Mendix → PostgreSQL data m
 - [ ] `P2-MH-01` Expand AI Trace Viewer with Temporal history integration
 - [ ] `P2-MH-02` Implement Output Simulator using Temporal activities
 - [x] `P2-MH-03` Real-time co-editing for Prompt Canvas
-- [ ] `P2-MH-04` Enhance Orchestrator Hub – visual editor for Temporal workflows
-- [ ] `P2-MH-10` Enable Ari to run dogfood workflow on itself continuously
+- [x] `P2-MH-04` Enhance Orchestrator Hub – visual editor for Temporal workflows
+- [x] `P2-MH-10` Enable Ari to run dogfood workflow on itself continuously
   - Owner hint: Product / Backend
   - Dependencies: `P1.5-MH-04`
   - Acceptance criteria:
@@ -110,7 +110,7 @@ Goal: Achieve self-bootstrapping (Ari builds Ari) + Mendix → PostgreSQL data m
 
 ### Must-Have Tier
 
-- [ ] `P3-MH-06` Mendix → PostgreSQL data migration workflow
+- [x] `P3-MH-06` Mendix → PostgreSQL data migration workflow
   - Owner hint: Backend / Data
   - Dependencies: `P2-MH-10`, `P3-MH-01`
   - Acceptance criteria:

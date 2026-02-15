@@ -557,7 +557,6 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
               handleSend()
             }
           }}
-          disabled={isSending}
         />
         <Button
           size="icon"

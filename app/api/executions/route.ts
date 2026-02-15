@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { upsertTraceExecution } from '@/lib/mock-trace-store';
 import { DecisionNode, TraceExecution } from '@/lib/trace-model';
 import { resolveProjectContext } from '@/lib/project-context';
-import { EXECUTIONS_DB, type ExecutionRecord } from '@/lib/execution-store';
+import { EXECUTIONS_DB, type ExecutionRecord, type SourceRepo } from '@/lib/execution-store';
 import { getProject } from '@/lib/project-store';
 import { estimateExecutionCost, evaluateProjectBudget } from '@/lib/project-budget';
 import { enforceProjectPermission } from '@/lib/project-rbac';
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
       estimated_cost,
       estimated_duration,
       success_probability,
+      source_repo: rawSourceRepo,
     } = body;
 
     if (!rule_set_id || !assignment_plan) {
@@ -140,6 +141,16 @@ export async function POST(req: NextRequest) {
       new Set(normalizedAssignmentPlan.map((assignment) => assignment.assigned_agent_id_or_pool))
     );
 
+    // Validate and normalize source_repo if present
+    const source_repo: SourceRepo | undefined =
+      rawSourceRepo && typeof rawSourceRepo.url === 'string'
+        ? {
+            url: rawSourceRepo.url,
+            branch: typeof rawSourceRepo.branch === 'string' ? rawSourceRepo.branch : 'main',
+            commit: typeof rawSourceRepo.commit === 'string' ? rawSourceRepo.commit : undefined,
+          }
+        : undefined;
+
     // Create execution record
     const execution: ExecutionRecord = {
       execution_id,
@@ -152,6 +163,7 @@ export async function POST(req: NextRequest) {
       estimated_duration: estimated_duration || 0,
       success_probability: success_probability || 0,
       status: 'pending',
+      source_repo,
     };
 
     // Store execution
@@ -194,6 +206,7 @@ export async function POST(req: NextRequest) {
       duration: typeof estimated_duration === 'number' ? estimated_duration : 0,
       cost: incomingEstimatedCost,
       status: 'pending',
+      source_repo: execution.source_repo,
       root_decisions: [
         {
           node_id: 'decision-dispatch',

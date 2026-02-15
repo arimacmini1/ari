@@ -1,0 +1,1 @@
+{"schedule_id": "ari-self-bootstrap-f03-mh-11", "status": "created", "workflow": "SelfBootstrapWorkflow", "workflow_start_id": "ari-self-bootstrap-f03-mh-11-workflow", "interval_seconds": 600, "roadmap_task_id": "P2-MH-10", "trigger_immediately": true}

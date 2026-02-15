@@ -3,7 +3,8 @@ import csv
 import json
 import os
 import re
-from datetime import timedelta
+import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from urllib import error as urllib_error
@@ -14,6 +15,19 @@ from temporalio.client import Client
 from temporalio.common import RetryPolicy
 from temporalio.worker import Worker
 from temporalio import workflow
+
+ALLOWED_ARTIFACT_TYPES = {
+    "code",
+    "html",
+    "json",
+    "sql",
+    "config",
+    "test",
+    "markdown",
+    "svg",
+    "dockerfile",
+    "yaml",
+}
 
 
 @workflow.defn
@@ -40,6 +54,48 @@ async def execute_assignment_activity(assignment: dict[str, Any]) -> dict[str, A
         "actual_cost": estimated_cost,
         "estimated_duration": estimated_duration,
         "actual_duration": simulated_duration,
+    }
+
+
+@activity.defn
+async def generate_simulation_artifact_activity(payload: dict[str, Any]) -> dict[str, Any]:
+    await asyncio.sleep(0.05)
+    candidate = (
+        payload.get("artifact_candidate")
+        if isinstance(payload.get("artifact_candidate"), dict)
+        else {}
+    )
+    assignment = payload.get("assignment") if isinstance(payload.get("assignment"), dict) else {}
+    task_id = str(assignment.get("id") or "unknown-task")
+    artifact_type = str(candidate.get("type") or "code")
+    if artifact_type not in ALLOWED_ARTIFACT_TYPES:
+        artifact_type = "code"
+    language = (
+        str(candidate.get("language"))
+        if isinstance(candidate.get("language"), str)
+        else "unknown"
+    )
+    content = (
+        str(candidate.get("content"))
+        if isinstance(candidate.get("content"), str)
+        else f"# generated artifact for {task_id}\n"
+    )
+    metadata = candidate.get("metadata") if isinstance(candidate.get("metadata"), dict) else {}
+    created_at = datetime.now(timezone.utc).isoformat()
+    version_id = str(metadata.get("version_id") or f"sim-{task_id}-{uuid.uuid4().hex[:8]}")
+    size = int(metadata.get("size") or len(content.encode("utf-8")))
+    lines = int(metadata.get("lines") or len(content.splitlines()))
+    return {
+        "type": artifact_type,
+        "language": language,
+        "content": content,
+        "metadata": {
+            "size": size,
+            "lines": lines,
+            "created_at": str(metadata.get("created_at") or created_at),
+            "version_id": version_id,
+            "language": language,
+        },
     }
 
 
@@ -406,7 +462,7 @@ class ExecutionWorkflow:
         total_cost = 0.0
         total_duration = 0.0
 
-        for assignment in assignment_plan:
+        for index, assignment in enumerate(assignment_plan):
             timeout_seconds = max(
                 5,
                 int(float(assignment.get("estimated_duration", 0) or 0)) + 5,
@@ -431,6 +487,74 @@ class ExecutionWorkflow:
             "tasks": completed_tasks,
             "actual_cost": total_cost,
             "actual_duration": total_duration,
+            "task_count": len(completed_tasks),
+        }
+
+
+@workflow.defn
+class SimulationWorkflow:
+    @workflow.run
+    async def run(self, payload: dict[str, Any]) -> dict[str, Any]:
+        assignment_plan = payload.get("assignment_plan", [])
+        graph = payload.get("instruction_graph", [])
+        artifact_candidates = (
+            payload.get("artifact_candidates")
+            if isinstance(payload.get("artifact_candidates"), list)
+            else []
+        )
+        node_by_id: dict[str, dict[str, Any]] = {}
+        for node in graph:
+            if isinstance(node, dict):
+                node_id = str(node.get("id", ""))
+                if node_id:
+                    node_by_id[node_id] = node
+
+        completed_tasks: list[dict[str, Any]] = []
+        artifacts: list[dict[str, Any]] = []
+
+        for index, assignment in enumerate(assignment_plan):
+            timeout_seconds = max(
+                5,
+                int(float(assignment.get("estimated_duration", 0) or 0)) + 5,
+            )
+            task_result = await workflow.execute_activity(
+                execute_assignment_activity,
+                assignment,
+                start_to_close_timeout=timedelta(seconds=timeout_seconds),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=3,
+                    initial_interval=timedelta(seconds=1),
+                ),
+            )
+            completed_tasks.append(task_result)
+
+            task_id = str(assignment.get("id", ""))
+            artifact_result = await workflow.execute_activity(
+                generate_simulation_artifact_activity,
+                {
+                    "assignment": assignment,
+                    "instruction_node": node_by_id.get(task_id, {}),
+                    "artifact_candidate": (
+                        artifact_candidates[index]
+                        if index < len(artifact_candidates)
+                        and isinstance(artifact_candidates[index], dict)
+                        else {}
+                    ),
+                },
+                start_to_close_timeout=timedelta(seconds=10),
+                retry_policy=RetryPolicy(
+                    maximum_attempts=3,
+                    initial_interval=timedelta(seconds=1),
+                ),
+            )
+            artifacts.append(artifact_result)
+
+        return {
+            "simulation_id": str(payload.get("simulation_id", "unknown")),
+            "rule_set_id": str(payload.get("rule_set_id", "unknown")),
+            "status": "complete",
+            "tasks": completed_tasks,
+            "artifacts": artifacts,
             "task_count": len(completed_tasks),
         }
 
@@ -869,12 +993,14 @@ async def main() -> None:
         workflows=[
             SmokeWorkflow,
             ExecutionWorkflow,
+            SimulationWorkflow,
             DogfoodB1B8Workflow,
             SelfBootstrapWorkflow,
             MendixMigrationWorkflow,
         ],
         activities=[
             execute_assignment_activity,
+            generate_simulation_artifact_activity,
             execute_dogfood_block_activity,
             generate_change_bundle_stub_activity,
             extract_mendix_records_activity,
@@ -885,7 +1011,7 @@ async def main() -> None:
         ],
     )
     print(
-        "Temporal worker started. task_queue=ari-smoke namespace=default workflows=[SmokeWorkflow, ExecutionWorkflow, DogfoodB1B8Workflow, SelfBootstrapWorkflow, MendixMigrationWorkflow]"
+        "Temporal worker started. task_queue=ari-smoke namespace=default workflows=[SmokeWorkflow, ExecutionWorkflow, SimulationWorkflow, DogfoodB1B8Workflow, SelfBootstrapWorkflow, MendixMigrationWorkflow]"
     )
     await worker.run()
 

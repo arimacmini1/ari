@@ -1,0 +1,5 @@
+
+> my-project@0.1.0 docs:parity
+> node scripts/check-docs-parity.mjs
+
+DOCS PARITY CHECK PASSED

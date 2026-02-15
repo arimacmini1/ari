@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, GitBranch } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { TraceNode } from './trace-node'
 import { DecisionContextDialog } from './decision-context-dialog'
@@ -77,6 +77,16 @@ export function TraceTree({
               <span className="text-muted-foreground">Cost: </span>
               <span className="font-mono text-foreground">${trace.cost.toFixed(3)}</span>
             </div>
+            {trace.source_repo && (
+              <div className="flex items-center gap-1.5">
+                <GitBranch className="w-3 h-3 text-muted-foreground" />
+                <span className="font-mono text-foreground">
+                  {trace.source_repo.url.replace(/^https?:\/\/github\.com\//, '')}
+                  @{trace.source_repo.branch}
+                  {trace.source_repo.commit ? ` (${trace.source_repo.commit.slice(0, 7)})` : ''}
+                </span>
+              </div>
+            )}
             {compareDisabled ? (
               <span className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 text-[11px] text-amber-300">
                 Compare Disabled

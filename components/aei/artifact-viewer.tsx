@@ -136,35 +136,51 @@ function SyntaxHighlightedLine({ line, language }: { line: string; language?: st
     return <span>{line}</span>
   }
 
-  // Very basic syntax highlighting
-  let highlighted = line
+  // Render tokens as React nodes to avoid HTML-string replacement corruption.
+  const tokenPattern =
+    /(#.*$|\/\/.*$|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`|\b(?:def|function|const|let|var|class|if|else|for|while|return|import|from|as|async|await)\b|\b\d+\b)/g
+  const parts = line.split(tokenPattern)
 
-  // Keywords (language-agnostic)
-  const keywords = /\b(def|function|const|let|var|class|if|else|for|while|return|import|from|as|async|await)\b/g
-  highlighted = highlighted.replace(
-    keywords,
-    '<span class="text-blue-400">$1</span>'
+  return (
+    <span>
+      {parts.map((part, idx) => {
+        if (!part) return null
+        if (part.startsWith("#") || part.startsWith("//")) {
+          return (
+            <span key={idx} className="text-slate-500">
+              {part}
+            </span>
+          )
+        }
+        if (
+          (part.startsWith('"') && part.endsWith('"')) ||
+          (part.startsWith("'") && part.endsWith("'")) ||
+          (part.startsWith("`") && part.endsWith("`"))
+        ) {
+          return (
+            <span key={idx} className="text-green-400">
+              {part}
+            </span>
+          )
+        }
+        if (/^\d+$/.test(part)) {
+          return (
+            <span key={idx} className="text-yellow-400">
+              {part}
+            </span>
+          )
+        }
+        if (/^(def|function|const|let|var|class|if|else|for|while|return|import|from|as|async|await)$/.test(part)) {
+          return (
+            <span key={idx} className="text-blue-400">
+              {part}
+            </span>
+          )
+        }
+        return <span key={idx}>{part}</span>
+      })}
+    </span>
   )
-
-  // Strings
-  highlighted = highlighted.replace(
-    /(["'`])([^"'`]*)\1/g,
-    '<span class="text-green-400">$1$2$1</span>'
-  )
-
-  // Comments
-  highlighted = highlighted.replace(
-    /(#.*|\/\/.*)/g,
-    '<span class="text-slate-500">$1</span>'
-  )
-
-  // Numbers
-  highlighted = highlighted.replace(
-    /\b(\d+)\b/g,
-    '<span class="text-yellow-400">$1</span>'
-  )
-
-  return <span dangerouslySetInnerHTML={{ __html: highlighted }} />
 }
 
 /**

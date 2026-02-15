@@ -1,0 +1,119 @@
+{
+  "started": {
+    "workflow_id": "ari-dogfood-da121ce5b6",
+    "run_id": "019c5d1d-eb8c-7d50-9fb9-49bd2daf5cb8",
+    "started_at": "2026-02-14T17:06:07.894877+00:00"
+  },
+  "evidence": {
+    "pre_approval_status": {
+      "approval_granted": false,
+      "approval_note": "",
+      "current_block": "B7",
+      "history": [
+        {
+          "block": "B1",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B2",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B3",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B4",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B5",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B6",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        }
+      ],
+      "status": "waiting_for_approval"
+    },
+    "approval_signal": {
+      "signal": "approve_resume",
+      "note": "manual evidence approval"
+    },
+    "post_approval_status": {
+      "approval_granted": true,
+      "approval_note": "manual evidence approval",
+      "current_block": "B8",
+      "history": [
+        {
+          "block": "B1",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B2",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B3",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B4",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B5",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B6",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "approval_gate",
+          "note": "manual evidence approval",
+          "status": "approved"
+        },
+        {
+          "block": "B7",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        },
+        {
+          "block": "B8",
+          "input": {},
+          "note": "stubbed-block-activity",
+          "status": "complete"
+        }
+      ],
+      "status": "complete"
+    }
+  },
+  "recorded_at": "2026-02-14T17:06:09.489537+00:00"
+}

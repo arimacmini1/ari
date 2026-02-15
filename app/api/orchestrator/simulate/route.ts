@@ -11,8 +11,73 @@ import {
   generateArtifactsForSimulation,
 } from '@/lib/orchestrator-engine';
 import { getOrchestratorEngine } from '@/lib/orchestrator-store';
+import type { Artifact, ArtifactType } from '@/lib/artifact-model';
+import {
+  getTemporalSimulationPreflight,
+  runTemporalSimulationWorkflow,
+} from '@/lib/temporal-simulation';
 
 const ORCHESTRATOR = getOrchestratorEngine();
+const ARTIFACT_TYPES: ArtifactType[] = [
+  'code',
+  'html',
+  'json',
+  'sql',
+  'config',
+  'test',
+  'markdown',
+  'svg',
+  'dockerfile',
+  'yaml',
+];
+
+function normalizeTemporalArtifacts(rawArtifacts: unknown[]): Artifact[] {
+  return rawArtifacts.flatMap((raw, index) => {
+    if (!raw || typeof raw !== 'object') return [];
+    const candidate = raw as Record<string, unknown>;
+    const type = String(candidate.type || '');
+    const normalizedType = ARTIFACT_TYPES.includes(type as ArtifactType)
+      ? (type as ArtifactType)
+      : 'code';
+    const content = String(candidate.content || '');
+    const metadataCandidate =
+      candidate.metadata && typeof candidate.metadata === 'object'
+        ? (candidate.metadata as Record<string, unknown>)
+        : {};
+    const language = candidate.language ? String(candidate.language) : undefined;
+    const size =
+      typeof metadataCandidate.size === 'number'
+        ? metadataCandidate.size
+        : new TextEncoder().encode(content).length;
+    const lines =
+      typeof metadataCandidate.lines === 'number'
+        ? metadataCandidate.lines
+        : content.split(/\r?\n/).length;
+    const createdAt =
+      typeof metadataCandidate.created_at === 'string'
+        ? metadataCandidate.created_at
+        : new Date().toISOString();
+    const versionId =
+      typeof metadataCandidate.version_id === 'string'
+        ? metadataCandidate.version_id
+        : `temporal-artifact-${index}-${Date.now()}`;
+
+    return [
+      {
+        type: normalizedType,
+        language: language as Artifact['language'],
+        content,
+        metadata: {
+          size,
+          lines,
+          created_at: createdAt,
+          version_id: versionId,
+          language: language as Artifact['language'],
+        },
+      },
+    ];
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -96,11 +161,46 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    // Generate artifacts for preview (F04-MH-03)
-    const artifacts = generateArtifactsForSimulation(
+    let artifacts = generateArtifactsForSimulation(
       instruction_graph as InstructionNode[],
       result.assignment_plan
     );
+    let simulationEngine: 'temporal' | 'legacy-mock' = 'legacy-mock';
+    let temporalWorkflowId: string | null = null;
+
+    const temporalPreflight = await getTemporalSimulationPreflight();
+    if (temporalPreflight.ok) {
+      try {
+        const simulationId = `sim-${Date.now()}`;
+        const temporal = await runTemporalSimulationWorkflow({
+          simulation_id: simulationId,
+          rule_set_id: ruleId,
+          instruction_graph: instruction_graph as InstructionNode[],
+          assignment_plan: result.assignment_plan,
+          artifact_candidates: artifacts,
+        });
+        temporalWorkflowId = temporal.workflowId;
+        const temporalArtifacts = normalizeTemporalArtifacts(
+          Array.isArray(temporal.result.artifacts) ? temporal.result.artifacts : []
+        );
+        if (temporalArtifacts.length > 0) {
+          artifacts = temporalArtifacts;
+          simulationEngine = 'temporal';
+        } else {
+          result.validation_errors.push(
+            'Temporal simulation returned no artifacts; using legacy simulator output.'
+          );
+        }
+      } catch (error) {
+        result.validation_errors.push(
+          `Temporal simulation unavailable; fallback to legacy simulator (${String(error)})`
+        );
+      }
+    } else {
+      result.validation_errors.push(
+        `Temporal simulation unavailable; fallback to legacy simulator (${temporalPreflight.reason})`
+      );
+    }
 
     // Non-destructive: return result without persisting
     return NextResponse.json(
@@ -108,6 +208,8 @@ export async function POST(req: NextRequest) {
         simulation: {
           ...result,
           artifacts,
+          simulation_engine: simulationEngine,
+          temporal_workflow_id: temporalWorkflowId,
         },
         timestamp: new Date().toISOString(),
       },

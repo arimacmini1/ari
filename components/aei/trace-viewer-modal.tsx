@@ -8,6 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { GitBranch } from 'lucide-react'
 import { TraceTree } from './trace-tree'
 import { TraceExecution } from '@/lib/trace-model'
 
@@ -79,6 +80,16 @@ export function TraceViewerModal({
               <p className="text-xs text-muted-foreground mt-2">
                 Execution: <span className="font-mono">{executionId}</span>
               </p>
+              {trace?.source_repo && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <GitBranch className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {trace.source_repo.url.replace(/^https?:\/\/github\.com\//, '')}
+                    @{trace.source_repo.branch}
+                    {trace.source_repo.commit ? ` (${trace.source_repo.commit.slice(0, 7)})` : ''}
+                  </span>
+                </div>
+              )}
             </div>
             {trace && (
               <Badge className={`${getStatusBadgeColor(trace.status)} text-xs`}>

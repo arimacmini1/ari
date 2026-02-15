@@ -16,6 +16,11 @@ function seedIfNeeded() {
     duration: 12.4,
     cost: 0.42,
     status: "success",
+    source_repo: {
+      url: "https://github.com/ari-platform/demo-project",
+      branch: "main",
+      commit: "a1b2c3d4e5f6789012345678901234567890abcd",
+    },
     root_decisions: [
       {
         node_id: "decision-1",

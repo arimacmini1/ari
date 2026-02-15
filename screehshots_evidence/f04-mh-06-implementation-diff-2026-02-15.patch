@@ -1,0 +1,372 @@
+diff --git a/app/api/orchestrator/simulate/route.ts b/app/api/orchestrator/simulate/route.ts
+index 5fe2bea..7615556 100644
+--- a/app/api/orchestrator/simulate/route.ts
++++ b/app/api/orchestrator/simulate/route.ts
+@@ -11,8 +11,73 @@ import {
+   generateArtifactsForSimulation,
+ } from '@/lib/orchestrator-engine';
+ import { getOrchestratorEngine } from '@/lib/orchestrator-store';
++import type { Artifact, ArtifactType } from '@/lib/artifact-model';
++import {
++  canRunTemporalSimulation,
++  runTemporalSimulationWorkflow,
++} from '@/lib/temporal-simulation';
+ 
+ const ORCHESTRATOR = getOrchestratorEngine();
++const ARTIFACT_TYPES: ArtifactType[] = [
++  'code',
++  'html',
++  'json',
++  'sql',
++  'config',
++  'test',
++  'markdown',
++  'svg',
++  'dockerfile',
++  'yaml',
++];
++
++function normalizeTemporalArtifacts(rawArtifacts: unknown[]): Artifact[] {
++  return rawArtifacts.flatMap((raw, index) => {
++    if (!raw || typeof raw !== 'object') return [];
++    const candidate = raw as Record<string, unknown>;
++    const type = String(candidate.type || '');
++    const normalizedType = ARTIFACT_TYPES.includes(type as ArtifactType)
++      ? (type as ArtifactType)
++      : 'code';
++    const content = String(candidate.content || '');
++    const metadataCandidate =
++      candidate.metadata && typeof candidate.metadata === 'object'
++        ? (candidate.metadata as Record<string, unknown>)
++        : {};
++    const language = candidate.language ? String(candidate.language) : undefined;
++    const size =
++      typeof metadataCandidate.size === 'number'
++        ? metadataCandidate.size
++        : new TextEncoder().encode(content).length;
++    const lines =
++      typeof metadataCandidate.lines === 'number'
++        ? metadataCandidate.lines
++        : content.split(/\r?\n/).length;
++    const createdAt =
++      typeof metadataCandidate.created_at === 'string'
++        ? metadataCandidate.created_at
++        : new Date().toISOString();
++    const versionId =
++      typeof metadataCandidate.version_id === 'string'
++        ? metadataCandidate.version_id
++        : `temporal-artifact-${index}-${Date.now()}`;
++
++    return [
++      {
++        type: normalizedType,
++        language: language as Artifact['language'],
++        content,
++        metadata: {
++          size,
++          lines,
++          created_at: createdAt,
++          version_id: versionId,
++          language: language as Artifact['language'],
++        },
++      },
++    ];
++  });
++}
+ 
+ export async function POST(req: NextRequest) {
+   try {
+@@ -96,11 +161,41 @@ export async function POST(req: NextRequest) {
+       };
+     }
+ 
+-    // Generate artifacts for preview (F04-MH-03)
+-    const artifacts = generateArtifactsForSimulation(
++    let artifacts = generateArtifactsForSimulation(
+       instruction_graph as InstructionNode[],
+       result.assignment_plan
+     );
++    let simulationEngine: 'temporal' | 'legacy-mock' = 'legacy-mock';
++    let temporalWorkflowId: string | null = null;
++
++    const temporalEnabled = canRunTemporalSimulation();
++    if (temporalEnabled) {
++      try {
++        const simulationId = `sim-${Date.now()}`;
++        const temporal = await runTemporalSimulationWorkflow({
++          simulation_id: simulationId,
++          rule_set_id: ruleId,
++          instruction_graph: instruction_graph as InstructionNode[],
++          assignment_plan: result.assignment_plan,
++        });
++        temporalWorkflowId = temporal.workflowId;
++        const temporalArtifacts = normalizeTemporalArtifacts(
++          Array.isArray(temporal.result.artifacts) ? temporal.result.artifacts : []
++        );
++        if (temporalArtifacts.length > 0) {
++          artifacts = temporalArtifacts;
++          simulationEngine = 'temporal';
++        } else {
++          result.validation_errors.push(
++            'Temporal simulation returned no artifacts; using legacy simulator output.'
++          );
++        }
++      } catch (error) {
++        result.validation_errors.push(
++          `Temporal simulation unavailable; fallback to legacy simulator (${String(error)})`
++        );
++      }
++    }
+ 
+     // Non-destructive: return result without persisting
+     return NextResponse.json(
+@@ -108,6 +203,8 @@ export async function POST(req: NextRequest) {
+         simulation: {
+           ...result,
+           artifacts,
++          simulation_engine: simulationEngine,
++          temporal_workflow_id: temporalWorkflowId,
+         },
+         timestamp: new Date().toISOString(),
+       },
+diff --git a/temporal_worker/worker.py b/temporal_worker/worker.py
+index 0beb5c3..5235f53 100644
+--- a/temporal_worker/worker.py
++++ b/temporal_worker/worker.py
+@@ -3,7 +3,8 @@ import csv
+ import json
+ import os
+ import re
+-from datetime import timedelta
++import uuid
++from datetime import datetime, timedelta, timezone
+ from pathlib import Path
+ from typing import Any
+ from urllib import error as urllib_error
+@@ -15,6 +16,16 @@ from temporalio.common import RetryPolicy
+ from temporalio.worker import Worker
+ from temporalio import workflow
+ 
++ARTIFACT_TYPE_BY_TASK_KEYWORD: list[tuple[str, tuple[str, str]]] = [
++    ("code", ("code", "python")),
++    ("test", ("test", "python")),
++    ("deploy", ("dockerfile", "dockerfile")),
++    ("sql", ("sql", "sql")),
++    ("config", ("config", "yaml")),
++    ("html", ("html", "html")),
++    ("doc", ("markdown", "markdown")),
++]
++
+ 
+ @workflow.defn
+ class SmokeWorkflow:
+@@ -43,6 +54,121 @@ async def execute_assignment_activity(assignment: dict[str, Any]) -> dict[str, A
+     }
+ 
+ 
++def _pick_artifact_kind(task_type: str) -> tuple[str, str]:
++    lowered = task_type.lower()
++    for needle, artifact in ARTIFACT_TYPE_BY_TASK_KEYWORD:
++        if needle in lowered:
++            return artifact
++    return ("code", "python")
++
++
++def _render_artifact_content(
++    artifact_type: str, language: str, task_id: str, description: str
++) -> str:
++    if artifact_type == "code":
++        return "\n".join(
++            [
++                f"def run_{task_id.replace('-', '_')}():",
++                f'    """{description or "Generated simulation task"}"""',
++                "    # TODO: replace simulation stub with implementation",
++                "    return {\"status\": \"ok\"}",
++                "",
++            ]
++        )
++    if artifact_type == "test":
++        return "\n".join(
++            [
++                f"def test_{task_id.replace('-', '_')}_stub():",
++                "    # TODO: replace with real assertions",
++                "    assert True",
++                "",
++            ]
++        )
++    if artifact_type == "dockerfile":
++        return "\n".join(
++            [
++                "FROM python:3.12-slim",
++                "WORKDIR /app",
++                "COPY . .",
++                'CMD ["python", "-m", "app"]',
++                "",
++            ]
++        )
++    if artifact_type == "sql":
++        return "\n".join(
++            [
++                f"-- {description or 'Generated migration'}",
++                f"CREATE TABLE IF NOT EXISTS {task_id.replace('-', '_')}_items (",
++                "  id SERIAL PRIMARY KEY,",
++                "  created_at TIMESTAMP NOT NULL DEFAULT NOW()",
++                ");",
++                "",
++            ]
++        )
++    if artifact_type == "config":
++        return "\n".join(
++            [
++                "service:",
++                f"  name: {task_id}",
++                "  retries: 3",
++                "  timeout_seconds: 30",
++                "",
++            ]
++        )
++    if artifact_type == "html":
++        return "\n".join(
++            [
++                "<section>",
++                f"  <h1>{task_id}</h1>",
++                f"  <p>{description or 'Generated simulation preview'}</p>",
++                "</section>",
++                "",
++            ]
++        )
++    if artifact_type == "markdown":
++        return "\n".join(
++            [
++                f"# {task_id}",
++                "",
++                description or "Generated simulation notes",
++                "",
++            ]
++        )
++    return f"# {task_id}\n"
++
++
++@activity.defn
++async def generate_simulation_artifact_activity(payload: dict[str, Any]) -> dict[str, Any]:
++    await asyncio.sleep(0.05)
++    assignment = payload.get("assignment") if isinstance(payload.get("assignment"), dict) else {}
++    instruction_node = (
++        payload.get("instruction_node")
++        if isinstance(payload.get("instruction_node"), dict)
++        else {}
++    )
++    task_id = str(assignment.get("id") or instruction_node.get("id") or "unknown-task")
++    task_type = str(instruction_node.get("type") or "code_gen")
++    description = str(instruction_node.get("description") or "").strip()
++    artifact_type, language = _pick_artifact_kind(task_type)
++    content = _render_artifact_content(artifact_type, language, task_id, description)
++    created_at = datetime.now(timezone.utc).isoformat()
++    version_id = f"sim-{task_id}-{uuid.uuid4().hex[:8]}"
++    size = len(content.encode("utf-8"))
++    lines = len(content.splitlines())
++    return {
++        "type": artifact_type,
++        "language": language,
++        "content": content,
++        "metadata": {
++            "size": size,
++            "lines": lines,
++            "created_at": created_at,
++            "version_id": version_id,
++            "language": language,
++        },
++    }
++
++
+ @activity.defn
+ async def execute_dogfood_block_activity(payload: dict[str, Any]) -> dict[str, Any]:
+     # Stub block activity for F03-MH-08: durable Temporal history with predictable runtime.
+@@ -435,6 +561,63 @@ class ExecutionWorkflow:
+         }
+ 
+ 
++@workflow.defn
++class SimulationWorkflow:
++    @workflow.run
++    async def run(self, payload: dict[str, Any]) -> dict[str, Any]:
++        assignment_plan = payload.get("assignment_plan", [])
++        graph = payload.get("instruction_graph", [])
++        node_by_id: dict[str, dict[str, Any]] = {}
++        for node in graph:
++            if isinstance(node, dict):
++                node_id = str(node.get("id", ""))
++                if node_id:
++                    node_by_id[node_id] = node
++
++        completed_tasks: list[dict[str, Any]] = []
++        artifacts: list[dict[str, Any]] = []
++
++        for assignment in assignment_plan:
++            timeout_seconds = max(
++                5,
++                int(float(assignment.get("estimated_duration", 0) or 0)) + 5,
++            )
++            task_result = await workflow.execute_activity(
++                execute_assignment_activity,
++                assignment,
++                start_to_close_timeout=timedelta(seconds=timeout_seconds),
++                retry_policy=RetryPolicy(
++                    maximum_attempts=3,
++                    initial_interval=timedelta(seconds=1),
++                ),
++            )
++            completed_tasks.append(task_result)
++
++            task_id = str(assignment.get("id", ""))
++            artifact_result = await workflow.execute_activity(
++                generate_simulation_artifact_activity,
++                {
++                    "assignment": assignment,
++                    "instruction_node": node_by_id.get(task_id, {}),
++                },
++                start_to_close_timeout=timedelta(seconds=10),
++                retry_policy=RetryPolicy(
++                    maximum_attempts=3,
++                    initial_interval=timedelta(seconds=1),
++                ),
++            )
++            artifacts.append(artifact_result)
++
++        return {
++            "simulation_id": str(payload.get("simulation_id", "unknown")),
++            "rule_set_id": str(payload.get("rule_set_id", "unknown")),
++            "status": "complete",
++            "tasks": completed_tasks,
++            "artifacts": artifacts,
++            "task_count": len(completed_tasks),
++        }
++
++
+ @workflow.defn
+ class DogfoodB1B8Workflow:
+     def __init__(self) -> None:
+@@ -869,12 +1052,14 @@ async def main() -> None:
+         workflows=[
+             SmokeWorkflow,
+             ExecutionWorkflow,
++            SimulationWorkflow,
+             DogfoodB1B8Workflow,
+             SelfBootstrapWorkflow,
+             MendixMigrationWorkflow,
+         ],
+         activities=[
+             execute_assignment_activity,
++            generate_simulation_artifact_activity,
+             execute_dogfood_block_activity,
+             generate_change_bundle_stub_activity,
+             extract_mendix_records_activity,
+@@ -885,7 +1070,7 @@ async def main() -> None:
+         ],
+     )
+     print(
+-        "Temporal worker started. task_queue=ari-smoke namespace=default workflows=[SmokeWorkflow, ExecutionWorkflow, DogfoodB1B8Workflow, SelfBootstrapWorkflow, MendixMigrationWorkflow]"
++        "Temporal worker started. task_queue=ari-smoke namespace=default workflows=[SmokeWorkflow, ExecutionWorkflow, SimulationWorkflow, DogfoodB1B8Workflow, SelfBootstrapWorkflow, MendixMigrationWorkflow]"
+     )
+     await worker.run()
+ 

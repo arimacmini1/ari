@@ -1,13 +1,14 @@
 # Feature 04 – Output Simulator: Architecture Document
 
 **Feature:** Output Simulator (Artifact Preview & Validation)  
-**Version:** 1.0  
-**Last Updated:** 2026-02-09  
-**Status:** Complete and Tested
+**Version:** 1.1  
+**Last Updated:** 2026-02-15  
+**Status:** Complete and Tested (including `F04-MH-06` Temporal-backed simulation path)
 
 <!--
   Architecture Version History:
   - 1.0 (2026-02-09): Initial architecture documentation
+  - 1.1 (2026-02-15): Added Temporal simulation execution path for F04-MH-06
 -->
 
 ---
@@ -18,11 +19,13 @@ The Output Simulator feature provides a complete workflow for:
 1. **Orchestrating rules** - Define task routing rules with priorities and agent affinities
 2. **Simulating execution** - Run orchestrator against instruction graphs to generate assignment plans
 3. **Previewing artifacts** - Display generated code/HTML/JSON/SQL artifacts with validation
+4. **Temporal-backed simulation runtime** - Execute simulation workflow as Temporal workflow + activities with retry/timeout visibility
 
 The architecture is **modular, decoupled, and extensible**, with clear separation between:
 - **UI Layer** - React components and state management
 - **API Layer** - Next.js route handlers with validation
 - **Engine Layer** - Core orchestration logic (decompose → assign → simulate)
+- **Workflow Runtime Layer** - Temporal workflows/activities + runner scripts
 - **Data Models** - Type-safe interfaces for rules, artifacts, and execution plans
 
 ---
@@ -66,9 +69,21 @@ The architecture is **modular, decoupled, and extensible**, with clear separatio
 │  │ 1. Parse instruction graph                                │ │
 │  │ 2. Initialize Rule from rule_set_id                       │ │
 │  │ 3. Call ORCHESTRATOR.simulate(graph, rule, constraints)   │ │
-│  │ 4. Generate artifacts for each task                       │ │
-│  │ 5. Return { simulation, artifacts }                       │ │
+│  │ 4. Generate artifact candidates                            │ │
+│  │ 5. Try Temporal SimulationWorkflow                         │ │
+│  │ 6. Fallback to legacy artifacts if Temporal unavailable    │ │
+│  │ 7. Return { simulation, artifacts, simulation_engine,      │ │
+│  │    temporal_workflow_id }                                  │ │
 │  └────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│     TEMPORAL WORKFLOW LAYER (F04-MH-06)                         │
+│  • run_simulation.py starts SimulationWorkflow                   │
+│  • SimulationWorkflow executes assignment + artifact activities  │
+│  • Retry/timeouts configured per activity                        │
+│  • Workflow history exported for evidence                        │
 └─────────────────────────────────────────────────────────────────┘
          │
          ▼
@@ -301,6 +316,8 @@ onToggle: (expanded: boolean) => void
     estimated_total_duration: number
     success_probability: number
     validation_errors: string[]
+    simulation_engine: "temporal" | "legacy-mock"
+    temporal_workflow_id: string | null
   }
   artifacts: Artifact[]
 }
@@ -311,7 +328,9 @@ onToggle: (expanded: boolean) => void
 2. Fetch or initialize Rule from rule_set_id
 3. Call ORCHESTRATOR.simulate()
 4. Generate artifacts for each task type
-5. Return results + artifacts
+5. Attempt Temporal-backed simulation workflow (when enabled and preflight checks pass)
+6. Fallback to legacy artifacts if Temporal path fails/unavailable
+7. Return results + artifacts + runtime metadata
 
 **Error Handling:**
 - 400: Invalid graph structure
@@ -702,4 +721,3 @@ curl -X POST http://localhost:3000/api/orchestrator/simulate \
 | ArtifactPreviewPanel | `artifacts`, `isExpanded` | `onToggle` |
 | ArtifactViewer | `artifact` | — |
 | RuleEditor | `rule` | `onSave`, `onCancel` |
-

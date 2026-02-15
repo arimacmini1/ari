@@ -142,7 +142,7 @@ export default function OrchestratorPage() {
   }, [artifacts]);
 
   return (
-    <div className="flex h-screen bg-slate-950 text-white">
+    <div className="flex min-h-screen bg-slate-950 text-white">
       {/* Left Sidebar: Rules */}
       <div className="w-80 border-r border-slate-700 overflow-y-auto shrink-0">
         <div className="p-4 border-b border-slate-700">
@@ -170,8 +170,8 @@ export default function OrchestratorPage() {
       </div>
 
       {/* Main Content: Visualization & Simulation */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <div className="grid grid-cols-2 gap-4 p-4 flex-1 min-h-0">
+      <div className="flex-1 min-w-0 overflow-y-auto">
+        <div className="grid grid-cols-2 auto-rows-max gap-4 p-4">
           {/* Rule Visualization */}
           <Card className="bg-slate-900 border-slate-700 overflow-hidden flex flex-col">
             <CardHeader className="pb-3 shrink-0">

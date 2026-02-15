@@ -27,6 +27,8 @@ import {
   BarChart3,
   Terminal,
   Network,
+  CheckCircle2,
+  Circle,
 } from "lucide-react"
 import type { CodeExplorerSnapshot } from "@/lib/code-explorer-snapshot"
 
@@ -36,6 +38,17 @@ const CODE_EXPLORER_SELECTED_PATH_KEY = "aei.code-explorer.selected-path"
 const CODE_EXPLORER_EXPANDED_FOLDERS_KEY = "aei.code-explorer.expanded-folders"
 const CODE_EXPLORER_SOURCE_KEY = "aei.code-explorer.source"
 const MIGRATION_TIP_STORAGE_KEY = "aei.migration.tips.dismissed"
+const WORKSPACE_MODE_KEY = "aei.workspace.mode"
+const WORKFLOW_STARTED_KEY = "aei.workflow.started"
+const WORKFLOW_STAGE_KEY = "aei.workflow.stage"
+const WORKFLOW_COMPLETED_KEY = "aei.workflow.completed"
+const WORKFLOW_CHECKLIST_KEY = "aei.workflow.checklist"
+const WORKFLOW_CHECKLIST_DISMISSED_KEY = "aei.workflow.checklist.dismissed"
+const WORKFLOW_CONTEXT_MODE_KEY = "aei.workflow.context.mode"
+const WORKFLOW_REPO_URL_KEY = "aei.workflow.context.repo_url"
+const WORKFLOW_REPO_BRANCH_KEY = "aei.workflow.context.repo_branch"
+const WORKFLOW_REPO_BADGE_KEY = "aei.workflow.context.repo_badge"
+const WORKFLOW_REPO_COMMIT_KEY = "aei.workflow.context.repo_commit"
 
 type CodeTreeNode =
   | { kind: "folder"; name: string; path: string; children: CodeTreeNode[] }
@@ -186,6 +199,165 @@ const mainTabs = [
 ] as const
 
 type TabId = (typeof mainTabs)[number]["id"]
+type WorkspaceMode = "workflow" | "advanced"
+type WorkflowStageId = "A" | "B" | "C" | "D" | "E" | "F" | "G"
+type ProjectContextMode = "template" | "repository"
+type RepoImportStatus = "idle" | "queued" | "indexing" | "ready" | "error"
+type ChecklistId =
+  | "goal"
+  | "canvas"
+  | "rule"
+  | "simulate"
+  | "artifacts"
+  | "execute"
+  | "trace"
+  | "iterate"
+
+const workflowStages: Array<{
+  id: WorkflowStageId
+  label: string
+  tabId: TabId
+  hint: string
+}> = [
+  { id: "A", label: "Intent", tabId: "console", hint: "Define goal and acceptance criteria." },
+  { id: "B", label: "Canvas", tabId: "canvas", hint: "Shape a valid workflow graph." },
+  { id: "C", label: "Orchestrator", tabId: "orchestrator", hint: "Select rule + constraints." },
+  { id: "D", label: "Simulation", tabId: "orchestrator", hint: "Run simulation and inspect outputs." },
+  { id: "E", label: "Execute", tabId: "orchestrator", hint: "Approve and run the workflow." },
+  { id: "F", label: "Trace", tabId: "traces", hint: "Review top decisions and confidence." },
+  { id: "G", label: "Operational", tabId: "analytics", hint: "Capture next iteration checklist." },
+]
+
+const workflowChecklist: Array<{
+  id: ChecklistId
+  label: string
+  stageId: WorkflowStageId
+}> = [
+  { id: "goal", label: "Define goal in chat", stageId: "A" },
+  { id: "canvas", label: "Build/verify workflow graph", stageId: "B" },
+  { id: "rule", label: "Select orchestrator rule", stageId: "C" },
+  { id: "simulate", label: "Run simulation", stageId: "D" },
+  { id: "artifacts", label: "Review artifacts", stageId: "D" },
+  { id: "execute", label: "Execute workflow", stageId: "E" },
+  { id: "trace", label: "Inspect trace decisions", stageId: "F" },
+  { id: "iterate", label: "Capture one improvement", stageId: "G" },
+]
+
+const defaultChecklistState: Record<ChecklistId, boolean> = {
+  goal: false,
+  canvas: false,
+  rule: false,
+  simulate: false,
+  artifacts: false,
+  execute: false,
+  trace: false,
+  iterate: false,
+}
+
+function createQuickWinCanvas(kind: "simple-script" | "debug-code"): CanvasState {
+  const now = Date.now().toString()
+  const mkId = (suffix: string) => `qw-${kind}-${suffix}-${now}`
+
+  if (kind === "simple-script") {
+    const n1 = mkId("prompt")
+    const n2 = mkId("task")
+    const n3 = mkId("artifact")
+    return {
+      nodes: [
+        {
+          id: n1,
+          type: "block",
+          data: {
+            label: "Prompt",
+            description: "Build a simple script that reads CSV and prints summary stats.",
+            blockType: "text",
+          },
+          position: { x: 80, y: 140 },
+        },
+        {
+          id: n2,
+          type: "block",
+          data: {
+            label: "Task",
+            description: "Generate implementation plan and script",
+            blockType: "task",
+          },
+          position: { x: 360, y: 140 },
+        },
+        {
+          id: n3,
+          type: "block",
+          data: {
+            label: "Artifact",
+            description: "Output script + usage notes",
+            blockType: "artifact",
+          },
+          position: { x: 660, y: 140 },
+        },
+      ],
+      edges: [
+        { id: `e-${n1}-${n2}`, source: n1, target: n2 },
+        { id: `e-${n2}-${n3}`, source: n2, target: n3 },
+      ],
+      viewport: { x: 0, y: 0, zoom: 1 },
+    }
+  }
+
+  const n1 = mkId("prompt")
+  const n2 = mkId("task")
+  const n3 = mkId("decision")
+  const n4 = mkId("artifact")
+  return {
+    nodes: [
+      {
+        id: n1,
+        type: "block",
+        data: {
+          label: "Prompt",
+          description: "Debug failing function with reproducible steps and expected output.",
+          blockType: "text",
+        },
+        position: { x: 60, y: 160 },
+      },
+      {
+        id: n2,
+        type: "block",
+        data: {
+          label: "Task",
+          description: "Analyze stack trace and isolate failure",
+          blockType: "task",
+        },
+        position: { x: 320, y: 160 },
+      },
+      {
+        id: n3,
+        type: "block",
+        data: {
+          label: "Decision",
+          description: "Patch found? choose fix path",
+          blockType: "decision",
+        },
+        position: { x: 560, y: 160 },
+      },
+      {
+        id: n4,
+        type: "block",
+        data: {
+          label: "Artifact",
+          description: "Produce fix diff + validation notes",
+          blockType: "artifact",
+        },
+        position: { x: 820, y: 160 },
+      },
+    ],
+    edges: [
+      { id: `e-${n1}-${n2}`, source: n1, target: n2 },
+      { id: `e-${n2}-${n3}`, source: n2, target: n3 },
+      { id: `e-${n3}-${n4}`, source: n3, target: n4 },
+    ],
+    viewport: { x: 0, y: 0, zoom: 0.95 },
+  }
+}
 
 function CodePeekPanel() {
   const [snapshot, setSnapshot] = useState<CodeExplorerSnapshot | null>(null)
@@ -982,7 +1154,81 @@ function CodeExplorerPanel() {
 }
 
 export function MainWorkspace() {
+  const codeServerEnabled = process.env.NEXT_PUBLIC_USE_CODE_SERVER === "true"
+  const codeServerUrl = process.env.NEXT_PUBLIC_CODE_SERVER_URL ?? ""
   const [activeTab, setActiveTab] = useState<TabId>("canvas")
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(() => {
+    if (typeof window === "undefined") return "workflow"
+    return localStorage.getItem(WORKSPACE_MODE_KEY) === "advanced" ? "advanced" : "workflow"
+  })
+  const [workflowStarted, setWorkflowStarted] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    return localStorage.getItem(WORKFLOW_STARTED_KEY) === "true"
+  })
+  const [workflowStage, setWorkflowStage] = useState<WorkflowStageId>(() => {
+    if (typeof window === "undefined") return "A"
+    const stored = localStorage.getItem(WORKFLOW_STAGE_KEY)
+    return workflowStages.some((stage) => stage.id === stored)
+      ? (stored as WorkflowStageId)
+      : "A"
+  })
+  const [completedStages, setCompletedStages] = useState<Set<WorkflowStageId>>(() => {
+    if (typeof window === "undefined") return new Set()
+    const raw = localStorage.getItem(WORKFLOW_COMPLETED_KEY)
+    if (!raw) return new Set()
+    try {
+      const parsed = JSON.parse(raw) as WorkflowStageId[]
+      return new Set(parsed.filter((id) => workflowStages.some((stage) => stage.id === id)))
+    } catch {
+      return new Set()
+    }
+  })
+  const [checklist, setChecklist] = useState<Record<ChecklistId, boolean>>(() => {
+    if (typeof window === "undefined") {
+      return defaultChecklistState
+    }
+    const raw = localStorage.getItem(WORKFLOW_CHECKLIST_KEY)
+    if (!raw) {
+      return defaultChecklistState
+    }
+    try {
+      return {
+        ...defaultChecklistState,
+        ...(JSON.parse(raw) as Record<ChecklistId, boolean>),
+      }
+    } catch {
+      return defaultChecklistState
+    }
+  })
+  const [checklistDismissed, setChecklistDismissed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false
+    return localStorage.getItem(WORKFLOW_CHECKLIST_DISMISSED_KEY) === "true"
+  })
+  const [projectContextMode, setProjectContextMode] = useState<ProjectContextMode>(() => {
+    if (typeof window === "undefined") return "template"
+    return localStorage.getItem(WORKFLOW_CONTEXT_MODE_KEY) === "repository"
+      ? "repository"
+      : "template"
+  })
+  const [repoUrl, setRepoUrl] = useState<string>(() => {
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem(WORKFLOW_REPO_URL_KEY) ?? ""
+  })
+  const [repoBranch, setRepoBranch] = useState<string>(() => {
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem(WORKFLOW_REPO_BRANCH_KEY) ?? ""
+  })
+  const [repoBadge, setRepoBadge] = useState<string>(() => {
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem(WORKFLOW_REPO_BADGE_KEY) ?? ""
+  })
+  const [repoCommit, setRepoCommit] = useState<string>(() => {
+    if (typeof window === "undefined") return ""
+    return localStorage.getItem(WORKFLOW_REPO_COMMIT_KEY) ?? ""
+  })
+  const [repoImportStatus, setRepoImportStatus] = useState<RepoImportStatus>("idle")
+  const [repoImportMessage, setRepoImportMessage] = useState<string>("")
+  const [repoImportLoading, setRepoImportLoading] = useState<boolean>(false)
   const [draftCanvasState, setDraftCanvasState] = useState<CanvasState | null>(() => {
     if (typeof window === "undefined") return null
     const raw = localStorage.getItem("canvas-state")
@@ -999,11 +1245,14 @@ export function MainWorkspace() {
   const [showTip, setShowTip] = useState(false)
 
   const visibleTabs = useMemo(() => {
+    if (workspaceMode === "workflow") {
+      return mainTabs
+    }
     if (settings.uiMode === 'novice') {
       return mainTabs.filter((tab) => tab.id !== 'traces' && tab.id !== 'orchestrator')
     }
     return mainTabs
-  }, [settings.uiMode])
+  }, [settings.uiMode, workspaceMode])
 
   const focusTab = useCallback((index: number) => {
     const tab = visibleTabs[index]
@@ -1017,6 +1266,61 @@ export function MainWorkspace() {
       setActiveTab(visibleTabs[0]?.id ?? 'canvas')
     }
   }, [activeTab, visibleTabs])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKSPACE_MODE_KEY, workspaceMode)
+  }, [workspaceMode])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_STARTED_KEY, workflowStarted ? "true" : "false")
+  }, [workflowStarted])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_STAGE_KEY, workflowStage)
+  }, [workflowStage])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_COMPLETED_KEY, JSON.stringify(Array.from(completedStages)))
+  }, [completedStages])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_CHECKLIST_KEY, JSON.stringify(checklist))
+  }, [checklist])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_CHECKLIST_DISMISSED_KEY, checklistDismissed ? "true" : "false")
+  }, [checklistDismissed])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_CONTEXT_MODE_KEY, projectContextMode)
+  }, [projectContextMode])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_REPO_URL_KEY, repoUrl)
+  }, [repoUrl])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_REPO_BRANCH_KEY, repoBranch)
+  }, [repoBranch])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_REPO_BADGE_KEY, repoBadge)
+  }, [repoBadge])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_REPO_COMMIT_KEY, repoCommit)
+  }, [repoCommit])
 
   useEffect(() => {
     if (typeof window === "undefined") return
@@ -1057,55 +1361,420 @@ export function MainWorkspace() {
     })
   }, [activeProjectId])
 
+  const stageIndex = useMemo(
+    () => workflowStages.findIndex((stage) => stage.id === workflowStage),
+    [workflowStage]
+  )
+
+  const selectWorkflowStage = useCallback((id: WorkflowStageId) => {
+    const stage = workflowStages.find((candidate) => candidate.id === id)
+    if (!stage) return
+    setWorkflowStage(stage.id)
+    setActiveTab(stage.tabId)
+  }, [])
+
+  const startWorkflow = useCallback(() => {
+    setWorkflowStarted(true)
+    setCompletedStages(new Set())
+    selectWorkflowStage("A")
+  }, [selectWorkflowStage])
+
+  const toggleChecklistItem = useCallback((id: ChecklistId) => {
+    setChecklist((prev) => ({ ...prev, [id]: !prev[id] }))
+  }, [])
+
+  const applyQuickWin = useCallback(
+    (kind: "simple-script" | "debug-code") => {
+      const template = createQuickWinCanvas(kind)
+      setDraftCanvasState(template)
+      localStorage.setItem("canvas-state", JSON.stringify(template))
+      window.dispatchEvent(new Event(CANVAS_STATE_EVENT))
+      setWorkspaceMode("workflow")
+      setWorkflowStarted(true)
+      setChecklistDismissed(false)
+      setChecklist((prev) => ({ ...prev, goal: true, canvas: true }))
+      setCompletedStages((prev) => {
+        const next = new Set(prev)
+        next.add("A")
+        return next
+      })
+      selectWorkflowStage("B")
+    },
+    [selectWorkflowStage]
+  )
+
+  const checklistCompleted = useMemo(
+    () => Object.values(checklist).filter(Boolean).length,
+    [checklist]
+  )
+
+  const markCurrentStageDone = useCallback(() => {
+    setCompletedStages((prev) => {
+      const next = new Set(prev)
+      next.add(workflowStage)
+      return next
+    })
+    const nextStage = workflowStages[stageIndex + 1]
+    if (nextStage) {
+      selectWorkflowStage(nextStage.id)
+    }
+  }, [selectWorkflowStage, stageIndex, workflowStage])
+
+  const continueToCanvas = useCallback(() => {
+    setCompletedStages((prev) => {
+      const next = new Set(prev)
+      next.add("A")
+      return next
+    })
+    setChecklist((prev) => ({ ...prev, goal: true }))
+    selectWorkflowStage("B")
+  }, [selectWorkflowStage])
+
+  const importRepository = useCallback(async () => {
+    const trimmed = repoUrl.trim()
+    if (!trimmed) {
+      setRepoImportStatus("error")
+      setRepoImportMessage("Import failed: repository URL is required.")
+      return
+    }
+    setRepoImportLoading(true)
+    setRepoImportStatus("queued")
+    setRepoImportMessage("Queued: import request received.")
+    emitTelemetryEvent({
+      storageKey: "aei.familiar.chat",
+      eventName: "workflow.stage_a.repo_import_started",
+      metadata: { mode: "workflow", repo_url: trimmed },
+    })
+    await new Promise((resolve) => setTimeout(resolve, 250))
+    setRepoImportStatus("indexing")
+    setRepoImportMessage("Indexing: preparing files for Ari context.")
+    try {
+      const normalized = repoBranch.trim()
+        ? `${trimmed}${trimmed.includes("#") ? "" : "#"}${repoBranch.trim()}`
+        : trimmed
+      const response = await fetch("/api/familiar/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: normalized }),
+      })
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(
+          typeof payload?.error === "string" ? payload.error : "Import failed: unable to fetch repository."
+        )
+      }
+      const payload = await response.json()
+      if (payload?.canvas) {
+        setDraftCanvasState(payload.canvas as CanvasState)
+        localStorage.setItem("canvas-state", JSON.stringify(payload.canvas))
+        window.dispatchEvent(new Event(CANVAS_STATE_EVENT))
+      }
+      const projectName =
+        typeof payload?.project_name === "string" && payload.project_name.trim().length > 0
+          ? payload.project_name.trim()
+          : "Imported Project"
+      const branchName = repoBranch.trim() || "default"
+      setRepoBadge(`${projectName}@${branchName}`)
+      if (typeof payload?.repo_commit === "string") {
+        setRepoCommit(payload.repo_commit)
+      }
+      setRepoImportStatus("ready")
+      setRepoImportMessage("Ready: repository context is available.")
+      emitTelemetryEvent({
+        storageKey: "aei.familiar.chat",
+        eventName: "workflow.stage_a.repo_import_status_changed",
+        metadata: { status: "ready", project_name: projectName },
+      })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Import failed: check URL/auth and retry."
+      setRepoImportStatus("error")
+      setRepoImportMessage(
+        message.startsWith("Import failed")
+          ? message
+          : `Import failed: ${message}`
+      )
+      emitTelemetryEvent({
+        storageKey: "aei.familiar.chat",
+        eventName: "workflow.stage_a.repo_import_failed",
+        metadata: { reason: message },
+      })
+    } finally {
+      setRepoImportLoading(false)
+    }
+  }, [repoBranch, repoUrl])
+
+  const canContinueStageA =
+    projectContextMode === "template" || repoImportStatus === "ready"
+
+  const canOpenStage = useCallback(
+    (id: WorkflowStageId) => {
+      const idx = workflowStages.findIndex((stage) => stage.id === id)
+      if (id === "A") return true
+      if (idx <= 0) return true
+      const prevId = workflowStages[idx - 1]?.id
+      return prevId ? completedStages.has(prevId) : true
+    },
+    [completedStages]
+  )
+
+  useEffect(() => {
+    if (workspaceMode !== "workflow") return
+    if (activeTab === "console") return
+    if (!workflowStarted) {
+      setActiveTab("console")
+      setWorkflowStage("A")
+    }
+  }, [activeTab, workflowStarted, workspaceMode])
+
   return (
     <div className="flex flex-1 flex-col min-w-0 min-h-0">
-      {/* Tab bar */}
-      <div
-        className="flex items-center gap-1 px-4 py-1.5 border-b border-border bg-card/30 shrink-0 overflow-x-auto"
-        role="tablist"
-        aria-label="Primary workspace tabs"
-      >
-        {visibleTabs.map((tab, index) => {
-          const Icon = tab.icon
-          return (
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-card/20 px-4 py-2 shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setWorkspaceMode("workflow")}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs font-medium",
+              workspaceMode === "workflow"
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+            )}
+          >
+            Workflow Mode
+          </button>
+          <button
+            type="button"
+            onClick={() => setWorkspaceMode("advanced")}
+            className={cn(
+              "rounded-md px-3 py-1.5 text-xs font-medium",
+              workspaceMode === "advanced"
+                ? "bg-secondary text-foreground"
+                : "text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+            )}
+          >
+            Advanced Mode
+          </button>
+        </div>
+        {workspaceMode === "workflow" ? (
+          <div className="flex items-center gap-2">
             <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              ref={(el) => {
-                tabRefs.current[index] = el
-              }}
-              role="tab"
-              id={`tab-${tab.id}`}
-              aria-selected={activeTab === tab.id}
-              aria-controls={`panel-${tab.id}`}
-              tabIndex={activeTab === tab.id ? 0 : -1}
-              onKeyDown={(event) => {
-                if (event.key === "ArrowRight") {
-                  event.preventDefault()
-                  focusTab((index + 1) % visibleTabs.length)
-                }
-                if (event.key === "ArrowLeft") {
-                  event.preventDefault()
-                  focusTab((index - 1 + visibleTabs.length) % visibleTabs.length)
-                }
-              }}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap",
-                activeTab === tab.id
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-              )}
+              type="button"
+              onClick={startWorkflow}
+              className="rounded-md border border-border bg-emerald-900/30 px-3 py-1.5 text-xs font-medium text-emerald-300 hover:bg-emerald-900/40"
             >
-              <Icon className="w-3.5 h-3.5" />
-              {tab.label}
+              {workflowStarted ? "New Workflow" : "Start Building"}
             </button>
-          )
-        })}
+            <button
+              type="button"
+              onClick={() => selectWorkflowStage("A")}
+              className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+            >
+              Open Chat
+            </button>
+            {workflowStarted ? (
+              <>
+                {checklistDismissed ? (
+                  <button
+                    type="button"
+                    onClick={() => setChecklistDismissed(false)}
+                    className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                  >
+                    Show Checklist
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("traces")}
+                  className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                >
+                  Explain Failure
+                </button>
+              </>
+            ) : null}
+          </div>
+        ) : null}
       </div>
+
+      {workspaceMode === "workflow" ? (
+        <div className="border-b border-amber-700/40 bg-amber-950/20 px-4 py-2 text-xs text-amber-200 shrink-0">
+          Mock / Deterministic Mode - Real Temporal-backed behavior is still rolling out. Use traces and simulation outputs as training signals.
+        </div>
+      ) : null}
+
+      {workspaceMode === "workflow" ? (
+        <div className="border-b border-border bg-card/10 px-4 py-2 shrink-0">
+          <div className="mb-2 text-xs font-medium text-muted-foreground">Guided Progression</div>
+          <div className="flex flex-wrap items-center gap-2">
+            {workflowStages.map((stage) => {
+              const isCurrent = stage.id === workflowStage
+              const isDone = completedStages.has(stage.id)
+              const locked = !workflowStarted || !canOpenStage(stage.id)
+              return (
+                <button
+                  key={stage.id}
+                  type="button"
+                  disabled={locked}
+                  onClick={() => selectWorkflowStage(stage.id)}
+                  className={cn(
+                    "inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs",
+                    locked
+                      ? "cursor-not-allowed border-border/60 text-muted-foreground/50"
+                      : isCurrent
+                        ? "border-blue-500/60 bg-blue-950/40 text-blue-200"
+                        : isDone
+                          ? "border-emerald-600/60 bg-emerald-950/20 text-emerald-200"
+                          : "border-border text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                  )}
+                  title={stage.hint}
+                >
+                  {isDone ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                  <span>{stage.id}</span>
+                  <span className="hidden sm:inline">- {stage.label}</span>
+                </button>
+              )
+            })}
+            {workflowStarted ? (
+              <button
+                type="button"
+                onClick={markCurrentStageDone}
+                className="ml-auto rounded-md border border-border bg-secondary/30 px-3 py-1 text-xs text-foreground hover:bg-secondary/60"
+              >
+                Mark Stage Done
+              </button>
+            ) : (
+              <span className="ml-auto text-xs text-muted-foreground">Start Building to unlock guided stages.</span>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {workspaceMode === "workflow" && !checklistDismissed ? (
+        <div className="border-b border-border bg-card/5 px-4 py-3 shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <div className="text-xs font-semibold text-foreground">First 10 Minutes Checklist</div>
+              <div className="text-[11px] text-muted-foreground">
+                {checklistCompleted}/{workflowChecklist.length} completed
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  setChecklist(defaultChecklistState)
+                }
+                className="rounded-md border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                onClick={() => setChecklistDismissed(true)}
+                className="rounded-md border border-border px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+              >
+                Hide
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-2 grid gap-2 md:grid-cols-2">
+            {workflowChecklist.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between rounded-md border border-border bg-background/60 px-2.5 py-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleChecklistItem(item.id)}
+                  className="inline-flex items-center gap-2 text-left text-xs text-foreground"
+                >
+                  {checklist[item.id] ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                  ) : (
+                    <Circle className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                  <span>{item.label}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => selectWorkflowStage(item.stageId)}
+                  className="rounded border border-border px-2 py-0.5 text-[11px] text-muted-foreground hover:bg-secondary/40 hover:text-foreground"
+                >
+                  Go to {item.stageId}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-[11px] font-medium text-muted-foreground">Quick Win Templates:</span>
+            <button
+              type="button"
+              onClick={() => applyQuickWin("simple-script")}
+              className="rounded-md border border-border bg-blue-950/30 px-2.5 py-1 text-[11px] text-blue-200 hover:bg-blue-950/40"
+            >
+              Build a Simple Script
+            </button>
+            <button
+              type="button"
+              onClick={() => applyQuickWin("debug-code")}
+              className="rounded-md border border-border bg-violet-950/30 px-2.5 py-1 text-[11px] text-violet-200 hover:bg-violet-950/40"
+            >
+              Debug My Code
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Tab bar */}
+      {workspaceMode === "advanced" ? (
+        <div
+          className="flex items-center gap-1 px-4 py-1.5 border-b border-border bg-card/30 shrink-0 overflow-x-auto"
+          role="tablist"
+          aria-label="Primary workspace tabs"
+        >
+          {visibleTabs.map((tab, index) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                ref={(el) => {
+                  tabRefs.current[index] = el
+                }}
+                role="tab"
+                id={`tab-${tab.id}`}
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                tabIndex={activeTab === tab.id ? 0 : -1}
+                onKeyDown={(event) => {
+                  if (event.key === "ArrowRight") {
+                    event.preventDefault()
+                    focusTab((index + 1) % visibleTabs.length)
+                  }
+                  if (event.key === "ArrowLeft") {
+                    event.preventDefault()
+                    focusTab((index - 1 + visibleTabs.length) % visibleTabs.length)
+                  }
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 text-xs font-medium rounded-md transition-colors whitespace-nowrap",
+                  activeTab === tab.id
+                    ? "bg-secondary text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+      ) : null}
 
       {/* Panel content */}
       <div
-        className="flex-1 min-h-0 overflow-hidden"
+        className="flex flex-1 min-h-0 flex-col overflow-hidden"
         role="tabpanel"
         id={`panel-${activeTab}`}
         aria-labelledby={`tab-${activeTab}`}
@@ -1144,6 +1813,134 @@ export function MainWorkspace() {
             </div>
           </div>
         ) : null}
+        {workspaceMode === "workflow" && activeTab === "console" ? (
+          <div className="mx-4 mt-4 rounded-lg border border-border bg-card/40 p-4 text-xs text-muted-foreground">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-foreground">Define Intent and Project Context</div>
+                <div className="mt-1 text-[11px] text-muted-foreground">
+                  Select starter template for speed, or import from GitHub for real repository context.
+                </div>
+              </div>
+              {repoBadge ? (
+                <div className="rounded-md border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-[11px] text-emerald-200">
+                  {repoBadge}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-[200px_1fr]">
+              <label className="space-y-1">
+                <span className="text-[11px] font-medium text-foreground">Project Context</span>
+                <select
+                  className="h-9 w-full rounded-md border border-border bg-secondary/40 px-2 text-xs text-foreground"
+                  value={projectContextMode}
+                  onChange={(event) => {
+                    const nextMode = event.target.value === "repository" ? "repository" : "template"
+                    setProjectContextMode(nextMode)
+                    emitTelemetryEvent({
+                      storageKey: "aei.familiar.chat",
+                      eventName: "workflow.stage_a.context_mode_selected",
+                      metadata: { mode: nextMode },
+                    })
+                  }}
+                >
+                  <option value="template">Starter Template (fastest)</option>
+                  <option value="repository">Import from GitHub</option>
+                </select>
+              </label>
+
+              {projectContextMode === "repository" ? (
+                <div className="space-y-2 rounded-md border border-border bg-background/40 p-3">
+                  <div className="grid gap-2 md:grid-cols-2">
+                    <label className="space-y-1">
+                      <span className="text-[11px] font-medium text-foreground">Repository URL</span>
+                      <input
+                        value={repoUrl}
+                        onChange={(event) => setRepoUrl(event.target.value)}
+                        placeholder="https://github.com/org/repo"
+                        className="h-9 w-full rounded-md border border-border bg-secondary/40 px-2 text-xs text-foreground placeholder:text-muted-foreground"
+                      />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-[11px] font-medium text-foreground">Branch (optional)</span>
+                      <input
+                        value={repoBranch}
+                        onChange={(event) => setRepoBranch(event.target.value)}
+                        placeholder="main"
+                        className="h-9 w-full rounded-md border border-border bg-secondary/40 px-2 text-xs text-foreground placeholder:text-muted-foreground"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={importRepository}
+                      disabled={repoImportLoading}
+                      className="rounded-md border border-border bg-blue-950/30 px-3 py-1.5 text-xs text-blue-200 hover:bg-blue-950/40 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {repoImportLoading ? "Importing..." : "Import Repository"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (codeServerEnabled && codeServerUrl) {
+                          const target = new URL(codeServerUrl)
+                          if (repoUrl.trim()) {
+                            target.searchParams.set("repo", repoUrl.trim())
+                          }
+                          if (repoBranch.trim()) {
+                            target.searchParams.set("branch", repoBranch.trim())
+                          }
+                          window.open(target.toString(), "_blank", "noopener,noreferrer")
+                        } else {
+                          setActiveTab("code-explorer")
+                        }
+                        emitTelemetryEvent({
+                          storageKey: "aei.familiar.chat",
+                          eventName: "workflow.stage_a.open_code_workspace_clicked",
+                          metadata: {
+                            status: repoImportStatus,
+                            target: codeServerEnabled && codeServerUrl ? "code-server" : "code-explorer",
+                          },
+                        })
+                      }}
+                      disabled={repoImportStatus !== "ready"}
+                      className="rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/40 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Open Code Workspace
+                    </button>
+                    <span className="rounded-md border border-border/80 bg-secondary/20 px-2 py-1 text-[11px] text-muted-foreground">
+                      Status: {repoImportStatus}
+                    </span>
+                    <span className="rounded-md border border-border/80 bg-secondary/20 px-2 py-1 text-[11px] text-muted-foreground">
+                      Workspace: {codeServerEnabled && codeServerUrl ? "code-server" : "code-explorer"}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">
+                    {repoImportMessage || "Continue to Canvas is disabled until repository status is ready."}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-md border border-border bg-background/40 p-3 text-[11px] text-muted-foreground">
+                  Need to proceed now? Use starter template mode and continue without repository import.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={continueToCanvas}
+                disabled={!canContinueStageA}
+                className="rounded-md border border-border bg-secondary/30 px-3 py-1.5 text-xs text-foreground hover:bg-secondary/60 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Continue to Canvas
+              </button>
+            </div>
+          </div>
+        ) : null}
         {activeTab === "canvas" && <PromptCanvas />}
         {activeTab === "code-peek" && <CodePeekPanel />}
         {activeTab === "code-explorer" && <CodeExplorerPanel />}
@@ -1152,18 +1949,20 @@ export function MainWorkspace() {
         {activeTab === "traces" && <TraceViewer />}
         {activeTab === "analytics" && <AnalyticsPane />}
         {activeTab === "console" && (
-          <ConsoleChat
-            storageKey="aei.familiar.chat"
-            seedMessages={[]}
-            enableAssistant
-            enableDraft
-            draftState={draftCanvasState}
-            onDraftStateChange={(nextState) => {
-              setDraftCanvasState(nextState)
-              localStorage.setItem("canvas-state", JSON.stringify(nextState))
-              window.dispatchEvent(new Event(CANVAS_STATE_EVENT))
-            }}
-          />
+          <div className="flex-1 min-h-0">
+            <ConsoleChat
+              storageKey="aei.familiar.chat"
+              seedMessages={[]}
+              enableAssistant
+              enableDraft
+              draftState={draftCanvasState}
+              onDraftStateChange={(nextState) => {
+                setDraftCanvasState(nextState)
+                localStorage.setItem("canvas-state", JSON.stringify(nextState))
+                window.dispatchEvent(new Event(CANVAS_STATE_EVENT))
+              }}
+            />
+          </div>
         )}
         {activeTab === "orchestrator" && <OrchestratorHub />}
       </div>

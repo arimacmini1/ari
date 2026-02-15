@@ -1,3 +1,9 @@
+export interface SourceRepo {
+  url: string
+  branch: string
+  commit?: string
+}
+
 export interface ExecutionRecord {
   execution_id: string
   project_id: string
@@ -17,6 +23,7 @@ export interface ExecutionRecord {
   status: 'pending' | 'processing' | 'complete' | 'failed'
   actual_cost?: number
   actual_duration?: number
+  source_repo?: SourceRepo
 }
 
 declare global {

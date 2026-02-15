@@ -1,0 +1,1151 @@
+{
+  "events": [
+    {
+      "eventId": "1",
+      "eventTime": "2026-02-14T16:17:46.890574248Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_STARTED",
+      "taskId": "2097342",
+      "workflowExecutionStartedEventAttributes": {
+        "workflowType": {
+          "name": "DogfoodB1B8Workflow"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9ja19pbnB1dHMiOnt9fQ=="
+            }
+          ]
+        },
+        "workflowTaskTimeout": "10s",
+        "originalExecutionRunId": "019c5cf1-a78a-78b1-8eed-1f0db0503207",
+        "identity": "37503@Windows-031",
+        "firstExecutionRunId": "019c5cf1-a78a-78b1-8eed-1f0db0503207",
+        "attempt": 1,
+        "firstWorkflowTaskBackoff": "0s",
+        "workflowId": "ari-dogfood-f7d12b42f8",
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "2",
+      "eventTime": "2026-02-14T16:17:46.890741540Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097343",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "3",
+      "eventTime": "2026-02-14T16:17:46.905234689Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097348",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "2",
+        "identity": "37435@Windows-031",
+        "requestId": "91fd131f-67a7-44bb-b6e1-e9c9b9d7301a",
+        "historySizeBytes": "298",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "4",
+      "eventTime": "2026-02-14T16:17:46.917959971Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097352",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "2",
+        "startedEventId": "3",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {
+          "coreUsedFlags": [
+            2,
+            1,
+            3
+          ],
+          "sdkName": "temporal-python",
+          "sdkVersion": "1.22.0"
+        },
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "5",
+      "eventTime": "2026-02-14T16:17:46.918010142Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097353",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "1",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkIxIiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "4",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "6",
+      "eventTime": "2026-02-14T16:17:46.926721364Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097359",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "5",
+        "identity": "37435@Windows-031",
+        "requestId": "b472e964-a412-4045-9f80-1c6773005655",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "7",
+      "eventTime": "2026-02-14T16:17:47.035359538Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097360",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkIxIiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "5",
+        "startedEventId": "6",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "8",
+      "eventTime": "2026-02-14T16:17:47.035365145Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097361",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "9",
+      "eventTime": "2026-02-14T16:17:47.043843600Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097365",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "8",
+        "identity": "37435@Windows-031",
+        "requestId": "9e6f045e-9ef3-48a6-b761-178fd19ed07e",
+        "historySizeBytes": "1101",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "10",
+      "eventTime": "2026-02-14T16:17:47.053146905Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097369",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "8",
+        "startedEventId": "9",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "11",
+      "eventTime": "2026-02-14T16:17:47.053184520Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097370",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "2",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkIyIiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "10",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "12",
+      "eventTime": "2026-02-14T16:17:47.060015737Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097375",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "11",
+        "identity": "37435@Windows-031",
+        "requestId": "0f49609f-d756-4684-81a8-d3b71ee5688a",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "13",
+      "eventTime": "2026-02-14T16:17:47.170786196Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097376",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkIyIiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "11",
+        "startedEventId": "12",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "14",
+      "eventTime": "2026-02-14T16:17:47.170795527Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097377",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "15",
+      "eventTime": "2026-02-14T16:17:47.178835257Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097381",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "14",
+        "identity": "37435@Windows-031",
+        "requestId": "32c8c046-a495-40b4-824e-22dbc0cc2535",
+        "historySizeBytes": "1870",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "16",
+      "eventTime": "2026-02-14T16:17:47.187382438Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097385",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "14",
+        "startedEventId": "15",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "17",
+      "eventTime": "2026-02-14T16:17:47.187421916Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097386",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "3",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkIzIiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "16",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "18",
+      "eventTime": "2026-02-14T16:17:47.194345054Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097391",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "17",
+        "identity": "37435@Windows-031",
+        "requestId": "1aa3b3de-aac4-42d1-8a74-965ac706b339",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "19",
+      "eventTime": "2026-02-14T16:17:47.304071923Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097392",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkIzIiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "17",
+        "startedEventId": "18",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "20",
+      "eventTime": "2026-02-14T16:17:47.304077707Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097393",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "21",
+      "eventTime": "2026-02-14T16:17:47.312077226Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097397",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "20",
+        "identity": "37435@Windows-031",
+        "requestId": "8e4bad0f-a8e1-4035-ab5a-75ed4ec445d7",
+        "historySizeBytes": "2641",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "22",
+      "eventTime": "2026-02-14T16:17:47.320785482Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097401",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "20",
+        "startedEventId": "21",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "23",
+      "eventTime": "2026-02-14T16:17:47.320823888Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097402",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "4",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI0IiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "22",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "24",
+      "eventTime": "2026-02-14T16:17:47.327561112Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097407",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "23",
+        "identity": "37435@Windows-031",
+        "requestId": "2232b4ad-3b7b-47b3-a294-4d072fd50a33",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "25",
+      "eventTime": "2026-02-14T16:17:47.438626879Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097408",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI0IiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "23",
+        "startedEventId": "24",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "26",
+      "eventTime": "2026-02-14T16:17:47.438632528Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097409",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "27",
+      "eventTime": "2026-02-14T16:17:47.446862990Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097413",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "26",
+        "identity": "37435@Windows-031",
+        "requestId": "76d45ce7-244d-4fd0-9795-d682729cf957",
+        "historySizeBytes": "3416",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "28",
+      "eventTime": "2026-02-14T16:17:47.454623224Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097417",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "26",
+        "startedEventId": "27",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "29",
+      "eventTime": "2026-02-14T16:17:47.454662535Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097418",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "5",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI1IiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "28",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "30",
+      "eventTime": "2026-02-14T16:17:47.461691677Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097423",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "29",
+        "identity": "37435@Windows-031",
+        "requestId": "69d136a6-8a9e-4a5a-a1ba-d8efdd5a7f73",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "31",
+      "eventTime": "2026-02-14T16:17:47.569268545Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097424",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI1IiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "29",
+        "startedEventId": "30",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "32",
+      "eventTime": "2026-02-14T16:17:47.569280987Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097425",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "33",
+      "eventTime": "2026-02-14T16:17:47.577457340Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097429",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "32",
+        "identity": "37435@Windows-031",
+        "requestId": "53c80f60-b3ce-4499-a494-fd38f7025e0b",
+        "historySizeBytes": "4191",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "34",
+      "eventTime": "2026-02-14T16:17:47.585396291Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097433",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "32",
+        "startedEventId": "33",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "35",
+      "eventTime": "2026-02-14T16:17:47.585431961Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097434",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "6",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI2IiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "34",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "36",
+      "eventTime": "2026-02-14T16:17:47.592211209Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097439",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "35",
+        "identity": "37435@Windows-031",
+        "requestId": "97154377-4f3f-4b0c-a0f1-cb845b76afec",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "37",
+      "eventTime": "2026-02-14T16:17:47.701043084Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097440",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI2IiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "35",
+        "startedEventId": "36",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "38",
+      "eventTime": "2026-02-14T16:17:47.701048722Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097441",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "39",
+      "eventTime": "2026-02-14T16:17:47.709898536Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097445",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "38",
+        "identity": "37435@Windows-031",
+        "requestId": "c67455b0-a7ab-4f4f-bc2f-9b0188c3c907",
+        "historySizeBytes": "4966",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "40",
+      "eventTime": "2026-02-14T16:17:47.717820740Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097449",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "38",
+        "startedEventId": "39",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "41",
+      "eventTime": "2026-02-14T16:18:27.870364909Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_SIGNALED",
+      "taskId": "2097451",
+      "workflowExecutionSignaledEventAttributes": {
+        "signalName": "approve_resume",
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "Im1hbnVhbCB0ZXN0Ig=="
+            }
+          ]
+        },
+        "identity": "37678@Windows-031"
+      }
+    },
+    {
+      "eventId": "42",
+      "eventTime": "2026-02-14T16:18:27.870368857Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097452",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "43",
+      "eventTime": "2026-02-14T16:18:27.878404733Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097456",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "42",
+        "identity": "37435@Windows-031",
+        "requestId": "cba9b8cc-dc5e-443a-be0c-689e69f5e1e9",
+        "historySizeBytes": "5387",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "44",
+      "eventTime": "2026-02-14T16:18:27.888440155Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097460",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "42",
+        "startedEventId": "43",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "45",
+      "eventTime": "2026-02-14T16:18:27.888483834Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097461",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "7",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI3IiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "44",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "46",
+      "eventTime": "2026-02-14T16:18:27.897353095Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097466",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "45",
+        "identity": "37435@Windows-031",
+        "requestId": "c4f07cc1-3716-4c6b-a1d5-01769577ffb7",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "47",
+      "eventTime": "2026-02-14T16:18:28.006522398Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097467",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI3IiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "45",
+        "startedEventId": "46",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "48",
+      "eventTime": "2026-02-14T16:18:28.006529822Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097468",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "49",
+      "eventTime": "2026-02-14T16:18:28.014914862Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097472",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "48",
+        "identity": "37435@Windows-031",
+        "requestId": "e8ceaab7-c875-4688-a0f5-c39d1b32faf4",
+        "historySizeBytes": "6160",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "50",
+      "eventTime": "2026-02-14T16:18:28.023584335Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097476",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "48",
+        "startedEventId": "49",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "51",
+      "eventTime": "2026-02-14T16:18:28.023618554Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_SCHEDULED",
+      "taskId": "2097477",
+      "activityTaskScheduledEventAttributes": {
+        "activityId": "8",
+        "activityType": {
+          "name": "execute_dogfood_block_activity"
+        },
+        "taskQueue": {
+          "name": "ari-smoke",
+          "kind": "TASK_QUEUE_KIND_NORMAL"
+        },
+        "header": {},
+        "input": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI4IiwiaW5wdXQiOnt9fQ=="
+            }
+          ]
+        },
+        "scheduleToCloseTimeout": "0s",
+        "scheduleToStartTimeout": "0s",
+        "startToCloseTimeout": "15s",
+        "heartbeatTimeout": "0s",
+        "workflowTaskCompletedEventId": "50",
+        "retryPolicy": {
+          "initialInterval": "1s",
+          "backoffCoefficient": 2,
+          "maximumInterval": "100s",
+          "maximumAttempts": 2
+        },
+        "useWorkflowBuildId": true,
+        "priority": {}
+      }
+    },
+    {
+      "eventId": "52",
+      "eventTime": "2026-02-14T16:18:28.030295014Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_STARTED",
+      "taskId": "2097482",
+      "activityTaskStartedEventAttributes": {
+        "scheduledEventId": "51",
+        "identity": "37435@Windows-031",
+        "requestId": "15228b44-3166-45cc-ba15-cc460e8632c0",
+        "attempt": 1,
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "53",
+      "eventTime": "2026-02-14T16:18:28.138223875Z",
+      "eventType": "EVENT_TYPE_ACTIVITY_TASK_COMPLETED",
+      "taskId": "2097483",
+      "activityTaskCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9jayI6IkI4IiwiaW5wdXQiOnt9LCJub3RlIjoic3R1YmJlZC1ibG9jay1hY3Rpdml0eSIsInN0YXR1cyI6ImNvbXBsZXRlIn0="
+            }
+          ]
+        },
+        "scheduledEventId": "51",
+        "startedEventId": "52",
+        "identity": "37435@Windows-031"
+      }
+    },
+    {
+      "eventId": "54",
+      "eventTime": "2026-02-14T16:18:28.138231456Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_SCHEDULED",
+      "taskId": "2097484",
+      "workflowTaskScheduledEventAttributes": {
+        "taskQueue": {
+          "name": "37435@Windows-031-643a925ecbfd48f2bd04c0550b3e0824",
+          "kind": "TASK_QUEUE_KIND_STICKY",
+          "normalName": "ari-smoke"
+        },
+        "startToCloseTimeout": "10s",
+        "attempt": 1
+      }
+    },
+    {
+      "eventId": "55",
+      "eventTime": "2026-02-14T16:18:28.146570936Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_STARTED",
+      "taskId": "2097488",
+      "workflowTaskStartedEventAttributes": {
+        "scheduledEventId": "54",
+        "identity": "37435@Windows-031",
+        "requestId": "ecbfaaef-82fb-4b92-bba0-41da2b46193c",
+        "historySizeBytes": "6929",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        }
+      }
+    },
+    {
+      "eventId": "56",
+      "eventTime": "2026-02-14T16:18:28.155319561Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_TASK_COMPLETED",
+      "taskId": "2097492",
+      "workflowTaskCompletedEventAttributes": {
+        "scheduledEventId": "54",
+        "startedEventId": "55",
+        "identity": "37435@Windows-031",
+        "workerVersion": {
+          "buildId": "e6075ed19e6add25589ec8919c87f7c4"
+        },
+        "sdkMetadata": {},
+        "meteringMetadata": {}
+      }
+    },
+    {
+      "eventId": "57",
+      "eventTime": "2026-02-14T16:18:28.155343066Z",
+      "eventType": "EVENT_TYPE_WORKFLOW_EXECUTION_COMPLETED",
+      "taskId": "2097493",
+      "workflowExecutionCompletedEventAttributes": {
+        "result": {
+          "payloads": [
+            {
+              "metadata": {
+                "encoding": "anNvbi9wbGFpbg=="
+              },
+              "data": "eyJibG9ja19jb3VudCI6OSwiaGlzdG9yeSI6W3siYmxvY2siOiJCMSIsImlucHV0Ijp7fSwibm90ZSI6InN0dWJiZWQtYmxvY2stYWN0aXZpdHkiLCJzdGF0dXMiOiJjb21wbGV0ZSJ9LHsiYmxvY2siOiJCMiIsImlucHV0Ijp7fSwibm90ZSI6InN0dWJiZWQtYmxvY2stYWN0aXZpdHkiLCJzdGF0dXMiOiJjb21wbGV0ZSJ9LHsiYmxvY2siOiJCMyIsImlucHV0Ijp7fSwibm90ZSI6InN0dWJiZWQtYmxvY2stYWN0aXZpdHkiLCJzdGF0dXMiOiJjb21wbGV0ZSJ9LHsiYmxvY2siOiJCNCIsImlucHV0Ijp7fSwibm90ZSI6InN0dWJiZWQtYmxvY2stYWN0aXZpdHkiLCJzdGF0dXMiOiJjb21wbGV0ZSJ9LHsiYmxvY2siOiJCNSIsImlucHV0Ijp7fSwibm90ZSI6InN0dWJiZWQtYmxvY2stYWN0aXZpdHkiLCJzdGF0dXMiOiJjb21wbGV0ZSJ9LHsiYmxvY2siOiJCNiIsImlucHV0Ijp7fSwibm90ZSI6InN0dWJiZWQtYmxvY2stYWN0aXZpdHkiLCJzdGF0dXMiOiJjb21wbGV0ZSJ9LHsiYmxvY2siOiJhcHByb3ZhbF9nYXRlIiwibm90ZSI6Im1hbnVhbCB0ZXN0Iiwic3RhdHVzIjoiYXBwcm92ZWQifSx7ImJsb2NrIjoiQjciLCJpbnB1dCI6e30sIm5vdGUiOiJzdHViYmVkLWJsb2NrLWFjdGl2aXR5Iiwic3RhdHVzIjoiY29tcGxldGUifSx7ImJsb2NrIjoiQjgiLCJpbnB1dCI6e30sIm5vdGUiOiJzdHViYmVkLWJsb2NrLWFjdGl2aXR5Iiwic3RhdHVzIjoiY29tcGxldGUifV0sInN0YXR1cyI6ImNvbXBsZXRlIiwid29ya2Zsb3ciOiJEb2dmb29kQjFCOFdvcmtmbG93In0="
+            }
+          ]
+        },
+        "workflowTaskCompletedEventId": "56"
+      }
+    }
+  ]
+}

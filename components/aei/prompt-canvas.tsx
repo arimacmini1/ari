@@ -488,12 +488,20 @@ export function PromptCanvas() {
 
   const executeFromPreview = useCallback(async () => {
     try {
+      const repoUrl = localStorage.getItem("aei.workflow.context.repo_url") || undefined;
+      const repoBranch = localStorage.getItem("aei.workflow.context.repo_branch") || undefined;
+      const repoCommit = localStorage.getItem("aei.workflow.context.repo_commit") || undefined;
+      const source_repo = repoUrl
+        ? { url: repoUrl, branch: repoBranch || "main", commit: repoCommit }
+        : undefined;
+
       const response = await fetch("/api/executions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           nodes: state.nodes,
           edges: state.edges,
+          source_repo,
         }),
       })
       if (!response.ok) throw new Error("Execution failed")

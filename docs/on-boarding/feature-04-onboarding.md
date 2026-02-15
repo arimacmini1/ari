@@ -1,17 +1,24 @@
 # Feature 04 – Output Simulator: Quick-Start On-Boarding Guide
 
 **Feature:** Output Simulator (Artifact Preview & Validation)  
-**Version:** 1.2  
-**Last Updated:** 2026-02-09
+**Version:** 1.3  
+**Last Updated:** 2026-02-15
 
 <!--
   Version History:
   - 1.0 (2026-02-09): Initial on-boarding guide creation
   - 1.1 (2026-02-09): Added Windows/WSL compatibility notes, debugging guide, continuation steps
   - 1.2 (2026-02-09): UI integration complete - panels rendering correctly, tested and verified
+  - 1.3 (2026-02-15): Added Temporal-backed simulator workflow status for F04-MH-06
 -->
 
 ## Version Updates
+
+- **2026-02-15 (1.3):**
+  - ✅ **TEMPORAL-BACKED SIMULATION COMPLETE (`F04-MH-06`)**
+  - `/api/orchestrator/simulate` now supports Temporal workflow-backed simulation with visible workflow IDs.
+  - Temporal fallback guardrails added (preflight + timeout) to avoid indefinite UI hangs.
+  - Companion evidence captured: `screehshots_evidence/temporal-simulation-f04-mh-06-2026-02-15.json`.
 
 - **2026-02-09 (1.2):** 
   - ✅ **UI INTEGRATION COMPLETE** - Rule visualization and simulation panels now display correctly
@@ -34,6 +41,7 @@ The Output Simulator lets you **preview generated artifacts before execution**. 
 - ✅ **UI Components:** Fully integrated and rendering
 - ✅ **Rule Management:** Create, select, edit rules
 - ✅ **Simulation Panel:** Displays with constraints (Max Agents, Cost Budget sliders)
+- ✅ **Temporal Simulation Path:** Workflow-backed simulation runs through Temporal activities (`F04-MH-06`)
 - ✅ **Orchestrator Engine:** Working with proper null safety
 - ✅ **Artifact Preview Panel:** Renders on right sidebar after simulation
 - ✅ **Artifact Tabs:** Code, HTML, JSON, SQL, Config, Test
@@ -138,14 +146,16 @@ Orchestrator Hub (main view)
 - ✅ Artifact generator (`lib/artifact-generator.ts`)
 - ✅ Artifact validator (`lib/artifact-validator.ts`)
 - ✅ API route for simulation (`app/api/orchestrator/simulate/route.ts`)
+- ✅ Temporal simulation route integration (`simulation_engine`, `temporal_workflow_id`)
+- ✅ Temporal workflow + worker runner for simulation (`temporal_worker/run_simulation.py`, `SimulationWorkflow`)
 - ✅ Orchestrator engine core logic (`lib/orchestrator-engine.ts`)
 - ✅ Frontend preview components (in `components/aei/`)
 - ✅ Improved API error handling (JSON parsing, validation messages)
 - ✅ Windows/PowerShell compatible test script (`test-artifact-workflow.ps1`)
 
-**What's Not Done:**
-- ❌ UI Integration - Preview panel components not connected to orchestrator page
-- ❌ Engine bug fix - NullReferenceException investigation & fix
+**What's Not Done (relevant to this guide):**
+- ❌ Real LLM artifact generation (current simulator remains deterministic/template-driven)
+- ❌ SH/CH enhancements (import/composition, cross-execution compare, caching, scoring)
 
 ---
 

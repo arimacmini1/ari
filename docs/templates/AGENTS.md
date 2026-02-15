@@ -83,17 +83,11 @@ Each template file includes:
 **When to use:** Automatically triggered when all Must-Have tasks marked `[x]`
 **Output:** Prompts Documentation Agent workflow
 
-### Template 05: Architecture Documentation
-**Purpose:** Create system design documentation
-**Used by:** Documentation Agents
-**When to use:** After feature implementation is complete
-**Output:** `/docs/architecture/feature-XX-architecture.md`
-
-### Template 06: Bug Report
-**Purpose:** Create consistent bug reports
-**Used by:** QA Agents
-**When to use:** When bug is discovered
-**Output:** Added to task file "Progress / Fixes / Updates"
+### Template 05: UX Progression Run
+**Purpose:** Run one UX slice (`U1-U8`) with explicit evidence and decision
+**Used by:** Product / UX / Documentation Agents
+**When to use:** Improving one stage of Ari usability at a time
+**Output:** `/docs/tasks/ux-progression-runs/YYYY-MM-DD-ux-*.md`
 
 ---
 

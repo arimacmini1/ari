@@ -134,6 +134,7 @@ Use this quick checklist after generating a feature file to keep formatting and 
 - **Blocks symmetry:** if this feature depends on a previous task, ensure the previous task’s `Blocks` includes this task (add to Blocks Update Patch)
 - **Roadmap refs:** every task has a valid `PX-TT-NN` where applicable
 - **Progress fields:** every task includes `Progress / Fixes / Updates` (even if only “Not started”)
+- **Dogfood compliance logging:** when work starts on any task, `Progress / Fixes / Updates` must record explicit `B1..B8` entries with dated evidence paths for `B5` and `B7`
 
 ---
 
@@ -311,5 +312,4 @@ Examples of correct first lines:
 Do not explain. Do not add intro text. Just output the single feature markdown file.
 
 **SAVE TO:** `/docs/tasks/feature-XX-[kebab-case-name].md` — ALWAYS `/docs/tasks/`, never elsewhere.
-
 

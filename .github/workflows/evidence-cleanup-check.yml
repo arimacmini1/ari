@@ -1,0 +1,30 @@
+name: Evidence cleanup check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  evidence-cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup pnpm (corepack)
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Evidence cleanup dry-run must be clean
+        run: pnpm run -s evidence:cleanup:check
+
