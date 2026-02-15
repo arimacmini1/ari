@@ -151,7 +151,7 @@ function normalizeNodes(nodes: unknown[]): CanvasNode[] | null {
 
     const position = normalizePosition(node.position, i)
     normalized.push({
-      ...(node as CanvasNode),
+      ...(node as unknown as CanvasNode),
       id,
       type: 'block',
       position,

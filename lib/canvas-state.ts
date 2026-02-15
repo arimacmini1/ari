@@ -14,7 +14,7 @@ export interface CanvasNode extends Node {
   }
 }
 
-export interface CanvasEdge extends Edge {}
+export type CanvasEdge = Edge
 
 export interface CanvasState {
   nodes: CanvasNode[]

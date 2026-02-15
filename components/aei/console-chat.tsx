@@ -102,7 +102,7 @@ function formatTimestamp(date: Date) {
   return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
-function validateDraftOps(ops: CollabOperation[] | null | undefined) {
+function validateDraftOps(ops: unknown): ops is CollabOperation[] {
   if (!Array.isArray(ops)) return false
   return ops.every((op) => {
     if (!op || typeof op !== "object") return false
@@ -159,7 +159,12 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
   const [autoScrollPaused, setAutoScrollPaused] = useState(false)
   const [showScrollToBottom, setShowScrollToBottom] = useState(false)
   const lastDraftUserCountRef = useRef(0)
-  const versionsRef = useRef<CollabVersions>({ nodeTs: new Map(), edgeTs: new Map() })
+  const versionsRef = useRef<CollabVersions>({
+    nodeTs: new Map(),
+    edgeTs: new Map(),
+    nodeClock: new Map(),
+    edgeClock: new Map(),
+  })
   const draftStateRef = useRef<CanvasState | null>(draftState ?? null)
   const sessionStartedRef = useRef(false)
   const emitTelemetry = useCallback(
@@ -271,7 +276,12 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
       setMessages(nextMessages)
       setInput("")
       lastDraftUserCountRef.current = 0
-      versionsRef.current = { nodeTs: new Map(), edgeTs: new Map() }
+      versionsRef.current = {
+        nodeTs: new Map(),
+        edgeTs: new Map(),
+        nodeClock: new Map(),
+        edgeClock: new Map(),
+      }
     },
   }))
 

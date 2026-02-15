@@ -12,7 +12,7 @@ import { Agent } from "@/lib/agent-tree"
  * Simulates server-sent agent updates since Next.js serverless doesn't support WebSocket upgrade
  */
 function createMockWebSocket(url: string): WebSocket {
-  let _readyState = WebSocket.CONNECTING
+  let _readyState: 0 | 1 | 2 | 3 = WebSocket.CONNECTING
   const subscriptions = new Set<string>()
   let updateInterval: NodeJS.Timeout | null = null
 
@@ -246,7 +246,6 @@ export function useAgentWebSocket(options: WebSocketOptions = {}) {
       console.error("[WebSocket] Connection error:", e)
       setError(String(e))
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url, reconnectInterval, maxReconnectAttempts])
 
   // Subscribe to agent updates

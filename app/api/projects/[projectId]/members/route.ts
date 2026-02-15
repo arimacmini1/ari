@@ -69,6 +69,7 @@ export async function POST(
   })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: permission.userId,
     action: "create",
     resource_type: "role",

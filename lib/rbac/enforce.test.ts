@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { enforcePermission } from '@/lib/rbac/enforce';
+import { ensureRbacSeed, userHasPermission } from '@/lib/rbac/rbac-service';
+import { createAuditLog } from '@/lib/audit/audit-service';
 
 vi.mock('@/lib/rbac/rbac-service', () => ({
   ensureRbacSeed: vi.fn(),
@@ -9,9 +11,6 @@ vi.mock('@/lib/rbac/rbac-service', () => ({
 vi.mock('@/lib/audit/audit-service', () => ({
   createAuditLog: vi.fn(),
 }));
-
-const { ensureRbacSeed, userHasPermission } = await import('@/lib/rbac/rbac-service');
-const { createAuditLog } = await import('@/lib/audit/audit-service');
 
 describe('enforcePermission', () => {
   beforeEach(() => {

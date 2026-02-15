@@ -8,14 +8,15 @@ import { createPluginReview, listPluginReviews } from '@/lib/plugins/reviews-ser
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
+  const { pluginId } = await params
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status') || 'approved'
   const limit = Number(searchParams.get('limit') || '50')
   const offset = Number(searchParams.get('offset') || '0')
 
-  const plugin = await getPluginById(params.pluginId)
+  const plugin = await getPluginById(pluginId)
   if (!plugin) return NextResponse.json({ error: 'Plugin not found' }, { status: 404 })
 
   const reviews = await listPluginReviews({
@@ -30,17 +31,18 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
+  const { pluginId } = await params
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'create',
     resourceType: 'plugin',
-    resourceId: params.pluginId,
+    resourceId: pluginId,
   })
   if (!result.allowed) return result.response!
 
-  const plugin = await getPluginById(params.pluginId)
+  const plugin = await getPluginById(pluginId)
   if (!plugin) return NextResponse.json({ error: 'Plugin not found' }, { status: 404 })
 
   const installation = await getInstallationForUser(plugin.id, result.userId)
@@ -69,6 +71,7 @@ export async function POST(
   })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'create',
     resource_type: 'plugin',
@@ -83,4 +86,3 @@ export async function POST(
 
   return NextResponse.json({ review }, { status: 201 })
 }
-

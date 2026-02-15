@@ -19,7 +19,7 @@ const pool = new Pool({
 const LOG_QUERIES = process.env.DB_LOG_QUERIES === 'true';
 
 // Handle pool errors
-pool.on('error', (err) => {
+pool.on('error', (err: unknown) => {
   console.error('Unexpected error on idle client', err);
 });
 

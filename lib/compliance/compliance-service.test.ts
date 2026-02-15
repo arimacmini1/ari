@@ -1,5 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { getComplianceSnapshot } from '@/lib/compliance/compliance-service';
+import { query } from '@/lib/db/postgres';
+import { verifyAuditLogChain } from '@/lib/audit/audit-service';
 
 vi.mock('@/lib/db/postgres', () => ({
   query: vi.fn(),
@@ -8,9 +10,6 @@ vi.mock('@/lib/db/postgres', () => ({
 vi.mock('@/lib/audit/audit-service', () => ({
   verifyAuditLogChain: vi.fn(),
 }));
-
-const { query } = await import('@/lib/db/postgres');
-const { verifyAuditLogChain } = await import('@/lib/audit/audit-service');
 
 describe('getComplianceSnapshot', () => {
   beforeEach(() => {

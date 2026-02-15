@@ -45,25 +45,27 @@ export function ArtifactSearch({ artifacts, onResultsChange }: ArtifactSearchPro
   const [showFilters, setShowFilters] = useState(false)
 
   const results = useMemo(() => {
-    let filtered = artifacts
+    let filteredArtifacts = artifacts
 
     // Filter by type
-    filtered = filtered.filter((a) => selectedTypes.has(a.type))
+    filteredArtifacts = filteredArtifacts.filter((a) => selectedTypes.has(a.type))
 
     // Filter by validation status
     if (validationFilter !== "all") {
-      filtered = filtered.map((a) => ({
+      const withValidation = filteredArtifacts.map((a) => ({
         artifact: a,
         validation: ArtifactValidator.validate(a),
       }))
 
       if (validationFilter === "valid") {
-        filtered = filtered.filter((item: any) => item.validation.valid)
+        filteredArtifacts = withValidation
+          .filter((item) => item.validation.valid)
+          .map((item) => item.artifact)
       } else if (validationFilter === "errors") {
-        filtered = filtered.filter((item: any) => item.validation.errors.length > 0)
+        filteredArtifacts = withValidation
+          .filter((item) => item.validation.errors.length > 0)
+          .map((item) => item.artifact)
       }
-
-      filtered = filtered.map((item: any) => item.artifact)
     }
 
     // Search by keyword
@@ -72,7 +74,7 @@ export function ArtifactSearch({ artifacts, onResultsChange }: ArtifactSearchPro
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase()
 
-      filtered.forEach((artifact) => {
+      filteredArtifacts.forEach((artifact) => {
         const matchIndices: number[] = []
         const highlights: { start: number; end: number }[] = []
 
@@ -102,7 +104,7 @@ export function ArtifactSearch({ artifacts, onResultsChange }: ArtifactSearchPro
     } else {
       // No search term: return all filtered artifacts
       searchResults.push(
-        ...filtered.map((a) => ({
+        ...filteredArtifacts.map((a) => ({
           artifact: a,
           matchIndices: [],
           highlights: [],

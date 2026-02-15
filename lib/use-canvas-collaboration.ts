@@ -234,19 +234,20 @@ export function useCanvasCollaboration(
             }
           }
           if (op.type === "node:update" && op.node) {
-            const localEdit = localEditRef.current.get(op.node.id)
-            const recentlyResolvedAt = conflictResolutionByNodeRef.current.get(op.node.id) ?? 0
+            const remoteNode = op.node
+            const localEdit = localEditRef.current.get(remoteNode.id)
+            const recentlyResolvedAt = conflictResolutionByNodeRef.current.get(remoteNode.id) ?? 0
             if (localEdit && Math.abs(op.ts - localEdit.ts) < 5000 && op.ts > recentlyResolvedAt) {
-              const lastQueuedTs = latestConflictByNodeRef.current.get(op.node.id) ?? 0
+              const lastQueuedTs = latestConflictByNodeRef.current.get(remoteNode.id) ?? 0
               if (op.ts <= lastQueuedTs) continue
-              latestConflictByNodeRef.current.set(op.node.id, op.ts)
+              latestConflictByNodeRef.current.set(remoteNode.id, op.ts)
               setConflicts((prev) => {
-                const nodeId = op.node.id
+                const nodeId = remoteNode.id
                 const nextConflict: CollaborationConflict = {
                   id: `${nodeId}-${op.clientId}-${op.id}`,
                   nodeId,
                   localNode: localEdit.node,
-                  remoteNode: op.node,
+                  remoteNode,
                   ts: op.ts,
                 }
                 const withoutNode = prev.filter((existing) => existing.nodeId !== nodeId)

@@ -6,13 +6,14 @@ import { decideCertificationRequest } from '@/lib/plugins/certification-service'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { requestId: string } }
+  { params }: { params: Promise<{ requestId: string }> }
 ) {
+  const { requestId } = await params
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'update',
     resourceType: 'plugin',
-    resourceId: `certification:${params.requestId}`,
+    resourceId: `certification:${requestId}`,
   })
   if (!result.allowed) return result.response!
 
@@ -23,7 +24,7 @@ export async function PATCH(
   }
 
   const updated = await decideCertificationRequest({
-    requestId: params.requestId,
+    requestId,
     status: parsed.data.status,
     decidedBy: result.userId,
     reason: parsed.data.reason,
@@ -31,6 +32,7 @@ export async function PATCH(
   if (!updated) return NextResponse.json({ error: 'Certification request not found' }, { status: 404 })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'update',
     resource_type: 'plugin',
@@ -45,4 +47,3 @@ export async function PATCH(
 
   return NextResponse.json({ certification: updated })
 }
-

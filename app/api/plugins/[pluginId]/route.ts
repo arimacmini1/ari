@@ -3,9 +3,10 @@ import { getLatestPluginVersion, getPluginById } from '@/lib/plugins/registry-se
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
-  const plugin = await getPluginById(params.pluginId);
+  const { pluginId } = await params;
+  const plugin = await getPluginById(pluginId);
   if (!plugin) {
     return NextResponse.json({ error: 'Plugin not found' }, { status: 404 });
   }

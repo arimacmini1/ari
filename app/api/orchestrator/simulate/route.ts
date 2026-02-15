@@ -5,15 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  createOrchestratorEngine,
   createMockAgentPool,
   InstructionNode,
+  SimulationResult,
   generateArtifactsForSimulation,
 } from '@/lib/orchestrator-engine';
+import { getOrchestratorEngine } from '@/lib/orchestrator-store';
 
-// Shared orchestrator instance (use database for production)
-const RULES_DB = new Map();
-const ORCHESTRATOR = createOrchestratorEngine();
+const ORCHESTRATOR = getOrchestratorEngine();
 
 export async function POST(req: NextRequest) {
   try {
@@ -72,7 +71,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Run simulation
-    let result;
+    let result: SimulationResult;
     try {
       result = ORCHESTRATOR.simulate(
         instruction_graph as InstructionNode[],
@@ -83,12 +82,11 @@ export async function POST(req: NextRequest) {
       // If simulation fails, return basic result with artifacts anyway
       result = {
         assignment_plan: instruction_graph.map((node, idx) => ({
-          task_id: node.id,
-          assigned_agent: `agent-${idx + 1}`,
+          id: String(node.id),
+          assigned_agent_id_or_pool: `agent-${idx + 1}`,
           estimated_cost: 10,
           estimated_duration: 5,
-          priority: 1,
-          dependencies: []
+          status: 'pending',
         })),
         critical_path: [],
         estimated_total_cost: instruction_graph.length * 10,

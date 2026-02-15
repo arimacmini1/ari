@@ -52,8 +52,10 @@ export function MetricSparkline({
       height={height}
       viewBox={`0 0 ${width} ${height}`}
       className={`inline-block ${className}`}
-      title={title}
+      role={title ? "img" : undefined}
+      aria-label={title || undefined}
     >
+      {title ? <title>{title}</title> : null}
       {/* Background */}
       <rect width={width} height={height} fill="transparent" />
 

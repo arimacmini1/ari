@@ -6,13 +6,14 @@ import { reportPluginReview } from '@/lib/plugins/reviews-service'
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
+  const { reviewId } = await params
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'create',
     resourceType: 'plugin',
-    resourceId: `review_report:${params.reviewId}`,
+    resourceId: `review_report:${reviewId}`,
   })
   if (!result.allowed) return result.response!
 
@@ -26,13 +27,14 @@ export async function POST(
   if (!pluginId) return NextResponse.json({ error: 'pluginId is required' }, { status: 400 })
 
   const report = await reportPluginReview({
-    reviewId: params.reviewId,
+    reviewId,
     pluginId,
     reporterId: result.userId,
     reason: parsed.data.reason,
   })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'create',
     resource_type: 'plugin',
@@ -46,4 +48,3 @@ export async function POST(
 
   return NextResponse.json({ report }, { status: 201 })
 }
-

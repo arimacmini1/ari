@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
 
   const merge = await createMergeRequest(source_id, target_id)
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: "create",
     resource_type: "workflow",

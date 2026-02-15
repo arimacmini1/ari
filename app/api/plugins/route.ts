@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
   const { plugin, version } = await publishPlugin(parsed.data.manifest);
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'create',
     resource_type: 'plugin',

@@ -39,7 +39,7 @@ export function Sparkline({
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={chartData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
-        <YAxis hide domain="dataMin auto" />
+        <YAxis hide domain={["dataMin", "dataMax"]} />
         <Line
           type="monotone"
           dataKey="value"

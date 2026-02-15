@@ -7,9 +7,10 @@ import { getCertificationForVersion, submitCertificationRequest } from '@/lib/pl
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
-  const plugin = await getPluginById(params.pluginId)
+  const { pluginId } = await params
+  const plugin = await getPluginById(pluginId)
   if (!plugin) return NextResponse.json({ error: 'Plugin not found' }, { status: 404 })
 
   return NextResponse.json({ plugin_id: plugin.id })
@@ -17,17 +18,18 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
+  const { pluginId } = await params
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'create',
     resourceType: 'plugin',
-    resourceId: params.pluginId,
+    resourceId: pluginId,
   })
   if (!result.allowed) return result.response!
 
-  const plugin = await getPluginById(params.pluginId)
+  const plugin = await getPluginById(pluginId)
   if (!plugin) return NextResponse.json({ error: 'Plugin not found' }, { status: 404 })
 
   const body = await req.json()
@@ -44,6 +46,7 @@ export async function POST(
   const requestRow = await submitCertificationRequest({ pluginId: plugin.id, versionId: version.id })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'create',
     resource_type: 'plugin',
@@ -58,4 +61,3 @@ export async function POST(
   const existing = await getCertificationForVersion(version.id)
   return NextResponse.json({ certification: existing ?? requestRow }, { status: 201 })
 }
-

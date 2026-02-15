@@ -6,8 +6,9 @@ import { enforceProjectPermission } from '@/lib/project-rbac';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
+  const { pluginId } = await params;
   const projectContext = resolveProjectContext(req);
   if (!projectContext.ok) {
     return projectContext.response;
@@ -18,7 +19,7 @@ export async function POST(
     permission: 'execute',
     action: 'execute',
     resourceType: 'plugin',
-    resourceId: params.pluginId,
+    resourceId: pluginId,
   });
   if (!result.allowed) return result.response!;
 
@@ -29,7 +30,7 @@ export async function POST(
   }
 
   const version = await getPluginVersionById(versionId);
-  if (!version || version.plugin_id !== params.pluginId) {
+  if (!version || version.plugin_id !== pluginId) {
     return NextResponse.json({ error: 'Plugin version not found' }, { status: 404 });
   }
 

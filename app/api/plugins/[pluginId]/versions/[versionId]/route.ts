@@ -5,22 +5,23 @@ import { deprecatePluginVersion, getPluginById, getPluginVersionById } from '@/l
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { pluginId: string; versionId: string } }
+  { params }: { params: Promise<{ pluginId: string; versionId: string }> }
 ) {
+  const { pluginId, versionId } = await params;
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'update',
     resourceType: 'plugin',
-    resourceId: params.pluginId,
+    resourceId: pluginId,
   });
   if (!result.allowed) return result.response!;
 
-  const plugin = await getPluginById(params.pluginId);
+  const plugin = await getPluginById(pluginId);
   if (!plugin) {
     return NextResponse.json({ error: 'Plugin not found' }, { status: 404 });
   }
 
-  const version = await getPluginVersionById(params.versionId);
+  const version = await getPluginVersionById(versionId);
   if (!version || version.plugin_id !== plugin.id) {
     return NextResponse.json({ error: 'Version not found' }, { status: 404 });
   }
@@ -30,6 +31,7 @@ export async function PATCH(
   const updated = await deprecatePluginVersion(version.id, deprecated);
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'update',
     resource_type: 'plugin',

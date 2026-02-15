@@ -6,17 +6,18 @@ import { setPluginEnabled } from '@/lib/plugins/installation-service';
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { pluginId: string } }
+  { params }: { params: Promise<{ pluginId: string }> }
 ) {
+  const { pluginId } = await params;
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'update',
     resourceType: 'plugin',
-    resourceId: params.pluginId,
+    resourceId: pluginId,
   });
   if (!result.allowed) return result.response!;
 
-  const plugin = await getPluginById(params.pluginId);
+  const plugin = await getPluginById(pluginId);
   if (!plugin) {
     return NextResponse.json({ error: 'Plugin not found' }, { status: 404 });
   }
@@ -30,6 +31,7 @@ export async function POST(
   }
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'update',
     resource_type: 'plugin',

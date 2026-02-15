@@ -92,7 +92,7 @@ export default function AnalyticsPage() {
             <p>Failed to load analytics data. Please try again later.</p>
           </div>
         ) : (
-          <AnalyticsDashboard summary={summary} loading={loading} />
+          <AnalyticsDashboard summary={summary ?? undefined} loading={loading} />
         )}
       </div>
     </main>

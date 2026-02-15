@@ -39,9 +39,9 @@ function generateMockLogs(agentId: string, count: number = 50): LogEntry[] {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  { params }: { params: Promise<{ agentId: string }> }
 ) {
-  const { agentId } = params
+  const { agentId } = await params
   const limit = request.nextUrl.searchParams.get("limit") || "50"
 
   try {

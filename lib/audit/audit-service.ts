@@ -150,7 +150,7 @@ export async function queryAuditLogs(filter: AuditLogFilter): Promise<AuditLogQu
     const sortOrder = filter.sort === 'asc' ? 'ASC' : 'DESC';
 
     // Get total count
-    const countResult = await query<{ count: number }>(
+    const countResult = await query<{ count: string }>(
       `SELECT COUNT(*) as count FROM audit_logs WHERE ${whereClause}`,
       params
     );
@@ -251,7 +251,20 @@ export async function verifyAuditLogChain(
     const entries = result.rows;
 
     // Verify chain
-    const verification = verifyHashChain(entries);
+    const verification = verifyHashChain(
+      entries.map((entry) => ({
+        id: entry.id,
+        timestamp: entry.timestamp.toISOString(),
+        actor: entry.actor,
+        action: entry.action,
+        resource_type: entry.resource_type,
+        resource_id: entry.resource_id,
+        context: JSON.stringify(entry.context ?? {}),
+        entry_hash: entry.entry_hash,
+        previous_hash: entry.previous_hash ?? null,
+        nonce: entry.nonce,
+      }))
+    );
 
     // Log verification result
     const verificationId = uuidv4();

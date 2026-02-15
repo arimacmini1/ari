@@ -70,6 +70,7 @@ export async function executePlugin(
   const executionId = execution.rows[0]?.id || 'unknown';
 
   await createAuditLog({
+    timestamp: new Date(),
     actor,
     action: 'execute',
     resource_type: 'plugin_execution',
@@ -85,6 +86,7 @@ export async function executePlugin(
 
   if (denied.length) {
     await createAuditLog({
+      timestamp: new Date(),
       actor,
       action: 'access',
       resource_type: 'plugin_execution',
@@ -120,6 +122,7 @@ export async function executePlugin(
   );
 
   await createAuditLog({
+    timestamp: new Date(),
     actor,
     action: 'update',
     resource_type: 'plugin_execution',

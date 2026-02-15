@@ -1,518 +1,211 @@
 # Feature 03 – Orchestrator Hub Architecture
 
+**Feature task file:** `docs/tasks/feature-03-orchestrator-hub.md`
+**Related on-boarding:** `docs/on-boarding/feature-03-onboarding.md`
+**Status:** COMPLETED (with known constraints and follow-on work)
+
 ## Overview
 
-The Orchestrator Hub is the coordination layer that transforms multi-agent workflows from "execute independently" to "execute with orchestrated control." It accepts task graphs from the Prompt Canvas (Feature 01), applies rule-based orchestration logic, decomposes nested goals into atomic tasks, assigns tasks to agents based on affinity and constraints, and dispatches the plan to agents via the Agent Dashboard (Feature 02).
+The Orchestrator Hub coordinates planning and execution for multi-agent workflows. It supports rule definition, simulation, execution dispatch, and execution history, with an additional constrained Temporal workflow editor introduced in the F03-MH-10 slice.
 
-**Core responsibility:** Take high-level instruction → decompose into concrete task assignments → simulate outcomes → execute with agent feedback
+Core loop:
+1. Define orchestration rules.
+2. Simulate assignment and metrics.
+3. Dispatch execution.
+4. Track execution status and trace output.
 
----
+## System Design
 
-## System Architecture
+```text
+Prompt Canvas graph (or mock graph in UI)
+  -> Orchestrator Hub UI (/orchestrator)
+     -> POST /api/orchestrator/simulate
+        -> OrchestratorEngine (decompose -> assign -> metrics)
+        -> simulation result + artifacts
+     -> POST /api/executions
+        -> ExecutionRecord persisted in in-memory store
+        -> Temporal runner (preferred when enabled) OR legacy mock dispatcher
+        -> status updates and trace data
+  -> /executions for history
+  -> /traces/[executionId] for trace visualization
 
-### High-Level Flow
-
-```
-User creates workflow    Prompt Canvas         Instruction Graph
-in Prompt Canvas    →   exports graph    →    (nested tasks, edges)
-                                                      ↓
-                                        Orchestrator Hub loads graph
-                                                      ↓
-User defines rules   Rule Editor (UI)        Rule set (priority, affinity,
-in Orchestrator  →   saves to backend   →    constraints) stored
-                                                      ↓
-User clicks          Simulation Engine      Decompose → Assign → Estimate
-"Simulate"      →    (OrchestratorEngine)   (non-destructive)
-                                                      ↓
-                                        Task Assignment Plan + Metrics
-                                                      ↓
-User adjusts         Constraint Adjuster    Sliders (max agents, cost)
-constraints    →     re-simulates instantly    Re-simulate in <2s
-                                                      ↓
-User clicks          Execution Manager      Create execution record,
-"Execute"       →    dispatches to agents     broadcast tasks via WebSocket
-                                                      ↓
-                                        Agent Dashboard updates live
-                                                      ↓
-User monitors        Execution History      View & replay past executions
-progress       →     & Replay Viewer
+Temporal workflow editor (safe subset):
+  /orchestrator panel
+  -> GET/POST /api/temporal/workflow-editor
+  -> schema + allowlist validation in lib/temporal-workflow-editor-schema.ts
 ```
 
----
+### Key Components
 
-## Component Architecture
-
-### Frontend Components
-
-#### `/app/orchestrator/page.tsx` – Main Hub Layout
-- Two-pane layout: left sidebar (rules), right main area (simulation + visualization)
-- State management for current rule set, loaded graph, simulation results
-- Orchestrates sub-component data flow
-
-**Props / State:**
-```typescript
-{
-  rules: Rule[];
-  currentGraph: InstructionGraph | null;
-  simulationResult: SimulationResult | null;
-  isSimulating: boolean;
-  constraints: { maxAgents: number; maxCostBudget: number };
-}
-```
-
-#### `components/orchestrator/rule-list.tsx` – Left Sidebar
-- Displays list of all rules with name, priority badge, affinity summary
-- Add/Edit/Delete buttons for rule management
-- Currently selected rule highlighted
-
-**Key behaviors:**
-- Click rule → highlights and loads in editor
-- Click add button → opens rule editor modal
-- Click edit icon → populates modal with current rule values
-- Click delete icon → confirmation, then deletes
-
-#### `components/orchestrator/rule-editor.tsx` – Rule Form Modal
-- Form fields: name (text), priority (slider 1–10), affinity (checkboxes), constraints (sliders)
-- Validation: name required, priority 1–10, at least one affinity optional
-- Save button → `POST /api/orchestrator/rules`
-- Cancel button → closes modal
-
-**Field details:**
-- **Name:** Text input, max 100 chars, required
-- **Priority:** Slider 1–10 (1=lowest, 10=highest), default 5
-- **Affinity:** Checkboxes for agent types (code_gen, test, deploy, analysis, etc.), defaults to empty (any agent)
-- **Max Agents:** Slider 1–1000, default 100
-- **Max Cost Per Task:** Slider $0–$100, default $10
-
-#### `components/orchestrator/simulation-panel.tsx` – Results Display
-- Displays simulation result: task assignment table, critical path, metrics summary
-- Constraint adjusters (sliders) for max agents, max cost budget
-- "Simulate" and "Execute Plan" buttons
-- Shows loading state during simulation
-
-**Result display:**
-```
-┌─ Task Assignment Table
-│  task_id | assigned_agent | estimated_cost | status
-│  ...
-├─ Critical Path (top 3 sequential chains)
-│  Path 1: Task A → Task B → Task C (duration: 45s)
-│  ...
-└─ Metrics Summary
-   Total Cost: $42.50 | Duration: 120s | Success: 95%
-```
-
-#### `components/orchestrator/rule-visualization.tsx` – Graph Visualization
-- Visual representation of rule dependencies (simple node + edge diagram)
-- Node = rule, edge = task dependency
-- Shows affinity mapping (task type → agent type colors)
-
-#### `/app/executions/page.tsx` – Execution History List
-- Table of all past executions: execution_id, created_at, rule_set_id, num_agents, cost, duration, status
-- Click row → navigate to execution detail page
-
-#### `/app/executions/[executionId]/page.tsx` – Execution Detail
-- Shows assignment plan, actual vs. estimated metrics, task completion timeline (Gantt chart)
-- "Replay" button re-runs same graph + rules
-- Timeline: Agent Y-axis, task duration X-axis, colors show task types
-
----
-
-### Backend Components
-
-#### `/lib/orchestrator-engine.ts` – Core Logic
-
-**OrchestratorEngine class:**
-
-```typescript
-class OrchestratorEngine {
-  constructor(rules: Rule[], constraints: Constraints) { ... }
-
-  // Main simulation method
-  simulate(graph: InstructionGraph): SimulationResult { ... }
-
-  // Internal helper methods
-  private decomposeGraph(graph: InstructionGraph): Task[] { ... }
-  private topologicalSort(tasks: Task[]): Task[] { ... }
-  private assignTasksToAgents(tasks: Task[]): TaskAssignment[] { ... }
-  private estimateMetrics(assignments: TaskAssignment[]): Metrics { ... }
-  private detectCircularDependencies(graph: InstructionGraph): void { ... }
-}
-```
-
-**Key algorithms:**
-
-1. **Graph Decomposition (Kahn's Algorithm)**
-   - Flattens nested instruction graph into atomic leaf tasks
-   - Input: hierarchical task graph (nodes, edges)
-   - Output: flat list of atomic tasks with dependency ordering
-   - Complexity: O(V + E) where V = tasks, E = dependencies
-
-2. **Topological Sort (Kahn's Algorithm)**
-   - Orders tasks respecting dependencies (A must finish before B starts)
-   - Input: tasks with dependency edges
-   - Output: task order ensuring all dependencies satisfied
-   - Detects cycles and errors if found
-
-3. **Task-to-Agent Assignment (Greedy Best-Fit)**
-   - Routes each task to best-matching agent based on affinity and availability
-   - For each task:
-     - Check affinity rule: if task type matches rule's preferred agent type, assign there first
-     - Otherwise: assign to any available agent of matching capability
-     - If no agent available: queue task (Phase 2 adds wait logic)
-   - Complexity: O(T × A) where T = tasks, A = agents (linear scan)
-   - **Note:** Not NP-hard optimal assignment (Phase 2 can add optimization layer)
-
-4. **Metrics Estimation**
-   - **Cost:** Sum of cost estimates for all tasks (Task.estimatedCost)
-   - **Duration:** Length of critical path (longest sequential chain of tasks)
-   - **Critical Path:** Topological order of tasks that determines total time
-   - **Success Probability:** Aggregate of individual task success rates (default 95% per task)
-
-**Input & Output:**
-
-```typescript
-// Input to simulate()
-interface InstructionGraph {
-  id: string;
-  nodes: { id: string; type: string; spec: object }[];
-  edges: { from: string; to: string }[];
-}
-
-interface Rule {
-  id: string;
-  name: string;
-  priority: number; // 1–10
-  agent_type_affinity: { task_type: string; agent_type: string }[];
-  constraints: { max_agents: number; max_cost_per_task: number };
-}
-
-interface Constraints {
-  maxAgents: number;
-  maxCostBudget: number;
-}
-
-// Output from simulate()
-interface SimulationResult {
-  assignment_plan: TaskAssignment[];
-  critical_path: string[]; // task_ids in dependency order
-  estimated_cost: number;
-  estimated_duration: number; // seconds
-  success_probability: number; // 0–100
-}
-
-interface TaskAssignment {
-  task_id: string;
-  assigned_agent_id: string | null;
-  estimated_cost: number;
-  estimated_duration: number;
-  status: "assigned" | "queued" | "unassigned";
-}
-```
-
-#### `/app/api/orchestrator/rules/route.ts` – Rule CRUD
-
-```typescript
-// POST /api/orchestrator/rules – Create or update rule
-// Body: { id?, name, priority, agent_type_affinity, constraints }
-// Returns: { id, ...rule }
-
-// GET /api/orchestrator/rules – List all rules
-// Returns: { rules: Rule[] }
-
-// DELETE /api/orchestrator/rules/:id – Delete rule
-// Returns: { success: true }
-```
-
-**Storage:** In-memory map (Phase 2: persist to database)
-
-#### `/app/api/orchestrator/simulate/route.ts` – Simulation Endpoint
-
-```typescript
-// POST /api/orchestrator/simulate
-// Body: {
-//   instruction_graph: InstructionGraph,
-//   rule_set_id: string,
-//   constraints_override?: { maxAgents?, maxCostBudget? }
-// }
-// Returns: SimulationResult
-```
-
-**Flow:**
-1. Parse request → validate graph and rule set
-2. Instantiate OrchestratorEngine with rules + constraints (apply overrides)
-3. Call engine.simulate(graph)
-4. Return result (non-destructive — no side effects)
-5. **Latency target:** <2s for 50-task graph
-
-#### `/app/api/executions/route.ts` – Execution Dispatch
-
-```typescript
-// POST /api/executions
-// Body: {
-//   assignment_plan: TaskAssignment[],
-//   rule_set_id: string,
-//   instruction_graph_id: string
-// }
-// Returns: { execution_id, created_at, status }
-```
-
-**Flow:**
-1. Create execution record with metadata (execution_id, timestamp, rule set, agents)
-2. Store in in-memory execution store (Phase 2: database)
-3. For each task assignment:
-   - Create task spec
-   - Broadcast to agent via WebSocket: `{ execution_id, task_id, agent_id, task_spec }`
-4. Return execution_id to frontend
-5. Frontend polls `/api/executions/:id` for status updates (or receives via WebSocket)
-
-#### `/app/api/executions/:id/route.ts` – Execution Detail
-
-```typescript
-// GET /api/executions/:id
-// Returns: {
-//   execution_id: string,
-//   created_at: timestamp,
-//   rule_set_id: string,
-//   assignment_plan: TaskAssignment[],
-//   agent_assignments: { agent_id: string, task_count: number }[],
-//   status: "pending" | "processing" | "complete" | "failed",
-//   actual_cost?: number,
-//   actual_duration?: number,
-//   completion_timeline: { task_id, agent_id, start_time, end_time }[]
-// }
-```
-
----
+- `app/orchestrator/page.tsx`
+- `components/aei/rule-list.tsx`
+- `components/aei/rule-editor.tsx`
+- `components/aei/rule-visualization.tsx`
+- `components/aei/simulation-panel.tsx`
+- `components/aei/orchestrator-dag-builder.tsx`
+- `components/aei/temporal-workflow-editor.tsx`
+- `components/aei/artifact-preview-panel.tsx`
+- `lib/orchestrator-engine.ts`
+- `app/api/orchestrator/route.ts`
+- `app/api/orchestrator/simulate/route.ts`
+- `app/api/executions/route.ts`
+- `app/api/executions/[executionId]/route.ts`
+- `lib/execution-store.ts`
+- `lib/temporal-execution.ts`
+- `lib/temporal-workflow-editor-schema.ts`
+- `app/api/temporal/workflow-editor/route.ts`
 
 ## Data Flow
 
 ### Simulation Flow
 
-```
-User loads graph    Frontend has InstructionGraph
-                             ↓
-User clicks Simulate         Frontend calls POST /api/orchestrator/simulate
-                             ↓
-Backend: POST /orchestrator/simulate
-  ├─ Parse graph + rules
-  ├─ Create OrchestratorEngine(rules, constraints)
-  ├─ engine.simulate(graph):
-  │   ├─ Decompose graph → atomic tasks
-  │   ├─ Topological sort
-  │   ├─ Assign tasks to agents (affinity matching)
-  │   ├─ Estimate metrics
-  │   └─ Return TaskAssignment[] + metrics
-  └─ Return SimulationResult JSON
-                             ↓
-Frontend receives SimulationResult
-  ├─ Store in state
-  ├─ Render SimulationPanel
-  ├─ Show task assignment table, critical path, metrics
-  └─ Enable Constraint Adjuster sliders
-                             ↓
-User adjusts sliders (maxAgents, maxCostBudget)
-  ├─ Frontend calls POST /orchestrator/simulate with new constraints
-  └─ Repeat simulation loop (target <2s per re-simulation)
-```
+1. User selects/creates a rule in `/orchestrator`.
+2. UI triggers `POST /api/orchestrator/simulate` with:
+   - `instruction_graph` (array of instruction nodes)
+   - `rule_set_id`
+   - optional `constraints_override`
+   - optional `agent_pool`
+3. API sets agent pool and ensures rule presence (creates default rule if missing).
+4. `OrchestratorEngine.simulate()` runs:
+   - graph validation and topological decomposition
+   - greedy assignment based on affinity and fallback
+   - metric estimation (`estimated_total_cost`, `estimated_total_duration`, `success_probability`)
+5. API returns simulation payload plus generated artifacts for preview.
 
 ### Execution Flow
 
-```
-User clicks "Execute Plan"   Frontend has SimulationResult
-                                      ↓
-Confirmation dialog shown           Show metrics summary
-  ├─ Total cost, duration, success probability
-  └─ User clicks "Confirm"
-                                      ↓
-Frontend POST /api/executions
-  ├─ Body: { assignment_plan, rule_set_id, graph_id }
-  └─ Receives { execution_id, status: "pending" }
-                                      ↓
-Backend: POST /api/executions
-  ├─ Create execution record
-  ├─ Store metadata
-  ├─ For each TaskAssignment:
-  │   ├─ Create task spec
-  │   ├─ Find agent by assigned_agent_id
-  │   └─ Broadcast via WebSocket: { execution_id, task_id, agent_id, task_spec }
-  └─ Return execution_id
-                                      ↓
-Agents receive tasks via WebSocket
-  ├─ Update local task queue
-  ├─ Change status to "processing"
-  └─ Broadcast status update to Agent Dashboard
-                                      ↓
-Agent Dashboard receives updates
-  ├─ Show task assignments per agent
-  ├─ Update status badges (idle → processing)
-  ├─ Update sparklines with live metrics
-  └─ User monitors in real-time
-                                      ↓
-Agents complete tasks
-  ├─ Report completion via heartbeat/WebSocket
-  ├─ Status changes to "complete"
-  └─ Agent Dashboard reflects completion
-                                      ↓
-All agents done              Execution status = "complete"
-  ├─ Store actual metrics (actual_cost, actual_duration)
-  ├─ Store completion timeline
-  └─ Available for history & replay
-```
+1. User clicks Execute in simulation panel.
+2. UI sends `POST /api/executions` with `rule_set_id`, `assignment_plan`, and estimated metrics.
+3. API resolves project context and RBAC, evaluates project budget, and creates an execution record in `EXECUTIONS_DB`.
+4. Dispatch path:
+   - Preferred: Temporal execution via `lib/temporal-execution.ts` if runner is enabled/available.
+   - Fallback: legacy in-process mock dispatch.
+5. Execution status transitions: `pending` -> `processing` -> `complete`/`failed`.
+6. History is available at `GET /api/executions`; detail is available at `GET /api/executions/[executionId]`.
 
----
+### Temporal Workflow Editor Validation Flow (F03-MH-10 Slice)
 
-## Key Design Decisions
+1. UI loads template with `GET /api/temporal/workflow-editor?template_id=self-bootstrap-v1`.
+2. User edits safe fields in a constrained form.
+3. UI submits proposed spec to `POST /api/temporal/workflow-editor`.
+4. Server validates using strict schema and policy:
+   - unknown keys rejected
+   - blocked keys rejected (`command`, `shell`, `script`, `env`, `image`, etc.)
+   - strict bounds for retry/timeout fields
+   - fixed allowlist for template and activity IDs
+5. API returns `{ valid, errors, sanitized_spec? }` with no workflow execution side effects.
 
-### 1. Non-Destructive Simulation
-- Simulation creates no side effects — no execution record, no task dispatch
-- User can safely explore what-if scenarios with different constraints
-- Only clicking "Execute" commits to task dispatch
+## Architecture Decisions
 
-### 2. Greedy Task Assignment (Not Optimal)
-- Uses greedy best-fit heuristic instead of NP-hard optimization
-- Justification: Good enough for MVP, fast (<2s for 50 tasks), easy to reason about
-- Phase 2 can add optimization layer (constraint solver, branch-and-bound, etc.)
+### Decision 1: Keep simulation non-destructive
+- **Chosen approach:** `POST /api/orchestrator/simulate` returns plan + metrics + artifacts only.
+- **Why:** Enables fast iterative tuning without committing execution state.
+- **Alternatives considered:** Persist simulation snapshots by default.
+- **Tradeoffs:** Less historical visibility of simulation-only sessions.
 
-### 3. Heuristic Affinity (Not Hard Constraints)
-- Agent type affinity is a preference hint, not a strict lock
-- If preferred agent unavailable, system falls back to any agent of matching capability
-- Justification: Real systems need flexibility; hard constraints cause unmet demand
-- Phase 2 can add hard constraint support
+### Decision 2: Use greedy assignment in MVP engine
+- **Chosen approach:** Rule affinity preference with fallback to first available agent.
+- **Why:** Simple and fast for current graph sizes.
+- **Alternatives considered:** Global optimization (ILP/solver).
+- **Tradeoffs:** Assignment quality may be suboptimal under complex constraints.
 
-### 4. In-Memory Storage
-- Rules and execution records stored in memory (no database yet)
-- Justification: MVP simplicity, fast iteration, no DB setup required
-- Phase 2: migrate to PostgreSQL for persistence, audit trail, replay
+### Decision 3: Prefer Temporal for execution, keep fallback path
+- **Chosen approach:** `app/api/executions/route.ts` tries Temporal when enabled, otherwise uses legacy mock dispatch.
+- **Why:** Enables realistic orchestration while preserving local/dev operability.
+- **Alternatives considered:** Hard-cut to Temporal only.
+- **Tradeoffs:** Dual-path complexity and potential behavior drift between engines.
 
-### 5. Topological Sort for Task Ordering
-- Uses Kahn's algorithm for dependency ordering
-- Detects circular dependencies upfront (error instead of infinite loop)
-- Justification: Correct handling of DAGs, fast O(V + E) algorithm, industry standard
+### Decision 4: Default-deny constrained Temporal workflow editing
+- **Chosen approach:** Strict schema + blocked key scan + activity/template allowlists.
+- **Why:** Prevent arbitrary code/execution knob exposure from UI edits.
+- **Alternatives considered:** Broad JSON editing with best-effort validation.
+- **Tradeoffs:** Reduced flexibility for advanced workflow tuning.
 
-### 6. WebSocket for Task Dispatch
-- Reuses WebSocket transport from Feature 00 (Heartbeat)
-- Agents already subscribed to WebSocket channel
-- Tasks broadcast as JSON messages: `{ execution_id, task_id, agent_id, task_spec }`
-- Justification: Low-latency, real-time, agents already connected
+### Decision 5: In-memory stores for rules and executions
+- **Chosen approach:** Runtime maps for MVP speed.
+- **Why:** Minimal setup and fast iteration.
+- **Alternatives considered:** Immediate DB-backed persistence.
+- **Tradeoffs:** Data loss on restart; limited audit durability.
 
----
+## Integration Points
 
-## Performance Considerations
+### Upstream Dependencies
+- `docs/architecture/feature-01-architecture.md`: workflow/instruction graph producer.
+- `docs/architecture/feature-00-architecture.md`: heartbeat/real-time communication baseline.
+- Project context and RBAC modules (`lib/project-context.ts`, `lib/project-rbac.ts`).
 
-### Simulation Latency Target: <2s per simulation
+### Downstream Dependents
+- `docs/architecture/feature-02-architecture.md`: agent dashboard consumes execution/task status.
+- `docs/architecture/feature-04-architecture.md`: artifact preview uses simulation artifacts.
+- Trace viewer surface (`app/traces/[executionId]/page.tsx`) depends on execution trace writes.
 
-**Breakdown for 50-task graph:**
-- Graph decomposition (topological sort): ~10ms
-- Task-to-agent assignment (greedy): ~20ms
-- Metrics estimation (aggregation): ~5ms
-- JSON serialization + network: ~100ms
-- **Total: ~135ms** (well under 2s target)
+## Known Issues & Constraints
 
-**Scaling:**
-- 100-task graph: ~200ms
-- 200-task graph: ~400ms
-- 1000-task graph: ~2000ms (approaching limit)
+1. Rule update/delete routing is inconsistent.
+- Current frontend calls `/api/orchestrator/${ruleId}`, but only `app/api/orchestrator/route.ts` exists.
+- PUT/DELETE handlers in that file parse `pathname`, which does not create a real dynamic API route.
 
-**Optimizations (if needed):**
-- Cache topological sort results (reuse if graph unchanged)
-- Batch constraint adjustments (don't re-simulate on every slider change)
-- Move to worker thread for large graphs (Phase 2)
+2. Execution detail page route is referenced by UI but not present.
+- `app/executions/page.tsx` links to `/executions/${execution_id}`.
+- No `app/executions/[executionId]/page.tsx` currently exists.
 
-### Execution History Growth
+3. Simulation panel currently uses a local mock graph.
+- `components/aei/simulation-panel.tsx` constructs a fixed graph client-side rather than ingesting a live Prompt Canvas graph.
 
-- Each execution stores: metadata, assignment plan (array of TaskAssignment objects)
-- Size per execution: ~10KB–100KB depending on task count
-- 1000 executions: ~100MB (in-memory limit)
-- Phase 2: database storage, archival, pagination
-
----
-
-## Error Handling
-
-### Circular Dependency Detection
-```typescript
-// Example: Task A depends on B, B depends on A
-// detectCircularDependencies() throws:
-throw new Error("Circular dependency detected in graph: A → B → A");
-```
-- Checked upfront during decomposition
-- Returns error in simulation response (user must fix canvas)
-
-### Missing Agent Type
-```typescript
-// Example: Rule affinity specifies "quantum_computer" agent type
-// But no such agents available
-// Fallback: assignTasksToAgents() assigns to any available agent type
-// Returns task assignment with warning in logs
-```
-
-### Budget Overrun
-```typescript
-// Example: maxCostBudget=$100, but 50 tasks cost $150 total
-// assignTasksToAgents() drops low-priority tasks
-// Returns partially-assigned plan with "queued" status for unassigned tasks
-```
-
-### Constraint Conflicts
-```typescript
-// Example: maxAgents=1, graph requires parallel execution
-// Engine assigns serially (one agent, longer duration)
-// Returns degraded metrics (longer duration, same cost)
-// User can adjust constraint and re-simulate
-```
-
----
+4. In-memory persistence remains a hard limit.
+- Rule and execution state are process-memory scoped and reset on restart.
 
 ## Testing Strategy
 
-### Unit Tests: OrchestratorEngine
+### Unit Tests
+- `lib/orchestrator-engine.ts`
+  - decomposition and cycle detection
+  - assignment affinity and fallback behavior
+  - metrics calculation
+- `lib/temporal-workflow-editor-schema.ts`
+  - blocked key rejection
+  - bounds validation
+  - allowlist enforcement
 
-- **Test decomposition:** Mock graph → verify atomic task list is correct
-- **Test topological sort:** Verify task order respects dependencies
-- **Test affinity matching:** Mock rule with affinity → verify task routed to correct agent type
-- **Test circular detection:** Graph with cycle → verify error thrown
-- **Test metrics:** Mock tasks → verify cost/duration/success probability calculated correctly
+### Integration Tests
+- `POST /api/orchestrator/simulate`
+  - valid graph + rule returns simulation payload
+  - invalid graph returns validation errors
+- `POST /api/executions`
+  - validates project context, RBAC, budget constraints
+  - returns engine mode (`temporal` or `legacy-mock`)
+- `GET /api/executions` and `GET /api/executions/[executionId]`
+  - scope by project and return expected record shape
+- `GET/POST /api/temporal/workflow-editor`
+  - allowed mutation accepted
+  - unsafe mutation rejected with explicit errors
 
-### Integration Tests: API Routes
+### E2E Scenarios
+1. Create/edit rule -> simulate -> execute -> confirm history row appears.
+2. Toggle constraints and verify metric deltas on re-simulation.
+3. Validate Temporal workflow editor safe mutation and blocked mutation behavior.
+4. Open trace view from execution history and verify decision tree load.
 
-- **Test simulate endpoint:** POST with graph + rules → verify 200 response, valid result
-- **Test execute endpoint:** POST simulation result → verify execution record created, WebSocket broadcast sent
-- **Test CRUD rules:** Create, read, update, delete rules → verify persistence
+## Future Improvements
 
-### E2E Tests: User Workflows
-
-- **Workflow 1:** Create rule → load graph → simulate → adjust constraints → re-simulate → execute
-- **Workflow 2:** Create multiple rules → simulate with different priorities → verify ordering
-- **Workflow 3:** Simulate with tight constraints → verify graceful degradation (queued tasks)
-
-### Performance Tests
-
-- **Benchmark decomposition:** 50-task graph, verify <2s simulation
-- **Benchmark assignment:** 100 tasks × 100 agents, verify <500ms assignment
-- **Load test:** 1000 concurrent simulations, verify <5s latency per request
-
----
-
-## Future Enhancements (Phase 2+)
-
-1. **Real Agent Pool:** Replace mock agents with real capability inventory (actual resource constraints)
-2. **Constraint Solver:** Upgrade from greedy to optimal task assignment (ILP solver, genetic algorithm)
-3. **Hard Constraints:** Support must-have affinity rules (not just hints)
-4. **Cost/Duration Tuning:** Per-task-type cost/duration models from historical data
-5. **Mid-Flight Reassignment:** Pause execution, move tasks between agents, resume
-6. **Multi-Graph Comparison:** Execute same graph with different rules, visualize deltas
-7. **Anomaly Escalation:** Failed tasks escalate to human operators (human-in-the-loop)
-8. **Advanced Visualization:** Drag-to-reschedule Gantt, task dependency graph, cost breakdown by agent type
-9. **Persistent Storage:** Rules and executions stored in PostgreSQL for audit trail and replay
-10. **API Versioning:** Support v1/v2 endpoints for backward compatibility as system evolves
-
----
+1. Add real dynamic orchestrator rule routes (`/api/orchestrator/[ruleId]`) and align frontend usage.
+2. Implement `app/executions/[executionId]/page.tsx` to close the current navigation gap.
+3. Replace mock graph input path with direct Prompt Canvas graph ingestion.
+4. Persist rules/executions to database for durability and queryability.
+5. Add deterministic replay endpoint semantics and UI flow.
+6. Introduce richer assignment optimization for larger or constrained agent pools.
 
 ## References
 
-- Feature 01 (Prompt Canvas): Produces instruction graphs consumed by orchestrator
-- Feature 02 (Agent Dashboard): Receives task assignments from orchestrator, updates in real-time
-- Feature 00 (Heartbeat): Provides WebSocket transport for task dispatch and agent communication
-- Kahn's algorithm: https://en.wikipedia.org/wiki/Topological_sorting
-- Greedy algorithms: https://en.wikipedia.org/wiki/Greedy_algorithm
+- Task source: `docs/tasks/feature-03-orchestrator-hub.md`
+- On-boarding guide: `docs/on-boarding/feature-03-onboarding.md`
+- Core engine: `lib/orchestrator-engine.ts`
+- Orchestrator APIs: `app/api/orchestrator/route.ts`, `app/api/orchestrator/simulate/route.ts`
+- Execution APIs: `app/api/executions/route.ts`, `app/api/executions/[executionId]/route.ts`
+- Temporal adapter: `lib/temporal-execution.ts`
+- Temporal editor schema/API: `lib/temporal-workflow-editor-schema.ts`, `app/api/temporal/workflow-editor/route.ts`
+
+## Automated Slice Sync Log
+
+- 2026-02-14 | task: F03-MH-09 | workflow: ari-self-bootstrap-df7b023d74 | task_file: docs/tasks/feature-03-orchestrator-hub.md
+- 2026-02-14 | task: F03-MH-11 | workflow: ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20:51:50Z | task_file: docs/tasks/feature-03-orchestrator-hub.md

@@ -6,13 +6,14 @@ import { moderatePluginReview } from '@/lib/plugins/reviews-service'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { reviewId: string } }
+  { params }: { params: Promise<{ reviewId: string }> }
 ) {
+  const { reviewId } = await params
   const result = await enforcePermission(req, {
     permission: 'assign',
     action: 'update',
     resourceType: 'plugin',
-    resourceId: `review:${params.reviewId}`,
+    resourceId: `review:${reviewId}`,
   })
   if (!result.allowed) return result.response!
 
@@ -23,7 +24,7 @@ export async function PATCH(
   }
 
   const updated = await moderatePluginReview({
-    reviewId: params.reviewId,
+    reviewId,
     status: parsed.data.status,
     moderatorId: result.userId,
     note: parsed.data.note,
@@ -31,6 +32,7 @@ export async function PATCH(
   if (!updated) return NextResponse.json({ error: 'Review not found' }, { status: 404 })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: result.userId,
     action: 'update',
     resource_type: 'plugin',
@@ -45,4 +47,3 @@ export async function PATCH(
 
   return NextResponse.json({ review: updated })
 }
-

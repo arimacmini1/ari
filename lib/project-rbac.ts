@@ -42,7 +42,8 @@ async function logProjectDeniedAccess(input: {
   const { userId, req, options, reason } = input
   try {
     await createAuditLog({
-      actor: userId,
+    timestamp: new Date(),
+    actor: userId,
       action: "access",
       resource_type: "permission",
       resource_id: options.permission,

@@ -52,6 +52,14 @@ const COMMENTS_VISIBLE_KEY = "aei.canvas.comments.visible"
 const COMMENTS_VISIBILITY_EVENT = "aei:comments-visibility"
 const SET_COMMENTS_VISIBILITY_EVENT = "aei:set-comments-panel"
 
+interface ExecutionResult {
+  id: string
+  status: "running" | "complete" | "error"
+  startTime: string
+  endTime?: string
+  logs?: string[]
+}
+
 export function PromptCanvas() {
   const canvasId = "default-canvas"
   const { activeProjectId } = useActiveProject()
@@ -74,7 +82,7 @@ export function PromptCanvas() {
   })
   const [history, setHistory] = useState<HistoryState>(createInitialHistory())
   const [selectedNode, setSelectedNode] = useState<CanvasNode | null>(null)
-  const [executionResult, setExecutionResult] = useState(null)
+  const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null)
   const [showVersions, setShowVersions] = useState(false)
   const [showComments, setShowComments] = useState<boolean>(() => {
     if (typeof window === "undefined") return true
@@ -502,11 +510,14 @@ export function PromptCanvas() {
         logs: [`Execution started: ${result.execution_id}`],
       })
       setTimeout(() => {
-        setExecutionResult((prev: any) => ({
+        setExecutionResult((prev) => {
+          if (!prev) return prev
+          return {
           ...prev,
           status: "complete",
           endTime: new Date().toISOString(),
-        }))
+          }
+        })
       }, 3000)
     } catch {
       alert("Failed to execute canvas")
@@ -593,7 +604,7 @@ export function PromptCanvas() {
     if (!source || !target) return
     const { merged, conflicts } = threeWayMerge(source.baseState, target.headState, source.headState)
     return { merged, conflicts }
-  }, [branches, currentBranchId, handleStateChange])
+  }, [branches, currentBranchId])
 
   const loadPendingMerges = useCallback(async () => {
     try {

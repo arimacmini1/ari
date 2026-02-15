@@ -37,6 +37,7 @@ async function logDeniedAccess(
 ) {
   try {
     await createAuditLog({
+      timestamp: new Date(),
       actor,
       action: 'access',
       resource_type: 'permission',

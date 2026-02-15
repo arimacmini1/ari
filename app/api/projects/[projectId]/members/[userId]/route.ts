@@ -46,6 +46,7 @@ export async function PATCH(
   })
 
   await createAuditLog({
+    timestamp: new Date(),
     actor: permission.userId,
     action: "update",
     resource_type: "role",

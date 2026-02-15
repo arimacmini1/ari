@@ -16,6 +16,7 @@ import RuleVisualization from '@/components/aei/rule-visualization';
 import SimulationPanel from '@/components/aei/simulation-panel';
 import { ArtifactPreviewPanel } from '@/components/aei/artifact-preview-panel';
 import OrchestratorDagBuilder from '@/components/aei/orchestrator-dag-builder';
+import TemporalWorkflowEditor from '@/components/aei/temporal-workflow-editor';
 import type { Artifact } from '@/lib/artifact-model';
 
 export interface Rule {
@@ -78,14 +79,22 @@ export default function OrchestratorPage() {
 
   const handleSaveRule = async (rule: Rule) => {
     try {
-      const response = await fetch('/api/orchestrator', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rule_set_id: rule.id,
-          rule,
-        }),
-      });
+      const ruleExists = rules.some((existingRule) => existingRule.id === rule.id);
+      const response = await fetch(
+        ruleExists ? `/api/orchestrator/${rule.id}` : '/api/orchestrator',
+        {
+          method: ruleExists ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(
+            ruleExists
+              ? { rule }
+              : {
+                  rule_set_id: rule.id,
+                  rule,
+                }
+          ),
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -222,6 +231,18 @@ export default function OrchestratorPage() {
                   Select a rule to use the DAG builder
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-slate-900 border-slate-700 overflow-hidden flex flex-col col-span-2 min-h-[420px]">
+            <CardHeader className="pb-3 shrink-0">
+              <CardTitle>Temporal Workflow Editor (Constrained)</CardTitle>
+              <CardDescription>
+                View workflow graph and edit safe fields with server-side validation gates.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="overflow-y-auto flex-1 min-h-0">
+              <TemporalWorkflowEditor />
             </CardContent>
           </Card>
         </div>

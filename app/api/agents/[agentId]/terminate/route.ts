@@ -3,9 +3,9 @@ import { enforcePermission } from "@/lib/rbac/enforce"
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { agentId: string } }
+  { params }: { params: Promise<{ agentId: string }> }
 ) {
-  const { agentId } = params
+  const { agentId } = await params
 
   try {
     // TODO: Integrate with actual agent runtime

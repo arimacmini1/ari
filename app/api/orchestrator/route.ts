@@ -7,18 +7,16 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createOrchestratorEngine, Rule, InstructionNode } from '@/lib/orchestrator-engine';
-import { enforcePermission } from '@/lib/rbac/enforce';
+import { type Rule } from '@/lib/orchestrator-engine';
+import { getOrchestratorEngine } from '@/lib/orchestrator-store';
 
-// In-memory storage for MVP (replace with database later)
-const RULES_DB = new Map<string, Rule>();
-const ORCHESTRATOR = createOrchestratorEngine();
+const ORCHESTRATOR = getOrchestratorEngine();
 
 /**
  * GET /api/orchestrator/rules
  * List all rule sets
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
     const rules = ORCHESTRATOR.getRules();
     return NextResponse.json({ rules });
@@ -64,7 +62,6 @@ export async function POST(req: NextRequest) {
     };
 
     ORCHESTRATOR.addRule(complete_rule);
-    RULES_DB.set(rule_set_id, complete_rule);
 
     return NextResponse.json(
       { rule: complete_rule },
@@ -79,87 +76,23 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * PUT /api/orchestrator/rules/{rule_set_id}
- * Update a rule set
+ * PUT /api/orchestrator
+ * Use /api/orchestrator/[ruleId] instead.
  */
-export async function PUT(req: NextRequest) {
-  try {
-    const { pathname } = new URL(req.url);
-    const rule_set_id = pathname.split('/').pop();
-    
-    if (!rule_set_id) {
-      return NextResponse.json(
-        { error: 'Missing rule_set_id' },
-        { status: 400 }
-      );
-    }
-
-    const body = await req.json();
-    const { rule } = body;
-
-    if (!rule) {
-      return NextResponse.json(
-        { error: 'Missing rule' },
-        { status: 400 }
-      );
-    }
-
-    const complete_rule: Rule = {
-      id: rule_set_id,
-      name: rule.name || '',
-      priority: rule.priority || 5,
-      dependencies: rule.dependencies || [],
-      agent_type_affinity: rule.agent_type_affinity || {},
-      constraints: rule.constraints || {},
-    };
-
-    ORCHESTRATOR.updateRule(complete_rule);
-    RULES_DB.set(rule_set_id, complete_rule);
-
-    return NextResponse.json({ rule: complete_rule });
-  } catch (error) {
-    return NextResponse.json(
-      { error: String(error) },
-      { status: 500 }
-    );
-  }
+export async function PUT(_req: NextRequest) {
+  return NextResponse.json(
+    { error: 'Use PUT /api/orchestrator/{ruleId}' },
+    { status: 405 }
+  );
 }
 
 /**
- * DELETE /api/orchestrator/rules/{rule_set_id}
- * Delete a rule set
+ * DELETE /api/orchestrator
+ * Use /api/orchestrator/[ruleId] instead.
  */
-export async function DELETE(req: NextRequest) {
-  try {
-    const { pathname } = new URL(req.url);
-    const rule_set_id = pathname.split('/').pop();
-    
-    if (!rule_set_id) {
-      return NextResponse.json(
-        { error: 'Missing rule_set_id' },
-        { status: 400 }
-      );
-    }
-
-    const enforcement = await enforcePermission(req, {
-      permission: 'delete',
-      action: 'delete',
-      resourceType: 'workflow',
-      resourceId: rule_set_id,
-    });
-
-    if (!enforcement.allowed) {
-      return enforcement.response!;
-    }
-
-    ORCHESTRATOR.deleteRule(rule_set_id);
-    RULES_DB.delete(rule_set_id);
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json(
-      { error: String(error) },
-      { status: 500 }
-    );
-  }
+export async function DELETE(_req: NextRequest) {
+  return NextResponse.json(
+    { error: 'Use DELETE /api/orchestrator/{ruleId}' },
+    { status: 405 }
+  );
 }

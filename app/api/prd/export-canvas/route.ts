@@ -229,9 +229,8 @@ function coerceCanvas(value: unknown): CanvasState | null {
   const obj = value as Record<string, unknown>
   if (!Array.isArray(obj.nodes) || !Array.isArray(obj.edges)) return null
 
-  const nodes = obj.nodes
-    .map((node, index) => {
-      if (!node || typeof node !== "object") return null
+  const nodes = obj.nodes.reduce<CanvasState["nodes"]>((acc, node, index) => {
+      if (!node || typeof node !== "object") return acc
       const n = node as Record<string, unknown>
       const id = typeof n.id === "string" ? n.id : `node-${index + 1}`
       const data = (n.data && typeof n.data === "object" ? n.data : {}) as Record<string, unknown>
@@ -242,32 +241,31 @@ function coerceCanvas(value: unknown): CanvasState | null {
       const pos = (n.position && typeof n.position === "object" ? n.position : {}) as Record<string, unknown>
       const x = typeof pos.x === "number" ? pos.x : (index % 6) * 260
       const y = typeof pos.y === "number" ? pos.y : Math.floor(index / 6) * 180
-      return {
+      acc.push({
         id,
         type: "block" as const,
         position: { x, y },
         data: { label, description, blockType },
-      }
-    })
-    .filter((node): node is CanvasState["nodes"][number] => Boolean(node))
+      })
+      return acc
+    }, [])
 
   const nodeIds = new Set(nodes.map((n) => n.id))
-  const edges = obj.edges
-    .map((edge, index) => {
-      if (!edge || typeof edge !== "object") return null
+  const edges = obj.edges.reduce<CanvasState["edges"]>((acc, edge, index) => {
+      if (!edge || typeof edge !== "object") return acc
       const e = edge as Record<string, unknown>
       const source = typeof e.source === "string" ? e.source : null
       const target = typeof e.target === "string" ? e.target : null
-      if (!source || !target) return null
-      if (!nodeIds.has(source) || !nodeIds.has(target)) return null
-      return {
+      if (!source || !target) return acc
+      if (!nodeIds.has(source) || !nodeIds.has(target)) return acc
+      acc.push({
         id: typeof e.id === "string" ? e.id : `edge-${index + 1}`,
         source,
         target,
         label: typeof e.label === "string" ? e.label : undefined,
-      }
-    })
-    .filter((edge): edge is CanvasState["edges"][number] => Boolean(edge))
+      })
+      return acc
+    }, [])
 
   const viewportObj = (obj.viewport && typeof obj.viewport === "object" ? obj.viewport : {}) as Record<string, unknown>
   const viewport = {

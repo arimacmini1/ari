@@ -9,7 +9,7 @@ import { EXECUTIONS_DB } from '@/lib/execution-store';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { executionId: string } }
+  { params }: { params: Promise<{ executionId: string }> }
 ) {
   try {
     const projectContext = resolveProjectContext(req);
@@ -17,7 +17,7 @@ export async function GET(
       return projectContext.response;
     }
 
-    const { executionId } = params;
+    const { executionId } = await params;
 
     const execution = EXECUTIONS_DB.get(executionId);
     if (!execution) {
