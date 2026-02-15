@@ -1,4 +1,5 @@
 import asyncio
+import csv
 import json
 import re
 from datetime import timedelta
@@ -63,6 +64,14 @@ def _resolve_safe_output_dir(repo_root: str, output_dir: str) -> Path:
     if root != output and root not in output.parents:
         raise ValueError("Refusing to write outside repo_root")
     return output
+
+
+def _resolve_safe_input_path(repo_root: str, source_path: str) -> Path:
+    root = Path(repo_root).resolve()
+    candidate = (root / source_path).resolve()
+    if root != candidate and root not in candidate.parents:
+        raise ValueError("Refusing to read outside repo_root")
+    return candidate
 
 
 @activity.defn
@@ -147,24 +156,72 @@ def _default_migration_source_records() -> list[dict[str, Any]]:
 @activity.defn
 async def extract_mendix_records_activity(payload: dict[str, Any]) -> dict[str, Any]:
     await asyncio.sleep(0.1)
+    repo_root = str(payload.get("repo_root", "."))
+    source_path_value = payload.get("source_path")
+    source_format_override = str(payload.get("source_format", "")).strip().lower()
     source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
-    records = source.get("records")
-    if not isinstance(records, list):
-        records = _default_migration_source_records()
+    extraction_errors: list[str] = []
+
+    records: list[dict[str, Any]] | None = None
+    source_system = str(source.get("system", "mendix_stub"))
+
+    if isinstance(source_path_value, str) and source_path_value.strip():
+        input_path = _resolve_safe_input_path(repo_root, source_path_value.strip())
+        if not input_path.exists():
+            raise ValueError(f"source_path does not exist: {source_path_value}")
+        if not input_path.is_file():
+            raise ValueError(f"source_path is not a file: {source_path_value}")
+
+        detected_format = source_format_override or input_path.suffix.lower().lstrip(".")
+        raw = input_path.read_text(encoding="utf-8")
+        source_system = f"file:{input_path.name}"
+        if detected_format == "json":
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                candidate = parsed.get("records")
+                if isinstance(candidate, list):
+                    records = [item for item in candidate if isinstance(item, dict)]
+                else:
+                    extraction_errors.append("JSON object is missing records array; defaulting to empty.")
+                    records = []
+            elif isinstance(parsed, list):
+                records = [item for item in parsed if isinstance(item, dict)]
+            else:
+                raise ValueError("Unsupported JSON structure for source_path.")
+        elif detected_format == "csv":
+            reader = csv.DictReader(raw.splitlines())
+            records = [dict(row) for row in reader]
+        else:
+            raise ValueError(
+                f"Unsupported source file format: {detected_format}. Use .json or .csv."
+            )
+    else:
+        in_memory_records = source.get("records")
+        if isinstance(in_memory_records, list):
+            records = [item for item in in_memory_records if isinstance(item, dict)]
+        else:
+            records = _default_migration_source_records()
 
     normalized_records: list[dict[str, Any]] = []
-    for raw in records:
+    for index, raw in enumerate(records):
         if not isinstance(raw, dict):
             continue
         source_id = str(raw.get("source_id", "")).strip()
-        if not source_id:
-            continue
+        source_identifier = source_id or f"row-{index + 1}"
+        full_name = str(raw.get("full_name", "")).strip()
+        email = str(raw.get("email", "")).strip().lower()
+        created_at = str(raw.get("created_at", "")).strip()
+        if not full_name:
+            extraction_errors.append(f"{source_identifier}: missing full_name")
+        if not email:
+            extraction_errors.append(f"{source_identifier}: missing email")
         normalized_records.append(
             {
-                "source_id": source_id,
-                "full_name": str(raw.get("full_name", "")).strip(),
-                "email": str(raw.get("email", "")).strip().lower(),
-                "created_at": str(raw.get("created_at", "")),
+                "source_id": source_id or source_identifier,
+                "source_identifier": source_identifier,
+                "full_name": full_name,
+                "email": email,
+                "created_at": created_at,
                 "active": bool(raw.get("active", True)),
             }
         )
@@ -172,7 +229,8 @@ async def extract_mendix_records_activity(payload: dict[str, Any]) -> dict[str, 
     return {
         "records": normalized_records,
         "count": len(normalized_records),
-        "source_system": str(source.get("system", "mendix_stub")),
+        "source_system": source_system,
+        "errors": extraction_errors,
     }
 
 
@@ -184,6 +242,7 @@ async def transform_record_activity(record: dict[str, Any]) -> dict[str, Any]:
     first_name = parts[0] if parts else ""
     last_name = " ".join(parts[1:]) if len(parts) > 1 else ""
     return {
+        "source_identifier": str(record.get("source_identifier") or record.get("source_id", "")),
         "target_id": str(record.get("source_id", "")),
         "first_name": first_name,
         "last_name": last_name,
@@ -198,14 +257,17 @@ async def load_record_activity(payload: dict[str, Any]) -> dict[str, Any]:
     await asyncio.sleep(0.03)
     record = payload.get("record") if isinstance(payload.get("record"), dict) else {}
     dry_run = bool(payload.get("dry_run", True))
+    source_identifier = str(record.get("source_identifier", ""))
     target_id = str(record.get("target_id", "unknown"))
     if dry_run:
         return {
+            "source_identifier": source_identifier,
             "target_id": target_id,
             "status": "dry_run_skipped",
             "write_performed": False,
         }
     return {
+        "source_identifier": source_identifier,
         "target_id": target_id,
         "status": "loaded",
         "write_performed": True,
@@ -482,6 +544,8 @@ class MendixMigrationWorkflow:
         extracted_records: list[dict[str, Any]] = []
         transformed_records: list[dict[str, Any]] = []
         loaded_results: list[dict[str, Any]] = []
+        extraction_errors: list[str] = []
+        record_audit_rows: list[dict[str, Any]] = []
 
         if resume_from == "extract":
             extracted = await workflow.execute_activity(
@@ -498,11 +562,17 @@ class MendixMigrationWorkflow:
                 if isinstance(extracted.get("records"), list)
                 else []
             )
+            extraction_errors = (
+                extracted.get("errors")
+                if isinstance(extracted.get("errors"), list)
+                else []
+            )
             checkpoints.append(
                 {
                     "stage": "extract",
                     "status": "complete",
                     "record_count": len(extracted_records),
+                    "error_count": len(extraction_errors),
                 }
             )
         else:
@@ -516,19 +586,42 @@ class MendixMigrationWorkflow:
             source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
             records = source.get("records")
             extracted_records = records if isinstance(records, list) else _default_migration_source_records()
+            extraction_errors = []
+
+        record_audit_rows = [
+            {
+                "source_identifier": str(record.get("source_identifier") or record.get("source_id", "")),
+                "transform_status": "pending",
+                "load_status": "pending",
+                "error": "",
+            }
+            for record in extracted_records
+            if isinstance(record, dict)
+        ]
+        audit_index = {row["source_identifier"]: row for row in record_audit_rows}
 
         if resume_from in {"extract", "transform"}:
             for record in extracted_records:
-                transformed = await workflow.execute_activity(
-                    transform_record_activity,
-                    record if isinstance(record, dict) else {},
-                    start_to_close_timeout=timedelta(seconds=10),
-                    retry_policy=RetryPolicy(
-                        maximum_attempts=3,
-                        initial_interval=timedelta(seconds=1),
-                    ),
-                )
-                transformed_records.append(transformed)
+                if not isinstance(record, dict):
+                    continue
+                source_identifier = str(record.get("source_identifier") or record.get("source_id", ""))
+                try:
+                    transformed = await workflow.execute_activity(
+                        transform_record_activity,
+                        record,
+                        start_to_close_timeout=timedelta(seconds=10),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=3,
+                            initial_interval=timedelta(seconds=1),
+                        ),
+                    )
+                    transformed_records.append(transformed)
+                    if source_identifier in audit_index:
+                        audit_index[source_identifier]["transform_status"] = "success"
+                except Exception as error:
+                    if source_identifier in audit_index:
+                        audit_index[source_identifier]["transform_status"] = "failed"
+                        audit_index[source_identifier]["error"] = str(error)
             checkpoints.append(
                 {
                     "stage": "transform",
@@ -549,6 +642,7 @@ class MendixMigrationWorkflow:
                     continue
                 transformed_records.append(
                     {
+                        "source_identifier": str(record.get("source_identifier") or record.get("source_id", "")),
                         "target_id": str(record.get("source_id", "")),
                         "first_name": str(record.get("full_name", "")).split(" ")[0]
                         if str(record.get("full_name", "")).strip()
@@ -562,16 +656,26 @@ class MendixMigrationWorkflow:
 
         if resume_from in {"extract", "transform", "load"}:
             for record in transformed_records:
-                loaded = await workflow.execute_activity(
-                    load_record_activity,
-                    {"record": record, "dry_run": dry_run},
-                    start_to_close_timeout=timedelta(seconds=10),
-                    retry_policy=RetryPolicy(
-                        maximum_attempts=3,
-                        initial_interval=timedelta(seconds=1),
-                    ),
-                )
-                loaded_results.append(loaded)
+                source_identifier = str(record.get("source_identifier", ""))
+                try:
+                    loaded = await workflow.execute_activity(
+                        load_record_activity,
+                        {"record": record, "dry_run": dry_run},
+                        start_to_close_timeout=timedelta(seconds=10),
+                        retry_policy=RetryPolicy(
+                            maximum_attempts=3,
+                            initial_interval=timedelta(seconds=1),
+                        ),
+                    )
+                    loaded_results.append(loaded)
+                    if source_identifier in audit_index:
+                        audit_index[source_identifier]["load_status"] = str(
+                            loaded.get("status", "unknown")
+                        )
+                except Exception as error:
+                    if source_identifier in audit_index:
+                        audit_index[source_identifier]["load_status"] = "failed"
+                        audit_index[source_identifier]["error"] = str(error)
             checkpoints.append(
                 {
                     "stage": "load",
@@ -604,6 +708,7 @@ class MendixMigrationWorkflow:
                 if isinstance(item, dict) and item.get("status") == "dry_run_skipped"
             ]
         )
+        dry_run_guard_ok = (not dry_run) or loaded_count == 0
 
         validation = await workflow.execute_activity(
             validate_migration_activity,
@@ -640,12 +745,16 @@ class MendixMigrationWorkflow:
                 "transformed_count": len(transformed_records),
                 "loaded_count": loaded_count,
                 "skipped_loads": skipped_loads,
+                "extraction_error_count": len(extraction_errors),
                 "write_performed": not dry_run and loaded_count > 0,
+                "dry_run_guard_ok": dry_run_guard_ok,
                 "row_count_match": bool(validation.get("row_count_match", False)),
                 "sample_verified_count": int(validation.get("sample_verified_count", 0)),
             },
             "validation": validation,
             "checkpoints": checkpoints,
+            "record_audit_rows": record_audit_rows,
+            "extraction_errors": extraction_errors,
         }
 
         report_result = await workflow.execute_activity(
@@ -667,6 +776,7 @@ class MendixMigrationWorkflow:
             "report_path": report_path,
             "summary": report_payload["summary"],
             "checkpoints": checkpoints,
+            "record_audit_rows": record_audit_rows,
         }
 
 

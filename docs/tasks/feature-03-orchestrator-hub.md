@@ -638,6 +638,59 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
       - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
     - 2026-02-15: `B8` ship decision.
       - Decision: `ITERATE` (thin vertical slice shipped; follow-on slice needed for production source integration and hardening).
+    - 2026-02-15: `B1` scope lock completed (slice 2 hardening).
+      - In-scope:
+        - Replace deterministic in-code source records with file-backed ingest input contract (`source_path` JSON/CSV) plus strict path/format validation.
+        - Add per-record audit trail fields to migration report (`source_identifier`, `transform_status`, `load_status`, `error`).
+        - Add explicit dry-run write-guard assertions in workflow output/report (`write_performed=false`, destination write count zero).
+      - Out-of-scope:
+        - Live Mendix API connector/auth implementation (deferred until connector credentials and endpoint contract are finalized).
+        - High-volume batch partitioning/performance tuning.
+      - Success metrics:
+        - Dry-run path can read a real input file and produce per-record report rows with validation summary.
+        - Report proves no destination writes in dry-run mode.
+        - Runtime workflow history still demonstrates checkpoint/resume behavior.
+    - 2026-02-15: `B2` dependency check completed (slice 2).
+      - Temporal runtime + worker execution path already validated in slice 1 evidence.
+      - Required runtime dependencies present for this slice:
+        - local filesystem access for input fixture files
+        - existing report output path under `screehshots_evidence/`
+      - External dependency still pending (non-blocking for this slice):
+        - production Mendix credentialed connector (explicitly out-of-scope for this iteration).
+      - Decision: `READY` for `B3` design pass (slice 2).
+    - 2026-02-15: `B3` design pass completed (slice 2).
+      - File-level hardening plan locked:
+        - `temporal_worker/worker.py`: add file-backed source ingest (`source_path` JSON/CSV), per-record audit rows in report, and explicit dry-run write guard flags.
+        - `temporal_worker/run_migration.py`: expose `--source-path` and `--source-format` CLI inputs.
+        - `screehshots_evidence/f03-mh-12-source-fixture-2026-02-15.json`: deterministic source fixture for runtime verification.
+    - 2026-02-15: `B4` implement pass completed (slice 2).
+      - Implemented source file ingest with safe path constraints and JSON/CSV parsing.
+      - Added per-record migration audit rows to workflow output/report:
+        - `source_identifier`, `transform_status`, `load_status`, `error`.
+      - Added summary safeguards:
+        - `dry_run_guard_ok`
+        - `extraction_error_count`
+      - Added migration CLI options:
+        - `--source-path`, `--source-format`.
+    - 2026-02-15: `B5` verify pass completed (slice 2).
+      - Compile check:
+        - `python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py` (pass)
+      - Runtime workflow run with file-backed source fixture:
+        - workflow id: `ari-migration-f03-mh-12-slice2-runtime-2026-02-15-cdbc2789`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-slice2-runtime-2026-02-15.json`
+      - Exported history:
+        - `screehshots_evidence/temporal-migration-f03-mh-12-slice2-runtime-history-2026-02-15.json`
+      - Evidence index:
+        - `screehshots_evidence/f03-mh-12-slice2-b5-verify-2026-02-15.txt`
+    - 2026-02-15: `B6` review pass completed (slice 2).
+      - No blocking findings for this hardening slice.
+      - Residual risk: source remains file-based (connector auth and endpoint integration deferred by scope).
+    - 2026-02-15: `B7` docs sync completed (slice 2).
+      - Updated `F03-MH-12` with slice-2 `B3..B8` records and evidence links.
+      - Ran docs parity + dogfood status refresh.
+      - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
+    - 2026-02-15: `B8` ship decision (slice 2).
+      - Decision: `ITERATE` (hardening slice shipped; next slice should add credentialed Mendix connector path).
 
 ## Should-Have Tasks (makes orchestrator flexible and observable)
 

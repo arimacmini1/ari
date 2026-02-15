@@ -1,0 +1,18 @@
+{
+  "records": [
+    {
+      "source_id": "mx-fixture-001",
+      "full_name": "Riley Harper",
+      "email": "riley.harper@example.com",
+      "created_at": "2026-02-15T09:00:00Z",
+      "active": true
+    },
+    {
+      "source_id": "mx-fixture-002",
+      "full_name": "Taylor Quinn",
+      "email": "taylor.quinn@example.com",
+      "created_at": "2026-02-15T09:30:00Z",
+      "active": false
+    }
+  ]
+}

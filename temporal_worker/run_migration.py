@@ -43,6 +43,17 @@ def parse_args() -> argparse.Namespace:
         choices=["extract", "transform", "load", "validate"],
         help="Optional resume checkpoint stage.",
     )
+    parser.add_argument(
+        "--source-path",
+        dest="source_path",
+        help="Optional source file path (JSON/CSV), relative to repo_root.",
+    )
+    parser.add_argument(
+        "--source-format",
+        dest="source_format",
+        choices=["json", "csv"],
+        help="Optional explicit source format override for --source-path.",
+    )
     return parser.parse_args()
 
 
@@ -98,6 +109,10 @@ def load_payload(args: argparse.Namespace) -> dict[str, Any]:
         payload["resume_from_checkpoint"] = args.resume_from
     if args.migration_id:
         payload["migration_id"] = args.migration_id
+    if args.source_path:
+        payload["source_path"] = args.source_path
+        if args.source_format:
+            payload["source_format"] = args.source_format
 
     return payload
 

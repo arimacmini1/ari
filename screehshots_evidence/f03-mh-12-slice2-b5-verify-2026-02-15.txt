@@ -1,0 +1,21 @@
+# F03-MH-12 Slice 2 B5 Verify Evidence
+
+date: 2026-02-15
+feature_task: F03-MH-12 (slice 2 hardening)
+
+$ python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py
+result: PASS
+
+$ temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-slice2-runtime-2026-02-15 --source-path screehshots_evidence/f03-mh-12-source-fixture-2026-02-15.json --source-format json
+result: PASS
+workflow_id: ari-migration-f03-mh-12-slice2-runtime-2026-02-15-cdbc2789
+
+Expected hardening assertions verified in result/report:
+- source file ingest path used (JSON fixture)
+- per-record audit rows present: source_identifier, transform_status, load_status, error
+- dry-run write guard: write_performed=false and dry_run_guard_ok=true
+
+Artifacts:
+- screehshots_evidence/f03-mh-12-source-fixture-2026-02-15.json
+- screehshots_evidence/migration-report-f03-mh-12-slice2-runtime-2026-02-15.json
+- screehshots_evidence/temporal-migration-f03-mh-12-slice2-runtime-history-2026-02-15.json
