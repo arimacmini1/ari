@@ -6,18 +6,22 @@ feature_task: F03-MH-12
 $ python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py
 result: PASS
 
-$ temporal_worker/.venv/bin/python -u temporal_worker/worker.py
-result: PASS (startup confirmed)
-artifact: screehshots_evidence/f03-mh-12-worker-startup-2026-02-15.log
+Live runtime verification (controlled worker+runner session):
 
-$ timeout 60s temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-runtime-2026-02-15
-result: BLOCKED (runtime invocation timed out in this shell environment)
-
-$ temporal_worker/.venv/bin/python - <<'PY' ... direct activity dry-run pipeline ... PY
+$ temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-runtime-inline-2026-02-15
 result: PASS
-output:
-{"report_path":"/home/drew/repo/ari/screehshots_evidence/migration-report-local-dry-run-2026-02-15.json"}
+workflow_id: ari-migration-f03-mh-12-runtime-inline-2026-02-15-f6c71802
+report_path: /home/drew/repo/ari/screehshots_evidence/migration-report-f03-mh-12-runtime-inline-2026-02-15.json
 
-Artifacts:
-- screehshots_evidence/f03-mh-12-worker-startup-2026-02-15.log
-- screehshots_evidence/migration-report-local-dry-run-2026-02-15.json
+$ temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-resume-inline-2026-02-15 --resume-from load
+result: PASS
+workflow_id: ari-migration-f03-mh-12-resume-inline-2026-02-15-1606faaf
+report_path: /home/drew/repo/ari/screehshots_evidence/migration-report-f03-mh-12-resume-inline-2026-02-15.json
+
+Exported workflow histories:
+- screehshots_evidence/temporal-migration-f03-mh-12-runtime-inline-history-2026-02-15.json
+- screehshots_evidence/temporal-migration-f03-mh-12-resume-inline-history-2026-02-15.json
+
+Migration reports:
+- screehshots_evidence/migration-report-f03-mh-12-runtime-inline-2026-02-15.json
+- screehshots_evidence/migration-report-f03-mh-12-resume-inline-2026-02-15.json

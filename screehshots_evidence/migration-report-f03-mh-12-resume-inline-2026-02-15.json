@@ -1,0 +1,51 @@
+{
+  "checkpoints": [
+    {
+      "resume_from_checkpoint": "load",
+      "stage": "extract",
+      "status": "resumed"
+    },
+    {
+      "resume_from_checkpoint": "load",
+      "stage": "transform",
+      "status": "resumed"
+    },
+    {
+      "dry_run": true,
+      "record_count": 2,
+      "stage": "load",
+      "status": "complete"
+    },
+    {
+      "row_count_match": true,
+      "stage": "validate",
+      "status": "complete"
+    }
+  ],
+  "dry_run": true,
+  "migration_id": "f03-mh-12-resume-inline-2026-02-15",
+  "output_dir": "screehshots_evidence",
+  "repo_root": ".",
+  "resume_from_checkpoint": "load",
+  "summary": {
+    "extracted_count": 2,
+    "loaded_count": 0,
+    "row_count_match": true,
+    "sample_verified_count": 2,
+    "skipped_loads": 2,
+    "transformed_count": 2,
+    "write_performed": false
+  },
+  "validation": {
+    "extracted_count": 2,
+    "loaded_count": 0,
+    "row_count_match": true,
+    "sample_verified_count": 2,
+    "sample_verified_ids": [
+      "mx-001",
+      "mx-002"
+    ],
+    "transformed_count": 2
+  },
+  "workflow": "MendixMigrationWorkflow"
+}

@@ -599,17 +599,29 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
         - `MendixMigrationWorkflow`
       - Registered workflow/activities in Temporal worker bootstrap.
       - Added runner CLI: `temporal_worker/run_migration.py`.
-    - 2026-02-15: `B5` verify pass progressed.
+    - 2026-02-15: `B5` verify pass completed.
       - Static compile passed:
         - `python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py`
-      - Temporal worker startup confirmed:
-        - `temporal_worker/.venv/bin/python -u temporal_worker/worker.py`
-      - Runtime workflow invocation in this shell session remains blocked (invocation timeout):
-        - `timeout 60s temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-runtime-2026-02-15`
-      - Dry-run ETL report artifact generated via direct activity pipeline execution:
-        - `screehshots_evidence/migration-report-local-dry-run-2026-02-15.json`
+      - Runtime dry-run workflow execution passed:
+        - workflow id: `ari-migration-f03-mh-12-runtime-inline-2026-02-15-f6c71802`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-runtime-inline-2026-02-15.json`
+      - Resume-mode checkpoint execution passed (`--resume-from load`):
+        - workflow id: `ari-migration-f03-mh-12-resume-inline-2026-02-15-1606faaf`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-resume-inline-2026-02-15.json`
+      - Workflow history exports captured:
+        - `screehshots_evidence/temporal-migration-f03-mh-12-runtime-inline-history-2026-02-15.json`
+        - `screehshots_evidence/temporal-migration-f03-mh-12-resume-inline-history-2026-02-15.json`
       - Evidence index:
         - `screehshots_evidence/f03-mh-12-b5-verify-2026-02-15.txt`
+    - 2026-02-15: `B6` review pass completed.
+      - No blocking correctness findings for the thin-slice ETL workflow scaffold.
+      - Residual risk: this slice uses deterministic stub source data and does not yet include production Mendix connector/auth hardening.
+    - 2026-02-15: `B7` docs sync completed.
+      - Updated Feature 03 task log with `B3-B7` outcomes for `F03-MH-12`.
+      - Ran docs parity and dogfood status refresh.
+      - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
+    - 2026-02-15: `B8` ship decision.
+      - Decision: `ITERATE` (thin vertical slice shipped; follow-on slice needed for production source integration and hardening).
 
 ## Should-Have Tasks (makes orchestrator flexible and observable)
 
