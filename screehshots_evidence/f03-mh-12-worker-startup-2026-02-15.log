@@ -1,0 +1,1 @@
+Temporal worker started. task_queue=ari-smoke namespace=default workflows=[SmokeWorkflow, ExecutionWorkflow, DogfoodB1B8Workflow, SelfBootstrapWorkflow, MendixMigrationWorkflow]

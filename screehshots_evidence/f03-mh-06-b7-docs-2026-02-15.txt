@@ -1,0 +1,11 @@
+# F03-MH-06 B7 Docs Evidence
+date: 2026-02-15T03:18:32-06:00
+
+$ npm run docs:parity
+
+> my-project@0.1.0 docs:parity
+> node scripts/check-docs-parity.mjs
+
+DOCS PARITY CHECK PASSED
+
+$ node scripts/update-dogfood-status.mjs

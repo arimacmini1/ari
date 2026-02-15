@@ -1,0 +1,51 @@
+{
+  "migration_id": "local-dry-run-2026-02-15",
+  "workflow": "MendixMigrationWorkflow",
+  "dry_run": true,
+  "repo_root": ".",
+  "output_dir": "screehshots_evidence",
+  "resume_from_checkpoint": "extract",
+  "summary": {
+    "extracted_count": 2,
+    "transformed_count": 2,
+    "loaded_count": 0,
+    "skipped_loads": 2,
+    "write_performed": false,
+    "row_count_match": true,
+    "sample_verified_count": 2
+  },
+  "validation": {
+    "row_count_match": true,
+    "extracted_count": 2,
+    "transformed_count": 2,
+    "loaded_count": 0,
+    "sample_verified_count": 2,
+    "sample_verified_ids": [
+      "mx-100",
+      "mx-101"
+    ]
+  },
+  "checkpoints": [
+    {
+      "stage": "extract",
+      "status": "complete",
+      "record_count": 2
+    },
+    {
+      "stage": "transform",
+      "status": "complete",
+      "record_count": 2
+    },
+    {
+      "stage": "load",
+      "status": "complete",
+      "record_count": 2,
+      "dry_run": true
+    },
+    {
+      "stage": "validate",
+      "status": "complete",
+      "row_count_match": true
+    }
+  ]
+}

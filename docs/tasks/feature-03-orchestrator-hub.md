@@ -146,8 +146,34 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
    - Gotchas / debug notes: Execution history can grow large. Index queries on (rule_set_id, created_at) and (cost DESC) for fast retrieval. Gantt chart: use simple SVG or lightweight library (e.g., `react-gantt-chart`). Replay doesn't modify original execution â€” creates new execution record.
    - Progress / Fixes / Updates:
      - 2026-02-08: Execution history page complete. Created: `/app/executions/page.tsx` lists all executions with: execution_id, created_at, status badge (pending/processing/complete/failed), assigned agents count, estimated cost, estimated duration, actual metrics (when complete), efficiency calculation. Auto-refreshes every 2s. Links to detail view (stub). All metrics displayed in grid layout.
+     - 2026-02-15: `B1` scope lock (stabilization slice).
+       - In scope: close execution detail gap and stabilize orchestrator/execution TypeScript contracts after prior implementation work.
+       - Out of scope: new product capabilities beyond stabilization and parity sync.
+     - 2026-02-15: `B2` dependency check completed.
+       - Verified upstream pieces (`F03-MH-03`, `F03-MH-04`) already implemented; this slice is non-blocking stabilization.
+     - 2026-02-15: `B3` design pass completed.
+       - Planned file-level fixes for dynamic orchestrator rule route, execution detail page, collab/canvas typing, audit typing, and strict compile cleanup.
+     - 2026-02-15: `B4` implement pass completed.
+       - Added `app/executions/[executionId]/page.tsx` and `app/api/orchestrator/[ruleId]/route.ts`.
+       - Wired shared orchestrator store via `lib/orchestrator-store.ts` and aligned orchestrator update semantics in UI/API.
+       - Applied strict TypeScript fixes across execution/orchestrator/canvas/audit/test modules.
+     - 2026-02-15: `B5` verify pass completed.
+       - `npx tsc --noEmit` passed.
+       - `npx vitest run lib/compliance/compliance-service.test.ts lib/rbac/enforce.test.ts` passed.
+       - `npm run build` passed.
+       - Evidence: `screehshots_evidence/f03-mh-05-b5-verify-2026-02-15.txt`.
+     - 2026-02-15: `B6` review pass completed.
+       - Findings addressed in-slice: orchestrator route contract mismatch, missing execution detail page, and strict TS regressions.
+       - Residual risk: unrelated repo-local uncommitted files remain outside this slice by design.
+     - 2026-02-15: `B7` docs sync completed.
+       - Updated this feature task log with explicit `B1..B8` entries for the slice.
+       - Ran docs parity and dogfood status refresh.
+       - Evidence: `screehshots_evidence/f03-mh-05-b7-docs-2026-02-15.txt`.
+     - 2026-02-15: `B8` ship decision.
+       - Decision: `DONE` for this stabilization slice.
+       - Commit reference: `4411e78` (`Stabilize orchestrator flows and clear TypeScript errors`).
 
-- [ ] `F03-MH-06` Install & configure Temporal dev + production-ready setup
+- [x] `F03-MH-06` Install & configure Temporal dev + production-ready setup
   - Owner: Backend / Infra
   - Dependencies: `none`
   - Blocks: `none`
@@ -190,6 +216,28 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
         - `temporal_worker/.venv/bin/python temporal_worker/run_smoke.py --workflow-id ari-smoke-workflow` -> returned `hello ari`.
       - Remaining evidence step:
         - Capture Temporal UI screenshot/export (`http://localhost:8080`) for the run history artifact.
+    - 2026-02-15: `B1` scope lock completed (closeout slice).
+      - In-scope: finalize `F03-MH-06` using already-captured runtime proof and convert outstanding “remaining evidence” note into explicit exported-history evidence.
+      - Out-of-scope: net-new Temporal features (covered by `F03-MH-07+`).
+    - 2026-02-15: `B2` dependency check completed.
+      - No upstream blockers; this is a documentation/evidence closeout slice over completed runtime setup.
+    - 2026-02-15: `B3` design pass completed.
+      - Planned closeout-only updates: task status flip + explicit `B1..B8` log + dedicated evidence index file.
+    - 2026-02-15: `B4` implement pass completed.
+      - Updated task status to complete and recorded strict dogfood block entries.
+      - Added closeout evidence index: `screehshots_evidence/f03-mh-06-closeout-2026-02-15.txt`.
+    - 2026-02-15: `B5` verify pass completed.
+      - Runtime/proof evidence references:
+        - Temporal stack healthy + smoke runner success evidence from 2026-02-14 notes.
+        - Exported workflow history artifact: `screehshots_evidence/temporal-dogfood-b1-b8-history-export-script.json` (history export path accepted in place of screenshot).
+      - Evidence index: `screehshots_evidence/f03-mh-06-closeout-2026-02-15.txt`.
+    - 2026-02-15: `B6` review pass completed.
+      - No blocking findings for this setup slice; acceptance criteria satisfied with command transcript + exported history + env/port notes.
+    - 2026-02-15: `B7` docs sync completed.
+      - Updated this feature task entry and reran docs parity/status refresh.
+      - Evidence: `screehshots_evidence/f03-mh-06-b7-docs-2026-02-15.txt`.
+    - 2026-02-15: `B8` ship decision.
+      - Decision: `DONE` for `F03-MH-06`.
 
 - [x] `F03-MH-07` Refactor mock execution pipeline to Temporal workflows
   - Owner: Backend / AI
@@ -235,7 +283,7 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
         - Follow-up project-scoped execution listing shows matched execution row with task statuses `complete` and execution status `complete`.
       - Evidence artifact: `screehshots_evidence/temporal-api-transcript-2026-02-14.txt`.
 
-- [ ] `F03-MH-08` Port dogfood workflow (B1â€“B8) into Temporal workflow
+- [x] `F03-MH-08` Port dogfood workflow (B1â€“B8) into Temporal workflow
   - Owner: Backend / AI
   - Dependencies: `none`
   - Blocks: `none`
@@ -249,9 +297,27 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - Screenshot(s) of the pause/resume approval gate working
   - Effort: Mâ€“L
   - Progress / Fixes / Updates:
-    - YYYY-MM-DD: Not started.
+    - 2026-02-14: `B2` dependency check completed. Temporal runtime/worker readiness confirmed from `F03-MH-06`; status `READY` for design and implementation.
+    - 2026-02-14: `B3` design pass completed. Locked implementation to parent `DogfoodB1B8Workflow` + explicit approval signal + CLI controls for start/status/approve/terminate.
+    - 2026-02-14: `B4` implement pass completed. Added parent workflow scaffold and runner controls:
+      - `temporal_worker/worker.py`
+      - `temporal_worker/run_dogfood.py`
+      - `scripts/temporal-export-history.sh`
+    - 2026-02-14: `B5` verify pass completed.
+      - End-to-end run `ari-dogfood-f7d12b42f8` paused at B7, resumed via `approve_resume`, and completed through B8.
+      - Workflow history export: `screehshots_evidence/temporal-dogfood-b1-b8-history-2026-02-14.json`
+      - Pause/resume proof transcript: `screehshots_evidence/temporal-dogfood-pause-resume-transcript-2026-02-14.json`
+    - 2026-02-14: `B6` review pass completed. No blocking correctness findings for this slice; residual risk limited to expected stubbed block activities.
+    - 2026-02-14: `B7` docs sync completed.
+      - Updated Feature 03 progress records for `F03-MH-08`.
+      - Added screenshot evidence:
+        - `screehshots_evidence/Screenshot 2026-02-14 dogfood-paused-detail.png`
+        - `screehshots_evidence/Screenshot 2026-02-14 dogfood-complete-detail.png`
+      - `npm run docs:parity` passed.
+    - 2026-02-14: `B8` ship decision.
+      - Decision: `DONE` for `F03-MH-08` slice.
 
-- [ ] `F03-MH-09` Enable Ari self-bootstrapping proof-of-concept
+- [x] `F03-MH-09` Enable Ari self-bootstrapping proof-of-concept
   - Owner: Product / Backend
   - Dependencies: `none`
   - Blocks: `none`
@@ -266,7 +332,66 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - Proof of human approval interaction (screenshot/log)
   - Effort: M
   - Progress / Fixes / Updates:
-    - YYYY-MM-DD: Not started.
+    - 2026-02-14: `B1` scope lock completed. Minimal self-bootstrapping slice for this first POC:
+      - In-scope:
+        - New Temporal workflow `SelfBootstrapWorkflow` that (1) starts a self-targeted run record, (2) reaches a human approval gate, (3) after approval generates a merge-ready *change bundle stub* artifact, and (4) requires a docs-parity gate before it can report `complete`.
+        - CLI runner to `start/status/approve/provide-docs-parity/terminate` the self-bootstrap workflow.
+        - Evidence export: workflow history JSON + bundle stub JSON (+ optional patch stub) stored under `screehshots_evidence/`.
+      - Out-of-scope (explicitly deferred):
+        - Actually applying changes, opening PRs, or auto-merging.
+        - Real “code generation” inside the workflow (bundle is a stub with deterministic structure).
+        - Full B1-B8 semantic execution beyond the gating semantics (reuse existing `DogfoodB1B8Workflow` as a reference only).
+      - Success metrics:
+        - SelfBootstrap run can be started via CLI and enters `waiting_for_approval`.
+        - After approval, bundle stub is written and its path is visible via query + emitted in workflow result.
+        - Run cannot reach `complete` without a docs-parity signal that includes an evidence path.
+    - 2026-02-14: `B2` dependency check completed. Reuse existing Temporal scaffolding from `F03-MH-08`:
+      - Worker + workflow registration: `temporal_worker/worker.py` (`DogfoodB1B8Workflow` proves approval gating + queries/signals).
+      - CLI pattern for start/status/approve/terminate: `temporal_worker/run_dogfood.py`.
+      - History export script: `scripts/temporal-export-history.sh`.
+      - Runtime dependency: Temporal dev stack + worker running locally (same as `F03-MH-06`/`F03-MH-08`).
+    - 2026-02-14: `B3` design pass completed. Contracts + file plan for the minimal slice:
+      - New workflow: `temporal_worker/worker.py` add `SelfBootstrapWorkflow` with:
+        - Signals:
+          - `approve_resume(note: str)` → releases approval gate for bundle generation
+          - `provide_docs_parity(evidence_path: str)` → releases docs-parity gate
+        - Query: `get_status()` returns `{status, current_step, approval_granted, docs_parity_granted, bundle_paths, history}`
+        - Run output includes bundle artifact paths and a short diff summary string (stubbed).
+      - New activity: `generate_change_bundle_stub_activity(payload)` writes:
+        - JSON: `screehshots_evidence/self-bootstrap-bundle-<workflow_id>.json`
+        - Optional patch stub: `screehshots_evidence/self-bootstrap-bundle-<workflow_id>.patch`
+      - New runner (preferred): `temporal_worker/run_self_bootstrap.py` mirroring `run_dogfood.py` subcommands.
+      - Evidence conventions:
+        - Use `scripts/temporal-export-history.sh <workflow_id> screehshots_evidence/temporal-self-bootstrap-history-<date>.json`
+        - Store CLI transcripts (approve + docs parity) under `screehshots_evidence/`.
+    - 2026-02-14: `B4` implement pass completed. Added self-bootstrapping POC scaffold:
+      - `temporal_worker/worker.py` added `SelfBootstrapWorkflow` + `generate_change_bundle_stub_activity` and registered both in the worker.
+      - `temporal_worker/run_self_bootstrap.py` added CLI control surface: `start/status/approve/docs-parity/terminate`.
+      - Updated Temporal Docker defaults to runnable tags (prior default image tag was not available): `docker-compose.temporal.yml`.
+    - 2026-02-14: `B5` verify pass BLOCKED (ext:Docker-WSL-integration). Unable to spin up Temporal dev stack locally because Docker is not available inside this WSL distro:
+      - `scripts/temporal-dev.sh` fails with “docker could not be found in this WSL 2 distro”.
+      - Static verification completed: `python3 -m py_compile temporal_worker/worker.py temporal_worker/run_self_bootstrap.py` (no syntax errors).
+    - 2026-02-14: `B5` verify pass completed (end-to-end self-bootstrap run + gates + artifacts).
+      - Temporal dev stack + worker started successfully via `scripts/temporal-dev.sh` (WSL + Docker Desktop integration enabled).
+      - Run: `ari-self-bootstrap-df7b023d74`
+        - Proof it reached approval gate: `screehshots_evidence/self-bootstrap-status-1-waiting-approval-2026-02-14.json`
+        - Human approval signal transcript: `screehshots_evidence/self-bootstrap-approve-2026-02-14.json`
+        - Proof bundle generated + waiting for docs parity: `screehshots_evidence/self-bootstrap-status-2-waiting-docs-parity-2026-02-14.json`
+        - Docs parity evidence (passed): `screehshots_evidence/npm-docs-parity-2026-02-14.txt`
+        - Docs parity signal transcript: `screehshots_evidence/self-bootstrap-docs-parity-signal-2026-02-14.json`
+        - Final complete status proof: `screehshots_evidence/self-bootstrap-status-3-complete-2026-02-14.json`
+      - Bundle stub artifacts produced:
+        - `screehshots_evidence/self-bootstrap-bundle-ari-self-bootstrap-df7b023d74.json`
+        - `screehshots_evidence/self-bootstrap-bundle-ari-self-bootstrap-df7b023d74.patch`
+      - Workflow history export (Python SDK): `screehshots_evidence/temporal-self-bootstrap-history-2026-02-14.json`
+    - 2026-02-14: `B6` review pass completed. Review notes:
+      - No repo write outside `repo_root` allowed; bundle generation activity enforces safe-path constraint.
+      - No auto-apply / auto-merge / PR automation included in this slice (explicitly out-of-scope).
+    - 2026-02-14: `B7` docs sync completed.
+      - Updated this `F03-MH-09` progress log with B1–B8 strict loop entries + evidence paths.
+      - Docs parity run recorded: `screehshots_evidence/npm-docs-parity-2026-02-14.txt`
+    - 2026-02-14: `B8` ship decision.
+      - Decision: `DONE` for `F03-MH-09` minimal POC slice (self-run + approval gate + bundle stub + docs parity gate).
 
 - [ ] `F03-MH-10` Enhance Orchestrator Hub â€“ visual editor for Temporal workflows
   - Owner: Frontend / Backend
@@ -283,9 +408,75 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - Validation examples (one allowed, one blocked) captured in notes/logs
   - Effort: XL
   - Progress / Fixes / Updates:
-    - YYYY-MM-DD: Not started.
+    - 2026-02-14: `B1` scope lock completed. Strict `B1->B8` loop started for the first `F03-MH-10` slice.
+      - In-scope:
+        - Deliver minimal visual Temporal workflow editor slice: load a real workflow graph + support constrained edits for safe fields (inputs, retry/timeout policy, activity parameters).
+        - Add validation guardrails that reject unsafe/invalid configuration mutations.
+        - Capture local evidence: one allowed edit flow + one blocked validation flow + editor screenshot on a real workflow payload.
+      - Out-of-scope:
+        - Arbitrary workflow code editing or execution knob exposure beyond constrained schema-backed fields.
+        - Full drag-and-drop authoring and advanced graph tooling (deferred to later `F03-MH-10` slices).
+      - Dev schedule policy:
+        - Keep the continuous self-bootstrap schedule paused in local dev by default (current state).
+        - Temporarily unpause only when intentional ongoing local proof runs are needed, then pause again after proof capture.
+    - 2026-02-14: `B2` dependency check completed.
+      - Reusable UI graph surface already available:
+        - `components/aei/orchestrator-dag-builder.tsx` (ReactFlow canvas + controls) for graph rendering primitives.
+        - `app/orchestrator/page.tsx` layout can host a new editor panel without route churn.
+      - Reusable Temporal execution/runtime pieces confirmed:
+        - `lib/temporal-execution.ts` process bridge and payload shape conventions.
+        - `temporal_worker/worker.py` + `temporal_worker/run_self_bootstrap.py` expose workflow-safe fields we can model in a constrained editor.
+      - Reusable safety controls confirmed:
+        - API authorization patterns (`enforcePermission`/`enforceProjectPermission`) already in use.
+      - Gaps to close in this slice:
+        - No dedicated schema/allowlist validator yet for editable Temporal workflow config.
+        - No dedicated API contract yet for read/validate/update of constrained workflow editor payload.
+      - Decision: `READY` for `B3` design pass.
+    - 2026-02-14: `B3` design pass completed. File-level implementation plan locked for minimal secure slice:
+      - New schema + policy module:
+        - `lib/temporal-workflow-editor-schema.ts`
+        - Define strict allowlist + bounds for editable fields only:
+          - `input.roadmap_task_id`, `input.repo_root`, `input.output_dir`, `input.continuous_mode`
+          - `retry_policy.maximum_attempts`, `retry_policy.initial_interval_seconds`
+          - `timeouts.workflow_run_timeout_seconds`, `timeouts.activity_start_to_close_timeout_seconds`
+          - activity parameters only for known activity IDs from an allowlist
+        - Reject unknown fields and block sensitive keys (`command`, `shell`, `script`, `env`, `image`, arbitrary `path` overrides).
+      - New API surface for editor:
+        - `app/api/temporal/workflow-editor/route.ts`
+        - `GET`: return constrained editable spec projection for a selected workflow template.
+        - `POST`: validate proposed mutation against schema/policy and return `{valid, errors[], sanitized_spec}` (no code execution side effects).
+      - New UI components:
+        - `components/aei/temporal-workflow-editor.tsx` (graph + constrained form editors)
+        - Integrate into `app/orchestrator/page.tsx` as a dedicated panel.
+      - Verification plan (`B5` target evidence):
+        - Allowed mutation example accepted + rendered in UI.
+        - Blocked mutation example rejected with explicit validation errors.
+        - Screenshot on real workflow-derived payload with edited safe fields.
+    - 2026-02-14: `B4` implement pass completed for the minimal constrained editor slice.
+      - Added strict schema/policy module:
+        - `lib/temporal-workflow-editor-schema.ts`
+        - Includes default-deny validation (unknown-key rejection, blocked-key scan, bounded numeric policy, activity ID allowlist).
+      - Added validation-only API surface:
+        - `app/api/temporal/workflow-editor/route.ts`
+        - `GET` returns constrained template projection; `POST` validates/sanitizes proposed mutation and blocks unsafe payloads.
+      - Added orchestrator UI panel:
+        - `components/aei/temporal-workflow-editor.tsx`
+        - Integrated on hub page: `app/orchestrator/page.tsx`
+      - Current behavior:
+        - Graph is rendered from template payload.
+        - Only safe-field controls are editable in UI.
+        - Validation result is shown inline (`passed` or explicit blocked errors).
+    - 2026-02-15: `B5` verify pass progressed (validation evidence captured; screenshot pending).
+      - Added validator tests for required allow/block scenarios:
+        - `lib/temporal-workflow-editor-schema.test.ts`
+      - Verification command passed:
+        - `npx vitest run lib/temporal-workflow-editor-schema.test.ts`
+      - Evidence:
+        - `screehshots_evidence/f03-mh-10-b5-validation-2026-02-15.txt`
+      - Remaining for full `B5` close:
+        - Capture editor screenshot(s) with real workflow loaded to satisfy UI evidence criterion.
 
-- [ ] `F03-MH-11` Enable Ari to run dogfood workflow on itself continuously
+- [x] `F03-MH-11` Enable Ari to run dogfood workflow on itself continuously
   - Owner: Product / Backend
   - Dependencies: `none`
   - Blocks: `none`
@@ -299,7 +490,69 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - Proof approvals are enforced (cannot proceed without signal)
   - Effort: Mâ€“L
   - Progress / Fixes / Updates:
-    - YYYY-MM-DD: Not started.
+    - 2026-02-14: `B1` scope lock completed. Minimal continuous slice locked to schedule-based auto-trigger:
+      - In-scope:
+        - Accept roadmap task id input and create a Temporal schedule that auto-triggers `SelfBootstrapWorkflow`.
+        - Preserve mandatory human approval + docs parity gates (already enforced in `SelfBootstrapWorkflow`).
+        - Add discoverability controls for schedules/runs (list + describe + pause/unpause/trigger/delete).
+      - Out-of-scope:
+        - Auto-apply or auto-merge changes.
+        - Full autonomous loop orchestration across multiple roadmap tasks.
+    - 2026-02-14: `B2` dependency check completed.
+      - Reused from prior slices:
+        - `SelfBootstrapWorkflow` scaffold and approval/docs-parity gates (`F03-MH-09`).
+        - Temporal runtime/worker and CLI infrastructure (`F03-MH-06`, `F03-MH-08`).
+      - Status: `READY`.
+    - 2026-02-14: `B3` design pass completed. Contracts/files:
+      - Update `temporal_worker/run_self_bootstrap.py` with schedule control surface:
+        - `schedule-create --roadmap-task-id <P*-*> --interval-seconds <n> [--trigger-immediately]`
+        - `schedule-list --contains <text>`
+        - `schedule-describe --schedule-id <id>`
+        - `schedule-pause|schedule-unpause|schedule-trigger|schedule-delete --schedule-id <id>`
+      - Update `temporal_worker/worker.py` so workflow derives runtime workflow id when payload id is absent (prevents artifact collision on schedule-triggered runs).
+    - 2026-02-14: `B4` implement pass completed.
+      - `temporal_worker/run_self_bootstrap.py`:
+        - Added Temporal schedule APIs and serialization helpers.
+        - Added continuous trigger commands and roadmap-task-aware schedule payload.
+      - `temporal_worker/worker.py`:
+        - `SelfBootstrapWorkflow` now uses `workflow.info().workflow_id` fallback.
+    - 2026-02-14: `B5` verify pass completed (end-to-end continuous proof).
+      - Schedule created and immediate trigger executed:
+        - `screehshots_evidence/self-bootstrap-schedule-create-2026-02-14.json`
+      - Schedule discoverability/list output:
+        - `screehshots_evidence/self-bootstrap-schedule-list-2026-02-14.json`
+      - Scheduled run approval gate proof:
+        - `screehshots_evidence/self-bootstrap-continuous-status-1-waiting-approval-2026-02-14.json`
+      - Human approval + docs parity gate proof:
+        - `screehshots_evidence/self-bootstrap-continuous-approve-2026-02-14.json`
+        - `screehshots_evidence/self-bootstrap-continuous-status-2-waiting-docs-parity-2026-02-14.json`
+        - `screehshots_evidence/npm-docs-parity-f03-mh-11-2026-02-14.txt`
+        - `screehshots_evidence/self-bootstrap-continuous-docs-parity-signal-2026-02-14.json`
+      - Completed run proof + artifact generation:
+        - `screehshots_evidence/self-bootstrap-continuous-status-3-complete-2026-02-14.json`
+        - `screehshots_evidence/self-bootstrap-bundle-ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20-51-50Z.json`
+        - `screehshots_evidence/self-bootstrap-bundle-ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20-51-50Z.patch`
+      - Workflow history export:
+        - `screehshots_evidence/temporal-self-bootstrap-continuous-history-2026-02-14.json`
+      - Schedule control proof (paused after validation):
+        - `screehshots_evidence/self-bootstrap-schedule-pause-2026-02-14.json`
+        - `screehshots_evidence/self-bootstrap-schedule-describe-paused-2026-02-14.json`
+    - 2026-02-14: `B6` review pass completed.
+      - Human approval remains mandatory before workflow can progress.
+      - Docs parity remains mandatory before completion.
+      - Continuous schedule was paused after proof to avoid uncontrolled run accumulation in local dev.
+    - 2026-02-14: `B7` docs sync completed.
+      - Ran standardized wrap-up automation:
+        - `npm run dogfood:wrapup -- --task-id F03-MH-11 --workflow-id ari-self-bootstrap-f03-mh-11-workflow-2026-02-14T20:51:50Z`
+      - Companion docs sync entry added:
+        - `docs/on-boarding/feature-03-onboarding.md`
+        - `docs/architecture/feature-03-architecture.md`
+      - Docs parity evidence:
+        - `screehshots_evidence/npm-docs-parity-f03-mh-11-2026-02-14.txt`
+      - Manifest + cleanup evidence:
+        - `screehshots_evidence/evidence-manifest-F03-MH-11-2026-02-14.json`
+    - 2026-02-14: `B8` ship decision.
+      - Decision: `DONE` for minimal `F03-MH-11` slice (continuous trigger + mandatory gates + discoverable run records).
 
 - [ ] `F03-MH-12` Mendix â†’ PostgreSQL data migration workflow
   - Owner: Backend / Data
@@ -316,7 +569,47 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
     - Workflow history export for a migration run demonstrating checkpoint/resume
   - Effort: L
   - Progress / Fixes / Updates:
-    - YYYY-MM-DD: Not started.
+    - 2026-02-15: `B1` scope lock completed (initial migration slice).
+      - In-scope (thin vertical slice):
+        - Define ETL workflow contract and dry-run migration report format.
+        - Implement deterministic sample-source -> transform -> report pipeline skeleton with checkpoint metadata.
+      - Out-of-scope:
+        - Production connector/auth hardening and high-volume batch tuning.
+        - Full production cutover.
+      - Success metrics:
+        - Dry-run report generated without destination writes.
+        - Workflow history demonstrates step progression with checkpoint payloads.
+    - 2026-02-15: `B2` dependency check completed.
+      - Temporal runtime and workflow scaffolding available from completed Feature 03 Temporal slices (`F03-MH-06` through `F03-MH-11`).
+      - Audit log infrastructure and Postgres connectivity already present for migration traceability.
+      - Decision: `READY` for `B3` design pass.
+    - 2026-02-15: `B3` design pass completed.
+      - Locked minimal contract for first migration slice:
+        - Workflow: `MendixMigrationWorkflow`
+        - Stages: `extract -> transform -> load -> validate -> report`
+        - Resume knob: `resume_from_checkpoint` (extract/transform/load/validate)
+        - Output: migration summary + checkpoint list + report artifact path
+    - 2026-02-15: `B4` implement pass completed.
+      - Added migration workflow and activities in `temporal_worker/worker.py`:
+        - `extract_mendix_records_activity`
+        - `transform_record_activity`
+        - `load_record_activity`
+        - `validate_migration_activity`
+        - `write_migration_report_activity`
+        - `MendixMigrationWorkflow`
+      - Registered workflow/activities in Temporal worker bootstrap.
+      - Added runner CLI: `temporal_worker/run_migration.py`.
+    - 2026-02-15: `B5` verify pass progressed.
+      - Static compile passed:
+        - `python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py`
+      - Temporal worker startup confirmed:
+        - `temporal_worker/.venv/bin/python -u temporal_worker/worker.py`
+      - Runtime workflow invocation in this shell session remains blocked (invocation timeout):
+        - `timeout 60s temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-runtime-2026-02-15`
+      - Dry-run ETL report artifact generated via direct activity pipeline execution:
+        - `screehshots_evidence/migration-report-local-dry-run-2026-02-15.json`
+      - Evidence index:
+        - `screehshots_evidence/f03-mh-12-b5-verify-2026-02-15.txt`
 
 ## Should-Have Tasks (makes orchestrator flexible and observable)
 

@@ -1,0 +1,15 @@
+# F03-MH-10 B5 Validation Evidence
+date: 2026-02-15T03:19:28-06:00
+
+$ npx vitest run lib/temporal-workflow-editor-schema.test.ts
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v2.1.9 /home/drew/repo/ari
+
+ ✓ lib/temporal-workflow-editor-schema.test.ts (2 tests) 6ms
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  03:19:29
+   Duration  473ms (transform 48ms, setup 0ms, collect 64ms, tests 6ms, environment 0ms, prepare 194ms)
+

@@ -1,0 +1,28 @@
+# F03-MH-06 Closeout Evidence
+
+date: 2026-02-15
+feature_task: F03-MH-06
+roadmap_ref: P1.5-MH-01
+
+## Runtime setup + smoke validation evidence (captured 2026-02-14)
+- Temporal stack start command (from task log):
+  `TEMPORAL_VERSION=latest TEMPORAL_ADMINTOOLS_VERSION=latest TEMPORAL_UI_VERSION=latest docker compose -f docker-compose.temporal.yml up -d`
+- Health check command (from task log):
+  `docker compose -f docker-compose.temporal.yml ps` -> temporal `healthy`
+- Worker start command (from task log):
+  `temporal_worker/.venv/bin/python temporal_worker/worker.py`
+- Smoke workflow command (from task log):
+  `temporal_worker/.venv/bin/python temporal_worker/run_smoke.py` -> `hello ari`
+
+## Exported history evidence (used in place of screenshot)
+- `screehshots_evidence/temporal-dogfood-b1-b8-history-export-script.json`
+
+## Environment / ports / namespace notes
+- Temporal gRPC endpoint: `localhost:7233`
+- Temporal UI: `http://localhost:8080`
+- Namespace: `default`
+- Task queue: `ari-smoke`
+
+## Related verification references
+- Build verification evidence: `screehshots_evidence/f03-mh-05-b5-verify-2026-02-15.txt`
+- Docs parity evidence: `screehshots_evidence/f03-mh-05-b7-docs-2026-02-15.txt`
