@@ -691,6 +691,55 @@ By end of week 10, a real user can open the Orchestrator Hub, define a simple co
       - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
     - 2026-02-15: `B8` ship decision (slice 2).
       - Decision: `ITERATE` (hardening slice shipped; next slice should add credentialed Mendix connector path).
+    - 2026-02-15: `B1` scope lock completed (slice 3 connector adapter).
+      - In-scope:
+        - Add connector adapter contract to migration extract step (`source_mode=connector`) with strict endpoint/token validation.
+        - Keep connector path safe by defaulting to mock connector records in this slice.
+        - Preserve fallback path (`source_mode=file`) and verify parity between connector and fallback reports.
+      - Out-of-scope:
+        - Live Mendix API network integration and credential provisioning in production environments.
+      - Success metrics:
+        - Connector-mode dry run and file-mode dry run both succeed with auditable per-record rows.
+        - Connector config errors fail fast with clear validation errors.
+    - 2026-02-15: `B2` dependency check completed (slice 3).
+      - Temporal runtime and worker confirmed available from prior slices.
+      - Required inputs available:
+        - connector mock fixture
+        - fallback file fixture
+      - Decision: `READY` for `B3` design pass (slice 3).
+    - 2026-02-15: `B3` design pass completed (slice 3).
+      - Planned file updates:
+        - `temporal_worker/worker.py`: add connector-mode extraction branch + config validation + normalized record handling.
+        - `temporal_worker/run_migration.py`: add connector-mode CLI flags.
+        - `screehshots_evidence/f03-mh-12-connector-mock-2026-02-15.json`: connector mock input.
+    - 2026-02-15: `B4` implement pass completed (slice 3).
+      - Added connector adapter skeleton in extraction flow:
+        - validates `source_connector.endpoint` (`https://`), `token_env`, token presence, and mock records.
+      - Added CLI flags:
+        - `--source-mode`, `--connector-endpoint`, `--connector-token-env`, `--connector-use-mock`, `--connector-mock-path`.
+      - Added connector mock fixture artifact.
+    - 2026-02-15: `B5` verify pass completed (slice 3).
+      - Compile check passed.
+      - Connector-mode dry-run workflow passed:
+        - workflow id: `ari-migration-f03-mh-12-slice3-connector-2026-02-15-189c2c0f`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-slice3-connector-2026-02-15.json`
+      - File-mode fallback dry-run workflow passed:
+        - workflow id: `ari-migration-f03-mh-12-slice3-file-2026-02-15-2ae2e18c`
+        - report: `screehshots_evidence/migration-report-f03-mh-12-slice3-file-2026-02-15.json`
+      - History exports:
+        - `screehshots_evidence/temporal-migration-f03-mh-12-slice3-connector-history-2026-02-15.json`
+        - `screehshots_evidence/temporal-migration-f03-mh-12-slice3-file-history-2026-02-15.json`
+      - Evidence index:
+        - `screehshots_evidence/f03-mh-12-slice3-b5-verify-2026-02-15.txt`
+    - 2026-02-15: `B6` review pass completed (slice 3).
+      - No blocking issues in connector adapter skeleton.
+      - Residual risk: connector path remains mock-backed for this slice; live endpoint integration still pending.
+    - 2026-02-15: `B7` docs sync completed (slice 3).
+      - Updated `F03-MH-12` with slice-3 records and evidence references.
+      - Ran docs parity and dogfood status refresh.
+      - Evidence: `screehshots_evidence/f03-batch-docs-parity-2026-02-15.txt`.
+    - 2026-02-15: `B8` ship decision (slice 3).
+      - Decision: `ITERATE` (connector contract shipped with mock mode; next slice should wire live credentialed source connector).
 
 ## Should-Have Tasks (makes orchestrator flexible and observable)
 

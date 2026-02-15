@@ -1,0 +1,18 @@
+{
+  "records": [
+    {
+      "source_id": "mx-conn-001",
+      "full_name": "Jordan Conn",
+      "email": "jordan.conn@example.com",
+      "created_at": "2026-02-15T10:10:00Z",
+      "active": true
+    },
+    {
+      "source_id": "mx-conn-002",
+      "full_name": "Morgan Conn",
+      "email": "morgan.conn@example.com",
+      "created_at": "2026-02-15T10:40:00Z",
+      "active": true
+    }
+  ]
+}

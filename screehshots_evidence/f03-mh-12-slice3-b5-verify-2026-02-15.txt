@@ -1,0 +1,31 @@
+# F03-MH-12 Slice 3 B5 Verify Evidence
+
+date: 2026-02-15
+feature_task: F03-MH-12 (slice 3 connector adapter)
+
+$ python3 -m py_compile temporal_worker/worker.py temporal_worker/run_migration.py
+result: PASS
+
+Connector-mode dry-run (mock connector adapter):
+$ temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-slice3-connector-2026-02-15 --source-mode connector --connector-endpoint https://mock.mendix.local/api/v1/records --connector-token-env MENDIX_CONNECTOR_TOKEN --connector-use-mock --connector-mock-path screehshots_evidence/f03-mh-12-connector-mock-2026-02-15.json
+result: PASS
+workflow_id: ari-migration-f03-mh-12-slice3-connector-2026-02-15-189c2c0f
+report_path: /home/drew/repo/ari/screehshots_evidence/migration-report-f03-mh-12-slice3-connector-2026-02-15.json
+
+File-mode fallback dry-run:
+$ temporal_worker/.venv/bin/python temporal_worker/run_migration.py --dry-run --migration-id f03-mh-12-slice3-file-2026-02-15 --source-mode file --source-path screehshots_evidence/f03-mh-12-source-fixture-2026-02-15.json --source-format json
+result: PASS
+workflow_id: ari-migration-f03-mh-12-slice3-file-2026-02-15-2ae2e18c
+report_path: /home/drew/repo/ari/screehshots_evidence/migration-report-f03-mh-12-slice3-file-2026-02-15.json
+
+Assertions verified in reports:
+- Connector config validation path exercised (endpoint + token env + mock records).
+- Per-record audit rows present.
+- dry_run_guard_ok=true and write_performed=false for both runs.
+
+Artifacts:
+- screehshots_evidence/f03-mh-12-connector-mock-2026-02-15.json
+- screehshots_evidence/migration-report-f03-mh-12-slice3-connector-2026-02-15.json
+- screehshots_evidence/migration-report-f03-mh-12-slice3-file-2026-02-15.json
+- screehshots_evidence/temporal-migration-f03-mh-12-slice3-connector-history-2026-02-15.json
+- screehshots_evidence/temporal-migration-f03-mh-12-slice3-file-history-2026-02-15.json

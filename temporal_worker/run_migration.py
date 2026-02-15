@@ -3,6 +3,7 @@ import asyncio
 import json
 import sys
 import uuid
+from pathlib import Path
 from typing import Any
 
 from temporalio.client import Client
@@ -53,6 +54,33 @@ def parse_args() -> argparse.Namespace:
         dest="source_format",
         choices=["json", "csv"],
         help="Optional explicit source format override for --source-path.",
+    )
+    parser.add_argument(
+        "--source-mode",
+        dest="source_mode",
+        choices=["inline", "file", "connector"],
+        help="Source ingest mode. Defaults by available flags (connector > file > inline).",
+    )
+    parser.add_argument(
+        "--connector-endpoint",
+        dest="connector_endpoint",
+        help="Connector endpoint URL (https://...) for connector mode.",
+    )
+    parser.add_argument(
+        "--connector-token-env",
+        dest="connector_token_env",
+        help="Environment variable name containing connector token.",
+    )
+    parser.add_argument(
+        "--connector-use-mock",
+        dest="connector_use_mock",
+        action="store_true",
+        help="Use mock connector records for this slice.",
+    )
+    parser.add_argument(
+        "--connector-mock-path",
+        dest="connector_mock_path",
+        help="Optional JSON file containing connector mock records array or {records:[...]} object.",
     )
     return parser.parse_args()
 
@@ -113,6 +141,34 @@ def load_payload(args: argparse.Namespace) -> dict[str, Any]:
         payload["source_path"] = args.source_path
         if args.source_format:
             payload["source_format"] = args.source_format
+
+    mode = args.source_mode
+    if not mode:
+        if args.connector_endpoint or args.connector_mock_path:
+            mode = "connector"
+        elif args.source_path:
+            mode = "file"
+        else:
+            mode = "inline"
+    payload["source_mode"] = mode
+
+    if mode == "connector":
+        connector: dict[str, Any] = {
+            "endpoint": args.connector_endpoint or "https://mock.mendix.local/api/v1/records",
+            "token_env": args.connector_token_env or "MENDIX_CONNECTOR_TOKEN",
+            "use_mock": bool(args.connector_use_mock or args.connector_mock_path),
+        }
+        if args.connector_mock_path:
+            raw = Path(args.connector_mock_path).read_text(encoding="utf-8")
+            parsed = json.loads(raw)
+            if isinstance(parsed, dict):
+                records = parsed.get("records")
+                connector["mock_records"] = records if isinstance(records, list) else []
+            elif isinstance(parsed, list):
+                connector["mock_records"] = parsed
+            else:
+                connector["mock_records"] = []
+        payload["source_connector"] = connector
 
     return payload
 

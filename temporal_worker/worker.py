@@ -1,6 +1,7 @@
 import asyncio
 import csv
 import json
+import os
 import re
 from datetime import timedelta
 from pathlib import Path
@@ -72,6 +73,62 @@ def _resolve_safe_input_path(repo_root: str, source_path: str) -> Path:
     if root != candidate and root not in candidate.parents:
         raise ValueError("Refusing to read outside repo_root")
     return candidate
+
+
+def _normalize_source_record(raw: dict[str, Any], index: int) -> dict[str, Any]:
+    source_id = str(raw.get("source_id", "")).strip()
+    source_identifier = source_id or f"row-{index + 1}"
+    full_name = str(raw.get("full_name", "")).strip()
+    email = str(raw.get("email", "")).strip().lower()
+    created_at = str(raw.get("created_at", "")).strip()
+    return {
+        "source_id": source_id or source_identifier,
+        "source_identifier": source_identifier,
+        "full_name": full_name,
+        "email": email,
+        "created_at": created_at,
+        "active": bool(raw.get("active", True)),
+    }
+
+
+def _build_connector_source_records(payload: dict[str, Any]) -> tuple[list[dict[str, Any]], str]:
+    connector = (
+        payload.get("source_connector")
+        if isinstance(payload.get("source_connector"), dict)
+        else {}
+    )
+    endpoint = str(connector.get("endpoint", "")).strip()
+    token_env = str(connector.get("token_env", "")).strip()
+    use_mock = bool(connector.get("use_mock", True))
+    mock_records = connector.get("mock_records")
+
+    if not endpoint:
+        raise ValueError("source_connector.endpoint is required for connector mode")
+    if not endpoint.startswith("https://"):
+        raise ValueError("source_connector.endpoint must use https://")
+    if not token_env:
+        raise ValueError("source_connector.token_env is required for connector mode")
+    token = (os.environ.get(token_env) or "").strip()
+    if not token:
+        raise ValueError(
+            f"source_connector token env is missing or empty: {token_env}"
+        )
+    if len(token) < 8:
+        raise ValueError("source_connector token is too short")
+
+    if not use_mock:
+        raise ValueError(
+            "Connector live fetch is not enabled in this slice; set use_mock=true and provide mock_records"
+        )
+    if not isinstance(mock_records, list):
+        raise ValueError("source_connector.mock_records must be an array for mock connector mode")
+
+    normalized = [
+        _normalize_source_record(item, index)
+        for index, item in enumerate(mock_records)
+        if isinstance(item, dict)
+    ]
+    return normalized, f"connector:{endpoint}"
 
 
 @activity.defn
@@ -159,13 +216,16 @@ async def extract_mendix_records_activity(payload: dict[str, Any]) -> dict[str, 
     repo_root = str(payload.get("repo_root", "."))
     source_path_value = payload.get("source_path")
     source_format_override = str(payload.get("source_format", "")).strip().lower()
+    source_mode = str(payload.get("source_mode", "inline")).strip().lower()
     source = payload.get("source") if isinstance(payload.get("source"), dict) else {}
     extraction_errors: list[str] = []
 
     records: list[dict[str, Any]] | None = None
     source_system = str(source.get("system", "mendix_stub"))
 
-    if isinstance(source_path_value, str) and source_path_value.strip():
+    if source_mode == "connector":
+        records, source_system = _build_connector_source_records(payload)
+    elif isinstance(source_path_value, str) and source_path_value.strip():
         input_path = _resolve_safe_input_path(repo_root, source_path_value.strip())
         if not input_path.exists():
             raise ValueError(f"source_path does not exist: {source_path_value}")
@@ -215,16 +275,7 @@ async def extract_mendix_records_activity(payload: dict[str, Any]) -> dict[str, 
             extraction_errors.append(f"{source_identifier}: missing full_name")
         if not email:
             extraction_errors.append(f"{source_identifier}: missing email")
-        normalized_records.append(
-            {
-                "source_id": source_id or source_identifier,
-                "source_identifier": source_identifier,
-                "full_name": full_name,
-                "email": email,
-                "created_at": created_at,
-                "active": bool(raw.get("active", True)),
-            }
-        )
+        normalized_records.append(_normalize_source_record(raw, index))
 
     return {
         "records": normalized_records,
