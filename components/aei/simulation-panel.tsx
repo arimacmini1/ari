@@ -6,7 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Play, Loader2, Zap, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+  DialogFooter, DialogTrigger
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { AlertCircle, Play, Loader2, Zap, CheckCircle2, AlertTriangle, XCircle, Info } from 'lucide-react';
 import type { Artifact } from '@/lib/artifact-model';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -180,6 +185,30 @@ function getConfidenceLabel(probability: number): string {
   return 'Low confidence';
 }
 
+// UX-E-01: Execute gate risk helpers
+function getRiskLevel(result: SimulationResult, maxBudget: number): 'low' | 'medium' | 'high' {
+  const status = getGateStatus(result, maxBudget);
+  if (status === 'ready') return 'low';
+  if (status === 'warnings') return 'medium';
+  return 'high'; // Should not reach execute if blocked
+}
+
+function getRiskBadge(risk: 'low' | 'medium' | 'high') {
+  if (risk === 'low') {
+    return <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-600">Low Risk</Badge>;
+  }
+  if (risk === 'medium') {
+    return <Badge className="bg-amber-900/50 text-amber-300 border-amber-600">Medium Risk</Badge>;
+  }
+  return <Badge className="bg-red-900/50 text-red-300 border-red-600">High Risk</Badge>;
+}
+
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds} seconds`;
+  const minutes = Math.round(seconds / 60);
+  return `~${minutes} minute${minutes > 1 ? 's' : ''}`;
+}
+
 export default function SimulationPanel({ rule, onArtifactsGenerated }: SimulationPanelProps) {
   const [simulating, setSimulating] = useState(false);
   const [executing, setExecuting] = useState(false);
@@ -189,6 +218,10 @@ export default function SimulationPanel({ rule, onArtifactsGenerated }: Simulati
     max_agents: rule.constraints.max_agents || 10,
     max_cost_budget: 1000,
   });
+  // UX-E-01: Execute confirmation dialog state
+  const [executeDialogOpen, setExecuteDialogOpen] = useState(false);
+  const [acknowledgedWarnings, setAcknowledgedWarnings] = useState(false);
+  const [skipLowRiskConfirm, setSkipLowRiskConfirm] = useState(false);
   const { toast } = useToast();
 
   const handleConstraintChange = (key: string, value: number) => {
@@ -401,45 +434,173 @@ export default function SimulationPanel({ rule, onArtifactsGenerated }: Simulati
       </Button>
 
       {/* Execute Button (shown when simulation complete) */}
-      {result && !executionId && (
-        <Button
-          onClick={() => {
-            const gateStatus = getGateStatus(result, constraints.max_cost_budget);
-            if (gateStatus === 'warnings') {
-              // Show confirmation for warnings
-              if (confirm('⚠ Simulation has warnings. Review the Gate Status card before proceeding.\n\nContinue with execution?')) {
-                handleExecute();
+      {result && !executionId && (() => {
+        const risk = getRiskLevel(result, constraints.max_cost_budget);
+        const isLowRiskSkippable = risk === 'low' && skipLowRiskConfirm;
+        
+        if (isLowRiskSkippable) {
+          return (
+            <Button
+              onClick={() => handleExecute()}
+              disabled={executing || getGateStatus(result, constraints.max_cost_budget) === 'blocked'}
+              className={cn(
+                "w-full text-white",
+                getGateStatus(result, constraints.max_cost_budget) === 'blocked'
+                  ? "bg-slate-600 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-700"
+              )}
+            >
+              {executing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Dispatching...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Execute Plan
+                </>
+              )}
+            </Button>
+          );
+        }
+        
+        return (
+        <Dialog open={executeDialogOpen} onOpenChange={setExecuteDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              disabled={executing || getGateStatus(result, constraints.max_cost_budget) === 'blocked'}
+              className={cn(
+                "w-full text-white",
+                getGateStatus(result, constraints.max_cost_budget) === 'blocked'
+                  ? "bg-slate-600 cursor-not-allowed"
+                  : "bg-emerald-600 hover:bg-emerald-700"
+              )}
+              title={
+                getGateStatus(result, constraints.max_cost_budget) === 'blocked'
+                  ? 'Execution blocked. Review Gate Status and adjust constraints.'
+                  : undefined
               }
-            } else {
-              handleExecute();
-            }
-          }}
-          disabled={executing || getGateStatus(result, constraints.max_cost_budget) === 'blocked'}
-          className={cn(
-            "w-full text-white",
-            getGateStatus(result, constraints.max_cost_budget) === 'blocked'
-              ? "bg-slate-600 cursor-not-allowed"
-              : "bg-emerald-600 hover:bg-emerald-700"
-          )}
-          title={
-            getGateStatus(result, constraints.max_cost_budget) === 'blocked'
-              ? 'Execution blocked. Review Gate Status and adjust constraints.'
-              : undefined
-          }
-        >
-          {executing ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Dispatching...
-            </>
-          ) : (
-            <>
-              <Zap className="w-4 h-4 mr-2" />
-              Execute Plan
-            </>
-          )}
-        </Button>
-      )}
+            >
+              {executing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Dispatching...
+                </>
+              ) : (
+                <>
+                  <Zap className="w-4 h-4 mr-2" />
+                  Execute Plan
+                </>
+              )}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                Ready to Execute Workflow?
+                {result && getRiskBadge(getRiskLevel(result, constraints.max_cost_budget))}
+              </DialogTitle>
+              <DialogDescription>
+                Review the details below before starting execution.
+              </DialogDescription>
+              {/* UX-E-01: Mock execution label */}
+              {result && (
+                <div className="mt-2">
+                  <Badge variant="outline" className="text-blue-400 border-blue-600 bg-blue-900/20">
+                    ⚠️ Mock Execution Mode
+                  </Badge>
+                </div>
+              )}
+            </DialogHeader>
+
+            {result && (
+              <div className="space-y-4">
+                {/* Resource Summary */}
+                <div className="bg-slate-800 rounded-lg p-4 space-y-3">
+                  <h4 className="text-sm font-medium text-slate-300">Resource Summary</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <p className="text-slate-400">Estimated Cost</p>
+                      <p className="text-white font-semibold">${result.estimated_total_cost.toFixed(2)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Estimated Duration</p>
+                      <p className="text-white font-semibold">{formatDuration(result.estimated_total_duration)}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <p className="text-slate-400">Success Probability</p>
+                      <p className="text-white font-semibold">
+                        {result.success_probability}% ({getConfidenceLabel(result.success_probability)})
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Consequences */}
+                <div className="bg-amber-900/20 border border-amber-700 rounded-lg p-3">
+                  <div className="flex gap-2 text-amber-300">
+                    <Info className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                    <p className="text-xs">
+                      This will start workflow execution and consume the estimated resources above.
+                      <strong> Execution cannot be undone once started.</strong>
+                    </p>
+                  </div>
+                </div>
+
+                {/* Warning acknowledgment for medium risk */}
+                {result && getRiskLevel(result, constraints.max_cost_budget) === 'medium' && (
+                  <div className="flex items-start gap-2">
+                    <Checkbox
+                      id="acknowledge-warnings"
+                      checked={acknowledgedWarnings}
+                      onCheckedChange={(checked) => setAcknowledgedWarnings(checked as boolean)}
+                    />
+                    <label
+                      htmlFor="acknowledge-warnings"
+                      className="text-sm text-slate-300 cursor-pointer"
+                    >
+                      I understand there are warnings from the simulation that I should review.
+                    </label>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter className="flex-row justify-between sm:justify-between">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setExecuteDialogOpen(false);
+                  setAcknowledgedWarnings(false);
+                }}
+              >
+                Review Simulation
+              </Button>
+              <Button
+                onClick={() => {
+                  const risk = result ? getRiskLevel(result, constraints.max_cost_budget) : 'low';
+                  // For medium risk, require acknowledgment
+                  if (risk === 'medium' && !acknowledgedWarnings) {
+                    return;
+                  }
+                  setExecuteDialogOpen(false);
+                  handleExecute();
+                  setAcknowledgedWarnings(false);
+                }}
+                disabled={
+                  result ? getRiskLevel(result, constraints.max_cost_budget) === 'medium' && !acknowledgedWarnings
+                    : false
+                }
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                Start Execution
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        );
+      })()}
 
       {/* Execution Status */}
       {executionId && (

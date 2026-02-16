@@ -118,10 +118,17 @@ If users see a clear pre-execution confirmation dialog summarizing cost, duratio
 ## U5 - Implement
 
 **Files changed:**
-(To be completed during U5)
+- `components/aei/simulation-panel.tsx`
 
 **Notes:**
-(To be completed during U5)
+- Added Dialog, Checkbox imports from Radix UI
+- Added risk level helpers: `getRiskLevel()`, `getRiskBadge()`, `formatDuration()`
+- Added state: `executeDialogOpen`, `acknowledgedWarnings`, `skipLowRiskConfirm`
+- Execute button now triggers Dialog instead of native confirm()
+- Dialog shows resource summary, risk badge, consequences warning
+- Medium risk requires checkbox acknowledgment
+- Low risk can be skippable (preference toggle)
+- Mock execution badge added
 
 ## U6 - Validate
 
@@ -130,31 +137,39 @@ If users see a clear pre-execution confirmation dialog summarizing cost, duratio
 - U1 acceptance criteria from this run file
 
 **Results:**
-(To be completed during U6)
+- ✅ Execute button click shows confirmation dialog before dispatching
+- ✅ Dialog displays estimated cost, duration, and success probability summary
+- ✅ Dialog shows risk level indicator (Low/Medium/High risk based on gate status)
+- ✅ Dialog explains reversibility: "This will start workflow execution and consume resources"
+- ✅ User can cancel and return to simulation review ("Review Simulation" button)
+- ✅ User can proceed with clear "Start Execution" confirmation
+- ✅ High-risk executions show blocked state (button disabled in Stage D)
+- ✅ Medium risk executions show additional confirmation step (checkbox required)
+- ✅ Dialog is skippable for low-risk "green light" executions (user preference)
+- ✅ Mock vs production execution behavior is clearly labeled in dialog
 
 **Regressions found:**
-(To be completed during U6)
+- None. TypeScript compiles clean, no UI regressions.
 
 ## U7 - Evidence + Parity
 
 **Evidence links:**
-(To be completed during U7)
+- `components/aei/simulation-panel.tsx` (lines 437-600+)
 
 **Docs updated:**
-(To be completed during U7)
+- This run file
 
-**Mock vs production note verified:** (pending)
+**Mock vs production note verified:** ✅
 
 ## U8 - Decision
 
-**Decision:** (pending)
+**Decision:** PROMOTE
 
 **Rationale:**
-(To be completed after validation)
+All 9 acceptance criteria pass. The execute confirmation dialog provides clear risk communication, resource summary, and actionable escape hatches. Users now understand consequences before execution. Mock mode is clearly labeled.
 
 **Next slice:**
-- If promoted: UX-F-01 (Trace first-view simplification)
-- If iterate: UX-E-01 iteration 2
+- UX-F-01 (Trace first-view simplification)
 
 **Owner + target date:**
-(To be completed after decision)
+- AI/UX - Next available cycle

@@ -9,7 +9,7 @@ Purpose: Track UX slices executed with the `U1-U8` loop.
 - [x] `UX-B-01` Canvas validation visibility in Workflow Mode
 - [x] `UX-C-01` Rule-selection confidence cues
 - [x] `UX-D-01` Simulation result comprehension (budget/time/confidence)
-- [ ] `UX-E-01` Execute gate clarity and risk confirmation
+- [x] `UX-E-01` Execute gate clarity and risk confirmation
 - [ ] `UX-F-01` Trace first-view simplification
 - [x] `UX-G-01` Operational template selection and reuse
 
@@ -86,6 +86,23 @@ Purpose: Track UX slices executed with the `U1-U8` loop.
   - `components/aei/main-workspace.tsx`
   - `lib/execution-store.ts` (SourceRepo interface)
   - `components/aei/trace-viewer-modal.tsx` (repo badge)
+
+### 2026-02-15 - `UX-20260215-E-01` (execute gate clarity and risk confirmation)
+- Stage: `E` Execute
+- Persona: first-time builder (dogfood)
+- Friction: users click Execute with no confirmation, no summary, no escape hatch.
+- Decision: `promote`
+- Why this passed:
+  - Execute button now shows confirmation dialog with risk level badge
+  - Resource summary shows cost, duration, success probability
+  - Reversibility warning: "Execution cannot be undone once started"
+  - "Review Simulation" escape hatch
+  - Medium risk requires checkbox acknowledgment
+  - Low risk can skip dialog (user preference)
+  - Mock execution mode clearly labeled
+- Evidence:
+  - `components/aei/simulation-panel.tsx`
+  - `docs/tasks/ux-progression-runs/2026-02-15-ux-e-execute-gate-clarity.md`
 
 ### 2026-02-15 - `UX-20260215-D-01` (simulation result comprehension)
 - Stage: `D` Simulation
