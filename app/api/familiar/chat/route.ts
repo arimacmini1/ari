@@ -99,6 +99,42 @@ async function callOpenAI(messages: ChatMessage[], systemPrompt: string) {
   return { reply: typeof content === "string" ? content : null, model }
 }
 
+async function callOpenRouter(messages: ChatMessage[], systemPrompt: string) {
+  const apiKey = process.env.OPENROUTER_KEY
+  if (!apiKey) return null
+  const model = "openrouter/auto" // Use auto-select or specify a model
+  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "HTTP-Referer": "http://localhost:3000",
+      "X-Title": "Ari",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        ...messages.map((m) => ({ role: m.role === "ai" ? "assistant" : m.role, content: m.content })),
+      ],
+      temperature: 0.4,
+      max_tokens: 300,
+    }),
+  })
+  if (!resp.ok) {
+    const errorText = await resp.text().catch(() => "")
+    return { reply: null, error: `OpenRouter error ${resp.status}: ${errorText.slice(0, 200)}`, model }
+  }
+  const data = await resp.json()
+  // OpenRouter may return content in reasoning or content field
+  let content = data?.choices?.[0]?.message?.content
+  if (!content && data?.choices?.[0]?.message?.reasoning) {
+    // Use reasoning content if main content is empty
+    content = data.choices[0].message.reasoning
+  }
+  return { reply: typeof content === "string" ? content : null, model }
+}
+
 async function callAnthropic(messages: ChatMessage[], systemPrompt: string) {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return null
@@ -180,7 +216,7 @@ export async function POST(req: Request) {
   const lastUserMessage = getLastUserMessage(messages)
   const allowRichFormatting = userRequestedRichFormatting(lastUserMessage?.content ?? "")
 
-  const providers = [callGemini, callAnthropic, callOpenAI]
+  const providers = [callOpenRouter, callOpenAI, callAnthropic, callGemini]
   const errors: string[] = []
   for (const provider of providers) {
     try {

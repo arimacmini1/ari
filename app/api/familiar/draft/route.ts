@@ -185,6 +185,45 @@ async function callAnthropic(messages: ChatMessage[], draft: CanvasState | null)
   return typeof content === "string" ? { raw: content, model } : { raw: null as string | null, model, error: "Anthropic: missing content" }
 }
 
+async function callOpenRouter(messages: ChatMessage[], draft: CanvasState | null) {
+  const apiKey = process.env.OPENROUTER_KEY
+  if (!apiKey) return null
+  const model = "openrouter/auto"
+  const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+      "HTTP-Referer": "http://localhost:3000",
+      "X-Title": "Ari",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Chat transcript:\n${messages
+            .map((m) => `${m.role}: ${m.content}`)
+            .join("\n")}\n\nCurrent draft JSON:\n${JSON.stringify(draft ?? {}, null, 2)}`,
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 900,
+    }),
+  })
+  if (!resp.ok) {
+    const errorText = await resp.text().catch(() => "")
+    return { raw: null as string | null, model, error: `OpenRouter error ${resp.status}: ${errorText.slice(0, 200)}` }
+  }
+  const data = await resp.json()
+  let content = data?.choices?.[0]?.message?.content
+  if (!content && data?.choices?.[0]?.message?.reasoning) {
+    content = data.choices[0].message.reasoning
+  }
+  return typeof content === "string" ? { raw: content, model } : { raw: null as string | null, model, error: "OpenRouter: missing content" }
+}
+
 async function callGemini(messages: ChatMessage[], draft: CanvasState | null) {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return null
@@ -257,7 +296,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ ops, source: "deterministic", model: "deterministic" })
   }
 
-  const providers = [callGemini, callAnthropic, callOpenAI]
+  const providers = [callOpenRouter, callOpenAI, callAnthropic, callGemini]
   const errors: string[] = []
   for (const provider of providers) {
     try {
