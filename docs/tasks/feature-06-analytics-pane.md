@@ -196,7 +196,7 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
   - Progress / Fixes / Updates:
     - YYYY-MM-DD: Not started.
 
-- [ ] `F06-SH-03` Add alert rule templates (cost budget, quality SLA, error threshold)
+- [x] `F06-SH-03` Add alert rule templates (cost budget, quality SLA, error threshold)
   - Owner: Backend / Frontend
   - Dependencies: `F06-MH-04`
   - Blocks: none
@@ -208,7 +208,16 @@ By end of week 16, a real user can open the Analytics Pane (new top-level nav it
     - Rule wizard: multi-step form to configure rule (select template → set threshold → pick action → save)
   - Effort: M
   - Progress / Fixes / Updates:
-    - YYYY-MM-DD: Not started.
+    - 2026-02-16: Implemented alert rules store and API.
+      - Added `lib/alert-rules-store.ts` with CRUD operations and default alert rules.
+      - Added `app/api/alerts/route.ts` with GET/POST endpoints.
+      - Added `hooks/use-alert-rules.ts` React hook.
+      - Added `components/analytics/alert-rules-panel.tsx` UI panel.
+      - Added Alert Rules panel to Analytics page (`app/analytics/page.tsx`).
+      - Default rules: Cost Budget Warning ($100), Cost Budget Critical ($500), Quality SLA Warning (<80%), Error Threshold Warning (>10/hr).
+      - API tested: GET /api/alerts (200), POST /api/alerts (201)
+      - UI tested: GET /analytics (200)
+      - Dogfood workflow: ari-dogfood-81da65b6b5 (B1-B8 complete)
 
 - [ ] `F06-SH-04` Implement anomaly explanation and root cause hints
   - Owner: Backend / AI

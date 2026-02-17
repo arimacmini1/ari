@@ -47,8 +47,20 @@ function temporalExecutionEnabledByEnv() {
 }
 
 function resolvePythonExecutable() {
+  // First check venv, then try common macOS paths
   if (existsSync(PYTHON_VENV_BIN)) return PYTHON_VENV_BIN
-  return "python3"
+  // Try to find python3 in common locations
+  const possiblePaths = [
+    "/usr/bin/python3",
+    "/usr/local/bin/python3",
+    "/opt/homebrew/bin/python3",
+    "/opt/homebrew/bin/python",
+    "python3",
+  ]
+  for (const p of possiblePaths) {
+    if (existsSync(p)) return p
+  }
+  return "python3" // fallback to PATH search
 }
 
 export function canRunTemporalExecution(): boolean {

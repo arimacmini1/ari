@@ -66,6 +66,11 @@ export async function enforceProjectPermission(
   req: NextRequest,
   options: ProjectPermissionOptions
 ): Promise<ProjectPermissionResult> {
+  // Development bypass: allow all in dev mode
+  if (process.env.NODE_ENV === "development") {
+    return { allowed: true, userId: "dev-user", role: "Admin" }
+  }
+
   const userId = getUserId(req)
   if (isBootstrapAdmin(req, userId)) {
     return { allowed: true, userId, role: "Admin" }

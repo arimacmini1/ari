@@ -10,7 +10,7 @@ import { TraceViewer } from "@/components/aei/trace-viewer"
 import { AnalyticsPane } from "@/components/aei/analytics-pane"
 import { ConsoleChat } from "@/components/aei/console-chat"
 import { OrchestratorHub } from "@/components/aei/orchestrator-hub"
-import { CodeExplorerMonaco } from "@/components/aei/code-explorer-monaco"
+import { CodeExplorerCoder } from "@/components/aei/code-explorer-coder"
 import { useAccessibilitySettings } from "@/components/accessibility/accessibility-provider"
 import { useActiveProject } from "@/components/aei/active-project-provider"
 import type { CanvasState } from "@/lib/canvas-state"
@@ -49,6 +49,7 @@ const WORKFLOW_REPO_URL_KEY = "aei.workflow.context.repo_url"
 const WORKFLOW_REPO_BRANCH_KEY = "aei.workflow.context.repo_branch"
 const WORKFLOW_REPO_BADGE_KEY = "aei.workflow.context.repo_badge"
 const WORKFLOW_REPO_COMMIT_KEY = "aei.workflow.context.repo_commit"
+const WORKFLOW_FILE_COUNT_KEY = "aei.workflow.context.file_count"
 
 type CodeTreeNode =
   | { kind: "folder"; name: string; path: string; children: CodeTreeNode[] }
@@ -257,6 +258,14 @@ const defaultChecklistState: Record<ChecklistId, boolean> = {
 function createQuickWinCanvas(kind: "simple-script" | "debug-code"): CanvasState {
   const now = Date.now().toString()
   const mkId = (suffix: string) => `qw-${kind}-${suffix}-${now}`
+
+  if (kind === "blank") {
+    return {
+      nodes: [],
+      edges: [],
+      viewport: { x: 0, y: 0, zoom: 1 },
+    }
+  }
 
   if (kind === "simple-script") {
     const n1 = mkId("prompt")
@@ -1052,7 +1061,7 @@ function CodeExplorerPanel() {
 
                   <div className="flex-1 overflow-auto p-3">
                     {selectedFile ? (
-                      <CodeExplorerMonaco
+                      <CodeExplorerCoder
                         key={selectedFile.path}
                         path={selectedFile.path}
                         content={selectedFile.content}
@@ -1154,8 +1163,9 @@ function CodeExplorerPanel() {
 }
 
 export function MainWorkspace() {
-  const codeServerEnabled = process.env.NEXT_PUBLIC_USE_CODE_SERVER === "true"
-  const codeServerUrl = process.env.NEXT_PUBLIC_CODE_SERVER_URL ?? ""
+  // Debug: force code-server enabled for now
+  const codeServerEnabled = true // process.env.NEXT_PUBLIC_USE_CODE_SERVER === "true"
+  const codeServerUrl = "http://localhost:8888" // process.env.NEXT_PUBLIC_CODE_SERVER_URL ?? ""
   const [activeTab, setActiveTab] = useState<TabId>("canvas")
   const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>(() => {
     if (typeof window === "undefined") return "workflow"
@@ -1225,6 +1235,12 @@ export function MainWorkspace() {
   const [repoCommit, setRepoCommit] = useState<string>(() => {
     if (typeof window === "undefined") return ""
     return localStorage.getItem(WORKFLOW_REPO_COMMIT_KEY) ?? ""
+  })
+  const [clonedPath, setClonedPath] = useState<string>("")
+  const [importedFileCount, setImportedFileCount] = useState<number>(() => {
+    if (typeof window === "undefined") return 0
+    const stored = localStorage.getItem(WORKFLOW_FILE_COUNT_KEY)
+    return stored ? parseInt(stored, 10) : 0
   })
   const [repoImportStatus, setRepoImportStatus] = useState<RepoImportStatus>("idle")
   const [repoImportMessage, setRepoImportMessage] = useState<string>("")
@@ -1324,6 +1340,11 @@ export function MainWorkspace() {
 
   useEffect(() => {
     if (typeof window === "undefined") return
+    localStorage.setItem(WORKFLOW_FILE_COUNT_KEY, importedFileCount.toString())
+  }, [importedFileCount])
+
+  useEffect(() => {
+    if (typeof window === "undefined") return
     if (!activeProjectId) return
     const stored = window.localStorage.getItem(MIGRATION_TIP_STORAGE_KEY)
     const dismissed = stored ? JSON.parse(stored) as Record<string, boolean> : {}
@@ -1384,7 +1405,7 @@ export function MainWorkspace() {
   }, [])
 
   const applyQuickWin = useCallback(
-    (kind: "simple-script" | "debug-code") => {
+    (kind: "simple-script" | "debug-code" | "blank") => {
       const template = createQuickWinCanvas(kind)
       setDraftCanvasState(template)
       localStorage.setItem("canvas-state", JSON.stringify(template))
@@ -1477,6 +1498,12 @@ export function MainWorkspace() {
       setRepoBadge(`${projectName}@${branchName}`)
       if (typeof payload?.repo_commit === "string") {
         setRepoCommit(payload.repo_commit)
+      }
+      if (typeof payload?.cloned_path === "string") {
+        setClonedPath(payload.cloned_path)
+      }
+      if (typeof payload?.imported_file_count === "number") {
+        setImportedFileCount(payload.imported_file_count)
       }
       setRepoImportStatus("ready")
       setRepoImportMessage("Ready: repository context is available.")
@@ -1722,6 +1749,13 @@ export function MainWorkspace() {
             >
               Debug My Code
             </button>
+            <button
+              type="button"
+              onClick={() => applyQuickWin("blank")}
+              className="rounded-md border border-border bg-secondary/30 px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-secondary/50"
+            >
+              Blank Canvas
+            </button>
           </div>
         </div>
       ) : null}
@@ -1823,8 +1857,18 @@ export function MainWorkspace() {
                 </div>
               </div>
               {repoBadge ? (
-                <div className="rounded-md border border-emerald-700/60 bg-emerald-950/20 px-2 py-1 text-[11px] text-emerald-200">
-                  {repoBadge}
+                <div className="rounded-md border border-emerald-700/60 bg-emerald-950/20 px-2 py-1.5 text-[11px] text-emerald-200">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{repoBadge}</span>
+                    {importedFileCount > 0 && (
+                      <span className="text-emerald-300/70">· {importedFileCount} files</span>
+                    )}
+                    {repoCommit && (
+                      <span className="font-mono text-emerald-300/70" title={repoCommit}>
+                        @{repoCommit.slice(0, 7)}
+                      </span>
+                    )}
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -1887,7 +1931,10 @@ export function MainWorkspace() {
                       onClick={() => {
                         if (codeServerEnabled && codeServerUrl) {
                           const target = new URL(codeServerUrl)
-                          if (repoUrl.trim()) {
+                          // Use cloned path if available, otherwise fall back to repo URL
+                          if (clonedPath) {
+                            target.searchParams.set("folder", clonedPath)
+                          } else if (repoUrl.trim()) {
                             target.searchParams.set("repo", repoUrl.trim())
                           }
                           if (repoBranch.trim()) {

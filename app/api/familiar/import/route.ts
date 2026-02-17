@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { suggestAgent as getSuggestedAgent, getAgentIds } from "@/lib/agents"
 
 type ImportRequest = {
   input?: string
@@ -41,7 +42,7 @@ type GithubRef = {
   branch?: string
 }
 
-const MAX_IMPORTED_FILES = 180
+const MAX_IMPORTED_FILES = 1000
 const MAX_FILE_SIZE_BYTES = 200_000
 const EXCLUDED_PATH_SEGMENTS = new Set([
   ".git",
@@ -57,6 +58,30 @@ const EXCLUDED_PATH_SEGMENTS = new Set([
   "bin",
   "obj",
 ])
+
+// Code-server workspace path
+const CODE_SERVER_WORKSPACE = process.env.CODE_SERVER_WORKSPACE || "/Users/ari_mac_mini/ari/projects"
+
+async function cloneRepoToWorkspace(owner: string, repo: string, branch: string): Promise<string> {
+  const { execSync } = await import("child_process")
+  const targetDir = `${CODE_SERVER_WORKSPACE}/${repo}`
+  
+  // Remove existing directory if present
+  try {
+    execSync(`rm -rf "${targetDir}"`, { stdio: "ignore" })
+  } catch {
+    // Ignore if doesn't exist
+  }
+  
+  // Clone the repository
+  const cloneUrl = `https://github.com/${owner}/${repo}.git`
+  execSync(`git clone --branch "${branch}" --depth 1 "${cloneUrl}" "${targetDir}"`, {
+    stdio: "inherit",
+    env: { ...process.env, GIT_TERMINAL_PROMPT: "0" }
+  })
+  
+  return targetDir
+}
 
 const EXCLUDED_FILE_SUFFIXES = [
   ".png",
@@ -104,7 +129,7 @@ function parseGithubUrl(input: string): GithubRef | null {
 }
 
 function githubHeaders() {
-  const token = process.env.GITHUB_TOKEN || process.env.GH_TOKEN
+  const token = process.env.GITHUB_TOKEN
   return {
     Accept: "application/vnd.github+json",
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -210,6 +235,8 @@ async function importGithubProject(ref: GithubRef): Promise<{
   resolvedBranch: string
 }> {
   const headers = githubHeaders()
+  console.log("[DEBUG] Fetching repo:", `https://api.github.com/repos/${ref.owner}/${ref.repo}`)
+  console.log("[DEBUG] Headers:", JSON.stringify(headers))
   const repoResp = await fetch(`https://api.github.com/repos/${ref.owner}/${ref.repo}`, { headers })
   if (!repoResp.ok) {
     throw new Error(`GitHub repo lookup failed (${repoResp.status}).`)
@@ -356,25 +383,8 @@ function parseImportInput(input: string): ParsedImport {
   }
 }
 
-function suggestAgent(task: string): string {
-  const lower = task.toLowerCase()
-  if (lower.includes("ui") || lower.includes("frontend") || lower.includes("react")) {
-    return "frontend-agent"
-  }
-  if (lower.includes("api") || lower.includes("backend") || lower.includes("server")) {
-    return "backend-agent"
-  }
-  if (lower.includes("database") || lower.includes("sql") || lower.includes("schema")) {
-    return "data-agent"
-  }
-  if (lower.includes("test") || lower.includes("validate")) {
-    return "qa-agent"
-  }
-  if (lower.includes("deploy") || lower.includes("release")) {
-    return "devops-agent"
-  }
-  return "generalist-agent"
-}
+// Use centralized agent suggestion from lib/agents
+const suggestAgent = getSuggestedAgent
 
 function buildImportedCanvas(parsed: ParsedImport): {
   canvas: CanvasState
@@ -485,6 +495,19 @@ export async function POST(req: Request) {
     const startedAt = Date.now()
     const githubRef = parseGithubUrl(input)
     const githubImport = githubRef ? await importGithubProject(githubRef) : null
+    
+    // Clone repo to code-server workspace if GitHub import
+    let clonedPath: string | undefined
+    if (githubRef) {
+      try {
+        clonedPath = await cloneRepoToWorkspace(githubRef.owner, githubRef.repo, githubRef.branch || "main")
+        console.log("[import] Cloned repo to:", clonedPath)
+      } catch (cloneErr) {
+        console.error("[import] Clone failed:", cloneErr)
+        // Continue without blocking - clone is optional enhancement
+      }
+    }
+    
     const parsed = githubImport
       ? {
           projectName: githubImport.projectName,
@@ -533,6 +556,7 @@ export async function POST(req: Request) {
       repo_url: githubRef ? `https://github.com/${githubRef.owner}/${githubRef.repo}` : undefined,
       repo_branch: githubImport?.resolvedBranch,
       repo_commit: githubImport?.commitSha,
+      cloned_path: clonedPath,
     })
   } catch (error) {
     return NextResponse.json(

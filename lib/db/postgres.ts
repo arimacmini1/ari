@@ -9,8 +9,13 @@
 import { Pool, PoolClient } from 'pg';
 
 // Initialize connection pool
+const dbUrl = process.env.DATABASE_URL || process.env.DB_HOST 
+  ? `postgresql://${process.env.DB_USER || 'aei_user'}:${process.env.DB_PASSWORD || 'aei_pass'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '5432'}/${process.env.DB_NAME || 'aei_app'}`
+  : 'postgresql://aei_user:aei_pass@localhost:5432/aei_app';
+
+console.log('[DB] DATABASE_URL:', dbUrl);
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://localhost:5432/aei_app',
+  connectionString: dbUrl,
   max: 20, // maximum pool size
   idleTimeoutMillis: 30000, // idle client timeout
   connectionTimeoutMillis: 2000,

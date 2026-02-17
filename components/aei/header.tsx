@@ -10,6 +10,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useActiveProject } from "@/components/aei/active-project-provider"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { RecentProjectsList } from "@/components/recent-projects-list"
+import { CommitBadge } from "@/components/commit-badge"
 
 export function Header() {
   const [collaborators, setCollaborators] = useState<string[]>([])
@@ -101,6 +104,9 @@ export function Header() {
             New
           </Button>
         </div>
+        
+        {/* P1-SH-01: Commit Badge - shows branch and commit */}
+        <CommitBadge branch="main" commitHash="abc1234" commitMessage="Initial commit" />
       </div>
 
       <div className="flex items-center gap-3">
@@ -140,6 +146,8 @@ export function Header() {
           <Settings className="w-4 h-4 text-muted-foreground" />
           <span className="sr-only">Settings</span>
         </Button>
+        <ThemeToggle />
+        <RecentProjectsList />
         <div className="h-5 w-px bg-border" />
         <button className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-secondary transition-colors">
           <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center">

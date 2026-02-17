@@ -26,7 +26,14 @@ export async function GET(req: NextRequest) {
   try {
     const projectContext = resolveProjectContext(req);
     if (!projectContext.ok) {
-      return projectContext.response;
+      // Fall back to default project if no project context provided
+      const defaultProject = getProject('project-default');
+      if (!defaultProject) {
+        return projectContext.response;
+      }
+      projectContext.ok = true;
+      projectContext.projectId = 'project-default';
+      projectContext.project = defaultProject;
     }
 
     const executions = Array.from(EXECUTIONS_DB.values()).sort(

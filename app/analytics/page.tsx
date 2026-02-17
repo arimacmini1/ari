@@ -12,6 +12,7 @@
 import { useState, useEffect } from 'react';
 import { AnalyticsDashboard } from '@/components/analytics/analytics-dashboard';
 import { AdoptionDashboard } from '@/components/analytics/adoption-dashboard';
+import { AlertRulesPanel } from '@/components/analytics/alert-rules-panel';
 import { useAnalyticsSummary } from '@/hooks/use-analytics-summary';
 import { useAdoptionSummary, type AdoptionPeriod } from '@/hooks/use-adoption-summary';
 import { useActiveProject } from '@/components/aei/active-project-provider';
@@ -94,6 +95,11 @@ export default function AnalyticsPage() {
         ) : (
           <AnalyticsDashboard summary={summary ?? undefined} loading={loading} />
         )}
+
+        {/* Alert Rules */}
+        <div className="mt-8">
+          <AlertRulesPanel projectId={activeProjectId ?? undefined} />
+        </div>
       </div>
     </main>
   );

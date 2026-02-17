@@ -3,15 +3,17 @@
 ## 🔴 CRITICAL RULES (READ FIRST)
 
 ### Input Requirements
-- **REQUIRED:** Master AEI PRD (`/docs/prd/AEI-prd-master.md`)
+- **REQUIRED:** Master AEI PRD (`docs/prd/master-prd-UX-UI-ARI.md`)
+
+<!-- - **REQUIRED:** Master AEI PRD (`/docs/prd/AEI-prd-master.md`) -->
 - **REQUIRED:** Paste PRD content into `=== PRD CONTENT PASTE HERE ===` section below
-- **OUTPUT:** Save generated roadmap to `/docs/tasks/project-roadmap.md`
+- **OUTPUT:** Save generated roadmap to `/docs/tasks/ux-project-roadmap.md`
 
 ### Task ID Convention (MANDATORY)
 
 Every task MUST have a unique ID in backticks before the task title.
 
-**Format:** `PX-TT-NN` where:
+**Format:** `PX-TT-NN` where:@master-prd-UX
 - `P` = Phase prefix (literal)
 - `X` = Phase number (1, 2, 3)
 - `TT` = Tier code: `MH` (Must-Have), `SH` (Should-Have), `CH` (Could-Have)

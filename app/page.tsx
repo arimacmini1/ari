@@ -12,7 +12,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { PanelRightClose, Bot, Settings, MessageSquare } from "lucide-react"
+import { PanelRightClose, Bot, Settings, MessageSquare, Sun, Moon } from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 const COPILOT_OPEN_KEY = "aei.copilot.open"
 const COPILOT_WIDTH_KEY = "aei.copilot.width"

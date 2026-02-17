@@ -7,6 +7,8 @@ import { ActiveProjectProvider } from '@/components/aei/active-project-provider'
 import { KeyboardShortcutsOverlay } from '@/components/accessibility/keyboard-shortcuts-overlay'
 import { SkipToContent } from '@/components/accessibility/skip-to-content'
 import { Toaster } from '@/components/ui/toaster'
+import { ThemeProvider } from '@/components/theme-provider'
+import { QuickActionsMenu } from '@/components/quick-actions-menu'
 
 export const metadata: Metadata = {
   title: 'AEI - AI Engineering Interface',
@@ -23,7 +25,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className="font-sans antialiased"
         style={
@@ -37,14 +39,22 @@ export default function RootLayout({
         }
       >
         <AccessibilityRoot>
-          <ActiveProjectProvider>
-            <SkipToContent />
-            <KeyboardShortcutsOverlay />
-            <div id="main-content" tabIndex={-1}>
-              {children}
-            </div>
-            <Toaster />
-          </ActiveProjectProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="dark"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <ActiveProjectProvider>
+              <SkipToContent />
+              <KeyboardShortcutsOverlay />
+              <QuickActionsMenu />
+              <div id="main-content" tabIndex={-1}>
+                {children}
+              </div>
+              <Toaster />
+            </ActiveProjectProvider>
+          </ThemeProvider>
         </AccessibilityRoot>
       </body>
     </html>

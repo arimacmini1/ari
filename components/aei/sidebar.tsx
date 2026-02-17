@@ -17,6 +17,8 @@ import {
   ChevronRight,
   Circle,
   TrendingUp,
+  FolderTree,
+  Bug,
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react"
@@ -57,6 +59,9 @@ const navItems: NavItem[] = [
   { icon: Network, label: "Orchestrator", href: "/orchestrator", badge: "3" },
   { icon: Activity, label: "Trace Viewer", href: "/trace" },
   { icon: TrendingUp, label: "Analytics", href: "/analytics" },
+  { icon: FolderTree, label: "Files", href: "/files" },
+  { icon: Bug, label: "UI Testing", href: "/test-browser" },
+  { icon: Zap, label: "Simple Canvas", href: "/simple-canvas" },
   { icon: GitBranch, label: "Workflows", href: "/workflows", badge: "5" },
   { icon: Shield, label: "Compliance", href: "/compliance" },
   { icon: Puzzle, label: "Plugins", href: "/plugins" },
