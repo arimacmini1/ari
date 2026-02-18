@@ -3,6 +3,7 @@ import csv
 import json
 import os
 import re
+import subprocess
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -547,12 +548,24 @@ Generate code for ALL files in the plan. Each file should be complete and functi
     elif block == "B8":  # Ship Decision
         verification = block_input.get("verification_results", {})
         review = block_input.get("review_findings", {})
-        if verification.get("passed") and review.get("approved"):
+        verification_passed = bool(
+            verification.get("passed")
+            or block_input.get("passed")
+            or block_input.get("verification_result") == "pass"
+        )
+        review_passed = bool(
+            review.get("approved")
+            or block_input.get("approved")
+            or block_input.get("review_status") == "pass"
+        )
+        pr_loop_passed = bool(block_input.get("pr_loop_passed", True))
+
+        if verification_passed and review_passed and pr_loop_passed:
             decision = "done"
             next_actions = ["Merge to main", "Update status to complete"]
-        elif review.get("required_fixes"):
+        elif review.get("required_fixes") or not review_passed or not pr_loop_passed:
             decision = "iterate"
-            next_actions = ["Fix issues in B6 findings", "Re-run B5"]
+            next_actions = ["Fix issues in B6 findings", "Re-run PR loop and B5"]
         else:
             decision = "split"
             next_actions = ["Break into smaller slices", "Re-plan in B1"]
@@ -561,6 +574,9 @@ Generate code for ALL files in the plan. Each file should be complete and functi
             "next_actions": next_actions,
             "summary": f"Decision: {decision.upper()}",
             "ready_to_ship": decision == "done",
+            "verification_passed": verification_passed,
+            "review_passed": review_passed,
+            "pr_loop_passed": pr_loop_passed,
         }
     
     return {}
@@ -679,6 +695,167 @@ async def execute_dogfood_block_activity(payload: dict[str, Any]) -> dict[str, A
         "description": agent_info["description"],
         "input": block_input,
         "output": output,
+    }
+
+
+def _run_cmd_json(cmd: list[str], cwd: str) -> dict[str, Any]:
+    completed = subprocess.run(
+        cmd,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    stdout = (completed.stdout or "").strip()
+    stderr = (completed.stderr or "").strip()
+    parsed: dict[str, Any] | None = None
+
+    if stdout:
+        try:
+            parsed = json.loads(stdout)
+        except Exception:
+            lines = [line for line in stdout.splitlines() if line.strip()]
+            for line in reversed(lines):
+                try:
+                    parsed = json.loads(line)
+                    break
+                except Exception:
+                    continue
+
+    return {
+        "returncode": int(completed.returncode),
+        "stdout": stdout,
+        "stderr": stderr,
+        "json": parsed,
+    }
+
+
+def _git_head_sha(repo_root: str) -> str:
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+    )
+    if result.returncode != 0:
+        return ""
+    return (result.stdout or "").strip()
+
+
+@activity.defn
+async def run_pr_agent_loop_activity(payload: dict[str, Any]) -> dict[str, Any]:
+    repo_root = str(payload.get("repo_root") or ".")
+    pr_loop = payload.get("pr_loop") if isinstance(payload.get("pr_loop"), dict) else {}
+    if not bool(pr_loop.get("enabled", False)):
+        return {"status": "skipped", "reason": "pr_loop_disabled"}
+
+    head_sha = str(pr_loop.get("head_sha") or _git_head_sha(repo_root))
+    max_rounds = max(0, int(pr_loop.get("max_remediation_rounds", 2)))
+    required_checks = [str(v) for v in pr_loop.get("required_checks", []) if str(v).strip()]
+    enable_remediation = bool(pr_loop.get("enable_remediation", False))
+
+    rounds: list[dict[str, Any]] = []
+    for round_idx in range(max_rounds + 1):
+        risk_cmd = ["node", "scripts/risk-policy-gate.mjs", "--head-sha", head_sha]
+        for check in required_checks:
+            risk_cmd.extend(["--required-check", check])
+        risk_result = _run_cmd_json(risk_cmd, cwd=repo_root)
+        round_record: dict[str, Any] = {
+            "round": round_idx,
+            "head_sha": head_sha,
+            "risk_gate": risk_result,
+        }
+        if risk_result["returncode"] != 0:
+            round_record["status"] = "risk_gate_failed"
+            rounds.append(round_record)
+            return {
+                "status": "fail",
+                "failure_phase": "risk_gate",
+                "head_sha": head_sha,
+                "rounds": rounds,
+            }
+
+        review_result = _run_cmd_json(
+            ["node", "scripts/local-review-agent.mjs", "--head-sha", head_sha],
+            cwd=repo_root,
+        )
+        round_record["review"] = review_result
+        review_json = review_result.get("json") if isinstance(review_result.get("json"), dict) else {}
+        actionable = review_json.get("actionable_findings")
+        actionable_count = len(actionable) if isinstance(actionable, list) else 0
+        stale_head = bool(review_json.get("stale_head"))
+        round_record["actionable_findings"] = actionable_count
+        round_record["stale_head"] = stale_head
+
+        if review_result["returncode"] == 0 and actionable_count == 0 and not stale_head:
+            round_record["status"] = "review_clean"
+            rounds.append(round_record)
+            return {
+                "status": "complete",
+                "head_sha": head_sha,
+                "rounds": rounds,
+                "review_status": "pass",
+                "pr_loop_passed": True,
+            }
+
+        if stale_head:
+            round_record["status"] = "stale_review_head"
+            rounds.append(round_record)
+            return {
+                "status": "fail",
+                "failure_phase": "review_stale_sha",
+                "head_sha": head_sha,
+                "rounds": rounds,
+            }
+
+        if not enable_remediation or round_idx >= max_rounds:
+            round_record["status"] = "review_failed_no_remediation"
+            rounds.append(round_record)
+            return {
+                "status": "fail",
+                "failure_phase": "review_findings",
+                "head_sha": head_sha,
+                "rounds": rounds,
+                "pr_loop_passed": False,
+            }
+
+        remediation_result = _run_cmd_json(
+            [
+                "node",
+                "scripts/remediation-agent.mjs",
+                "--head-sha",
+                head_sha,
+                "--findings-json",
+                json.dumps(review_json or {}),
+                "--apply",
+            ],
+            cwd=repo_root,
+        )
+        round_record["remediation"] = remediation_result
+        if remediation_result["returncode"] != 0:
+            round_record["status"] = "remediation_failed"
+            rounds.append(round_record)
+            return {
+                "status": "fail",
+                "failure_phase": "remediation",
+                "head_sha": head_sha,
+                "rounds": rounds,
+                "pr_loop_passed": False,
+            }
+
+        remediation_json = (
+            remediation_result.get("json") if isinstance(remediation_result.get("json"), dict) else {}
+        )
+        head_sha = str(remediation_json.get("commit_sha") or _git_head_sha(repo_root))
+        round_record["status"] = "remediated"
+        round_record["new_head_sha"] = head_sha
+        rounds.append(round_record)
+
+    return {
+        "status": "fail",
+        "failure_phase": "max_rounds_exhausted",
+        "head_sha": head_sha,
+        "rounds": rounds,
+        "pr_loop_passed": False,
     }
 
 
@@ -1134,6 +1311,9 @@ class DogfoodB1B8Workflow:
     def __init__(self) -> None:
         self._approval_granted = False
         self._approval_note = ""
+        self._step_mode = False
+        self._advance_requested = False
+        self._advance_note = ""
         self._current_block = "not-started"
         self._status = "pending"
         self._history: list[dict[str, Any]] = []
@@ -1143,6 +1323,11 @@ class DogfoodB1B8Workflow:
         self._approval_granted = True
         self._approval_note = note
 
+    @workflow.signal
+    async def advance_step(self, note: str = "") -> None:
+        self._advance_requested = True
+        self._advance_note = note
+
     @workflow.query
     def get_status(self) -> dict[str, Any]:
         return {
@@ -1150,6 +1335,8 @@ class DogfoodB1B8Workflow:
             "current_block": self._current_block,
             "approval_granted": self._approval_granted,
             "approval_note": self._approval_note,
+            "step_mode": self._step_mode,
+            "advance_requested": self._advance_requested,
             "history": self._history,
         }
 
@@ -1157,14 +1344,30 @@ class DogfoodB1B8Workflow:
     async def run(self, payload: dict[str, Any]) -> dict[str, Any]:
         # F03-MH-08 scaffold: represent B1-B8 as durable activity executions.
         self._status = "running"
+        self._step_mode = bool(payload.get("step_mode", False))
         blocks = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]
         block_inputs = payload.get("block_inputs", {})
+        pr_loop_cfg = payload.get("pr_loop") if isinstance(payload.get("pr_loop"), dict) else {}
+        repo_root = str(payload.get("repo_root") or ".")
         
         # Track outputs to pass between blocks
         block_outputs = {}
 
         for block in blocks:
             self._current_block = block
+            if self._step_mode:
+                self._status = "waiting_for_advance"
+                await workflow.wait_condition(lambda: self._advance_requested)
+                self._advance_requested = False
+                self._status = "running"
+                self._history.append(
+                    {
+                        "block": "step_advance",
+                        "status": "approved",
+                        "target_block": block,
+                        "note": self._advance_note,
+                    }
+                )
             if block == "B7" and not self._approval_granted:
                 self._status = "waiting_for_approval"
                 await workflow.wait_condition(lambda: self._approval_granted)
@@ -1194,6 +1397,31 @@ class DogfoodB1B8Workflow:
             # Store output for next block
             if "output" in result:
                 block_outputs.update(result["output"])
+
+            if block == "B4":
+                pr_loop_result = await workflow.execute_activity(
+                    run_pr_agent_loop_activity,
+                    {"repo_root": repo_root, "pr_loop": pr_loop_cfg},
+                    start_to_close_timeout=timedelta(seconds=240),
+                    retry_policy=RetryPolicy(
+                        maximum_attempts=1,
+                        initial_interval=timedelta(seconds=1),
+                    ),
+                )
+                self._history.append({"block": "PR_LOOP", "status": pr_loop_result.get("status"), "output": pr_loop_result})
+                if pr_loop_result.get("status") != "complete" and pr_loop_result.get("status") != "skipped":
+                    self._status = "failed"
+                    return {
+                        "status": "failed",
+                        "workflow": "DogfoodB1B8Workflow",
+                        "failure_phase": "pr_loop",
+                        "history": self._history,
+                    }
+
+                block_outputs["pr_loop_passed"] = bool(pr_loop_result.get("pr_loop_passed", True))
+                block_outputs["review_status"] = pr_loop_result.get("review_status", block_outputs.get("review_status", "pass"))
+                if pr_loop_result.get("head_sha"):
+                    block_outputs["head_sha"] = pr_loop_result.get("head_sha")
 
         self._status = "complete"
         return {
@@ -1582,6 +1810,7 @@ async def main() -> None:
             execute_assignment_activity,
             generate_simulation_artifact_activity,
             execute_dogfood_block_activity,
+            run_pr_agent_loop_activity,
             generate_change_bundle_stub_activity,
             extract_mendix_records_activity,
             transform_record_activity,
