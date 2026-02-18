@@ -233,6 +233,18 @@ export async function POST(req: NextRequest) {
 
     upsertTraceExecution(trace, projectContext.projectId);
 
+    // Store trace in RAG for semantic search (async, don't block)
+    import('@/lib/rag').then(({ storeTrace }) => {
+      trace.root_decisions.forEach(decision => {
+        storeTrace(
+          executionId,
+          decision.agent_id,
+          decision.decision_context,
+          decision.decision_outcome
+        ).catch(console.error);
+      });
+    }).catch(console.error);
+
     // Update execution status to processing
     execution.status = 'processing';
     EXECUTIONS_DB.set(execution_id, execution);

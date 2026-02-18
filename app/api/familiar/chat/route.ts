@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
 import { resolveCopilotPrompt } from "@/lib/copilot/prompt-router"
+import { searchMemories, storeConversation, initializeRAG } from "@/lib/rag"
+
+// Initialize RAG on first request (idempotent)
+initializeRAG().catch(console.error)
 
 type ChatMessage = {
   role: "user" | "ai" | "system"
@@ -102,7 +106,7 @@ async function callOpenAI(messages: ChatMessage[], systemPrompt: string) {
 async function callOpenRouter(messages: ChatMessage[], systemPrompt: string) {
   const apiKey = process.env.OPENROUTER_KEY
   if (!apiKey) return null
-  const model = "openrouter/auto" // Use auto-select or specify a model
+  const model = "minimax/minimax-m2.5" // Use MiniMax via OpenRouter
   const resp = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -216,12 +220,70 @@ export async function POST(req: Request) {
   const lastUserMessage = getLastUserMessage(messages)
   const allowRichFormatting = userRequestedRichFormatting(lastUserMessage?.content ?? "")
 
+  // Handle /remember command - save to memory without AI response
+  if (lastUserMessage?.content?.startsWith("/remember ")) {
+    const memoryText = lastUserMessage.content.slice(10).trim()
+    if (memoryText) {
+      try {
+        const { addMemory } = await import("@/lib/rag")
+        const id = await addMemory(memoryText, "memory")
+        return NextResponse.json({
+          reply: `💾 Saved to memory: "${memoryText.slice(0, 50)}${memoryText.length > 50 ? '...' : ''}"`,
+          memory: { saved: true, id },
+        })
+      } catch (e) {
+        return NextResponse.json({ reply: "Failed to save memory", error: String(e) }, { status: 500 })
+      }
+    }
+  }
+
+  // Handle /memories command - show recent memories
+  if (lastUserMessage?.content === "/memories") {
+    try {
+      const { getMemories } = await import("@/lib/rag")
+      const memories = await getMemories()
+      const preview = memories.slice(0, 5).map(m => `• ${m.content.slice(0, 60)}...`).join("\n")
+      return NextResponse.json({
+        reply: memories.length > 0 
+          ? `**Recent Memories:**\n${preview}\n\nTotal: ${memories.length} memories`
+          : "No memories saved yet. Use /remember [text] to save something.",
+        memory: { count: memories.length },
+      })
+    } catch (e) {
+      return NextResponse.json({ reply: "Failed to load memories", error: String(e) }, { status: 500 })
+    }
+  }
+
+  // RAG: Search for relevant memories and include in context
+  let memoryContext = ""
+  let memoriesFound = 0
+  if (lastUserMessage?.content) {
+    try {
+      const memories = await searchMemories(lastUserMessage.content, 3)
+      if (memories.length > 0) {
+        memoriesFound = memories.length
+        memoryContext = "\n\n## Relevant Past Conversations:\n" +
+          memories.map(m => `- [${m.source}] ${m.content} (similarity: ${(1 - m.similarity).toFixed(2)})`).join("\n")
+      }
+    } catch (e) {
+      console.warn("RAG search failed:", e)
+    }
+  }
+
+  // Append memory context to system prompt
+  const systemPromptWithMemory = resolvedPrompt.prompt.systemPrompt + memoryContext
+
   const providers = [callOpenRouter, callOpenAI, callAnthropic, callGemini]
   const errors: string[] = []
   for (const provider of providers) {
     try {
-      const result = await provider(messages, resolvedPrompt.prompt.systemPrompt)
+      const result = await provider(messages, systemPromptWithMemory)
       if (result?.reply) {
+        // RAG: Store conversation for future memory
+        if (lastUserMessage?.content && result.reply) {
+          storeConversation(lastUserMessage.content, result.reply).catch(console.error)
+        }
+
         return NextResponse.json({
           reply: normalizeReply({
             reply: result.reply,
@@ -235,6 +297,10 @@ export async function POST(req: Request) {
             version: resolvedPrompt.prompt.version,
             mode: resolvedPrompt.mode,
             reason: resolvedPrompt.reason,
+          },
+          memory: {
+            found: memoriesFound,
+            context: memoryContext ? "included" : "none",
           },
         })
       }

@@ -1,13 +1,14 @@
 import type { BlockType } from "@/lib/canvas-state"
 
 export const CONNECTION_RULES: Record<BlockType, BlockType[]> = {
-  task: ["task", "decision", "loop", "parallel", "artifact", "preview"],
-  decision: ["task", "loop", "parallel", "artifact", "preview"],
-  loop: ["task", "decision", "parallel", "artifact", "preview"],
-  parallel: ["task", "decision", "loop", "artifact", "preview"],
-  text: ["task", "decision"],
+  task: ["task", "decision", "loop", "parallel", "artifact", "preview", "memory"],
+  decision: ["task", "loop", "parallel", "artifact", "preview", "memory"],
+  loop: ["task", "decision", "parallel", "artifact", "preview", "memory"],
+  parallel: ["task", "decision", "loop", "artifact", "preview", "memory"],
+  text: ["task", "decision", "memory"],
   artifact: [],
   preview: [],
+  memory: ["task", "decision", "artifact", "preview"],
 }
 
 export function wouldCreateCycle(

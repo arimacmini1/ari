@@ -11,6 +11,7 @@ import {
   Zap,
   FileOutput,
   Eye,
+  Brain,
 } from "lucide-react"
 import type { CanvasNode, BlockType } from "@/lib/canvas-state"
 import { CONNECTION_RULES } from "@/lib/connection-rules"
@@ -51,6 +52,11 @@ const blockColors: Record<string, { bg: string; border: string; icon: string }> 
     border: "border-cyan-500/40",
     icon: "text-cyan-400",
   },
+  memory: {
+    bg: "bg-violet-500/10",
+    border: "border-violet-500/40",
+    icon: "text-violet-400",
+  },
 }
 
 const blockIcons: Record<string, React.ElementType> = {
@@ -61,6 +67,7 @@ const blockIcons: Record<string, React.ElementType> = {
   text: MessageSquare,
   artifact: FileOutput,
   preview: Eye,
+  memory: Brain,
 }
 
 const handleBaseStyle: React.CSSProperties = {

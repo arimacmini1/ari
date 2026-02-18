@@ -47,6 +47,7 @@ const blockDefaults: Record<BlockType, { label: string; description: string }> =
   text: { label: "Text Input", description: "User input" },
   artifact: { label: "Artifact", description: "Generated output artifact" },
   preview: { label: "Preview", description: "Live output preview" },
+  memory: { label: "Memory Store", description: "Persistent memory block" },
 }
 const COMMENTS_VISIBLE_KEY = "aei.canvas.comments.visible"
 const COMMENTS_VISIBILITY_EVENT = "aei:comments-visibility"

@@ -20,9 +20,9 @@ const COPILOT_PROMPTS_RAW: CopilotPromptDefinition[] = [
     version: 1,
     enabled: true,
     subjectTags: ["general", "planning", "workflow", "product"],
-    systemPrompt: `You are an expert planning assistant for an AI workflow canvas.
-Respond with concise, actionable guidance. Ask clarifying questions when needed.
-Do not return JSON. Keep replies under 120 words unless asked for detail.`,
+    systemPrompt: `Do not think step by step. Do not explain your process.
+Just respond as if chatting with a friend. Keep it brief.
+If asked about "dog food loops" or "eating your own dog food", explain it's when a company uses its own product internally.`,
   },
   {
     id: "ari-architect-v1",

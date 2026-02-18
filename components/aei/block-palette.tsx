@@ -12,6 +12,7 @@ import {
   Search,
   PanelLeftClose,
   PanelLeftOpen,
+  Brain,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -110,6 +111,19 @@ const blockCategories: BlockCategory[] = [
         icon: Eye,
         color: "bg-cyan-500/10 border-cyan-500/40",
         iconColor: "text-cyan-400",
+      },
+    ],
+  },
+  {
+    name: "Memory",
+    blocks: [
+      {
+        type: "memory",
+        label: "Memory Store",
+        description: "Store or search memories",
+        icon: Brain,
+        color: "bg-violet-500/10 border-violet-500/40",
+        iconColor: "text-violet-400",
       },
     ],
   },

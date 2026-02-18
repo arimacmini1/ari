@@ -8,16 +8,15 @@
 
 import { Pool, PoolClient } from 'pg';
 
-// Initialize connection pool
-const dbUrl = process.env.DATABASE_URL || process.env.DB_HOST 
-  ? `postgresql://${process.env.DB_USER || 'aei_user'}:${process.env.DB_PASSWORD || 'aei_pass'}@${process.env.DB_HOST || 'localhost'}:${process.env.DB_PORT || '5432'}/${process.env.DB_NAME || 'aei_app'}`
-  : 'postgresql://aei_user:aei_pass@localhost:5432/aei_app';
-
-console.log('[DB] DATABASE_URL:', dbUrl);
+// Hardcoded config - override with env vars if properly set
 const pool = new Pool({
-  connectionString: dbUrl,
-  max: 20, // maximum pool size
-  idleTimeoutMillis: 30000, // idle client timeout
+  user: process.env.DB_USER || 'aei_user',
+  host: process.env.DB_HOST || 'localhost',
+  database: process.env.PG_DATABASE || 'aei_app',
+  password: process.env.DB_PASSWORD || 'aei_pass',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  max: 20,
+  idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
 });
 

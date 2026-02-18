@@ -81,8 +81,8 @@ export function resolveCopilotPrompt({
   }
 
   const candidates = [
+    fallback,  // Check default first - it should win on ties
     getCopilotPromptById("ari-architect-v1"),
-    fallback,
   ].filter((prompt): prompt is CopilotPromptDefinition => Boolean(prompt && prompt.enabled))
 
   let best = fallback
@@ -95,8 +95,9 @@ export function resolveCopilotPrompt({
     }
   }
 
-  if (best.id === fallback.id && bestScore <= 0) {
-    return { prompt: fallback, mode: "auto", reason: "no keyword match, fallback default" }
+  // Always prefer fallback unless there's a clear keyword match
+  if (best.id !== fallback.id && bestScore <= 0) {
+    return { prompt: fallback, mode: "auto", reason: "no clear keyword match, using default" }
   }
 
   return {

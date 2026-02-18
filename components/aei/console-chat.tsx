@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "react"
-import { Send, Terminal, Bot, User, Sparkles, ArrowDown } from "lucide-react"
+import { Send, Terminal, Bot, User, Sparkles, ArrowDown, Bookmark } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -47,31 +47,7 @@ export interface PromptResolution {
 }
 
 const defaultSeedMessages: ChatMessage[] = [
-  {
-    id: "1",
-    role: "system",
-    content: "Session initialized. Orchestrator connected with 6 agents.",
-    timestamp: "14:02",
-  },
-  {
-    id: "2",
-    role: "user",
-    content: "Build a real-time analytics dashboard with auth, REST API, and Postgres integration.",
-    timestamp: "14:03",
-  },
-  {
-    id: "3",
-    role: "ai",
-    content:
-      "Parsed 4 task blocks. Dispatching to code-gen-alpha (architecture), test-runner-01 (test harness), and security-scan (compliance). Estimated completion: 12 minutes.",
-    timestamp: "14:03",
-  },
-  {
-    id: "4",
-    role: "system",
-    content: "code-gen-alpha: Architecture plan generated. Confidence: 89%. Proceeding to implementation.",
-    timestamp: "14:05",
-  },
+  // Empty by default - fresh session starts clean
 ]
 
 export interface ConsoleChatHandle {
@@ -401,6 +377,33 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
     }
   }
 
+  const handleSaveToMemory = async () => {
+    const trimmed = input.trim()
+    if (!trimmed) return
+    try {
+      const res = await fetch("/api/familiar/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: "/remember " + trimmed }],
+        }),
+      })
+      const data = await res.json()
+      if (data.reply) {
+        const systemMessage: ChatMessage = {
+          id: String(messages.length + 1),
+          role: "ai",
+          content: data.reply,
+          timestamp: formatTimestamp(new Date()),
+        }
+        setMessages([...messages, systemMessage])
+        setInput("")
+      }
+    } catch (e) {
+      console.error("Failed to save to memory:", e)
+    }
+  }
+
   return (
     <div
       className={cn(
@@ -558,6 +561,22 @@ export const ConsoleChat = forwardRef<ConsoleChatHandle, ConsoleChatProps>(funct
             }
           }}
         />
+        <Button
+          size="icon"
+          variant="ghost"
+          className={cn(
+            "h-9 w-9 shrink-0",
+            messageStyle === "plain"
+              ? "text-[#8f949e] hover:text-[#d7d7d9] hover:bg-[#2a2c31]"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+          onClick={handleSaveToMemory}
+          disabled={!input.trim() || isSending}
+          title="Save to Memory"
+        >
+          <Bookmark className="w-4 h-4" />
+          <span className="sr-only">Save to memory</span>
+        </Button>
         <Button
           size="icon"
           className={cn(

@@ -368,6 +368,43 @@ function createQuickWinCanvas(kind: "simple-script" | "debug-code"): CanvasState
   }
 }
 
+// Guided Dogfood Workflow Template (B1-B8)
+function createGuidedDogfoodCanvas(): CanvasState {
+  const now = Date.now().toString()
+  const mkId = (suffix: string) => `dogfood-${suffix}-${now}`
+  
+  // B1-B8 block definitions
+  const blocks = [
+    { id: 'b1', name: 'B1: Scope Lock', desc: 'Define slice goal, in/out of scope. Owner: Planner', type: 'text' as const },
+    { id: 'b2', name: 'B2: Dependency Check', desc: 'Verify dependencies ready. Owner: Planner', type: 'task' as const },
+    { id: 'b3', name: 'B3: Design Pass', desc: 'Implementation plan. Owner: Architect', type: 'task' as const },
+    { id: 'b4', name: 'B4: Implement Pass', desc: 'Write code. Owner: Implementer', type: 'task' as const },
+    { id: 'b5', name: 'B5: Verify Pass', desc: 'Test & validate. Owner: Tester', type: 'task' as const },
+    { id: 'b6', name: 'B6: Review Pass', desc: 'Code review. Owner: Reviewer', type: 'task' as const },
+    { id: 'b7', name: 'B7: Docs Sync', desc: 'Update docs. Owner: Docs Agent', type: 'task' as const },
+    { id: 'b8', name: 'B8: Ship Decision', desc: 'Done/Iterate/Split. Owner: Lead', type: 'decision' as const },
+  ]
+  
+  const nodes = blocks.map((block, i) => ({
+    id: mkId(block.id),
+    type: 'block',
+    data: {
+      label: block.name,
+      description: block.desc,
+      blockType: block.type,
+    },
+    position: { x: 180 * i, y: 100 },
+  }))
+  
+  const edges = nodes.slice(1).map((_, i) => ({
+    id: `e-${nodes[i].id}-${nodes[i + 1].id}`,
+    source: nodes[i].id,
+    target: nodes[i + 1].id,
+  }))
+  
+  return { nodes, edges, viewport: { x: 0, y: 0, zoom: 0.9 } }
+}
+
 function CodePeekPanel() {
   const [snapshot, setSnapshot] = useState<CodeExplorerSnapshot | null>(null)
   const [loading, setLoading] = useState(true)
@@ -1405,7 +1442,24 @@ export function MainWorkspace() {
   }, [])
 
   const applyQuickWin = useCallback(
-    (kind: "simple-script" | "debug-code" | "blank") => {
+    (kind: "simple-script" | "debug-code" | "guided-dogfood") => {
+      if (kind === "guided-dogfood") {
+        const template = createGuidedDogfoodCanvas()
+        setDraftCanvasState(template)
+        localStorage.setItem("canvas-state", JSON.stringify(template))
+        window.dispatchEvent(new Event(CANVAS_STATE_EVENT))
+        setWorkspaceMode("workflow")
+        setWorkflowStarted(true)
+        setChecklistDismissed(false)
+        setChecklist((prev) => ({ ...prev, goal: true, canvas: true }))
+        setCompletedStages((prev) => {
+          const next = new Set(prev)
+          next.add("A")
+          return next
+        })
+        selectWorkflowStage("B")
+        return
+      }
       const template = createQuickWinCanvas(kind)
       setDraftCanvasState(template)
       localStorage.setItem("canvas-state", JSON.stringify(template))
@@ -1422,6 +1476,7 @@ export function MainWorkspace() {
       selectWorkflowStage("B")
     },
     [selectWorkflowStage]
+  )
   )
 
   const checklistCompleted = useMemo(
@@ -1751,10 +1806,10 @@ export function MainWorkspace() {
             </button>
             <button
               type="button"
-              onClick={() => applyQuickWin("blank")}
-              className="rounded-md border border-border bg-secondary/30 px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-secondary/50"
+              onClick={() => applyQuickWin("guided-dogfood")}
+              className="rounded-md border border-border bg-amber-950/30 px-2.5 py-1 text-[11px] text-amber-200 hover:bg-amber-950/40"
             >
-              Blank Canvas
+              🐕 Build Product (Guided Dogfood)
             </button>
           </div>
         </div>

@@ -39,6 +39,7 @@ const BLOCK_TYPE_TO_TASK_TYPE: Record<BlockType, InstructionTask['task_type']> =
   text: 'input',
   artifact: 'output',
   preview: 'output',
+  memory: 'input',
 }
 
 function inferAgentTypeHint(node: CanvasNode): string {

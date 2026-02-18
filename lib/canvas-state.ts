@@ -1,7 +1,7 @@
 import { produce } from 'immer'
 import type { Node, Edge } from 'reactflow'
 
-export type BlockType = 'task' | 'decision' | 'loop' | 'parallel' | 'text' | 'artifact' | 'preview'
+export type BlockType = 'task' | 'decision' | 'loop' | 'parallel' | 'text' | 'artifact' | 'preview' | 'memory'
 
 export interface CanvasNode extends Node {
   data: {
