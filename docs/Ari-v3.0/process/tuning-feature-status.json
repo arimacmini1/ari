@@ -1,0 +1,13 @@
+{
+  "version": "1",
+  "updated_at": "2026-02-18",
+  "qa_window_days": 7,
+  "feature_status": {
+    "T01": "in_progress",
+    "T01-MH-02": "complete"
+  },
+  "notes": [
+    "Canonical tuning-layer status store for Ari v3.0 dogfood execution.",
+    "2026-02-18: T01-MH-02 complete - deterministic PR sub-loop integrated"
+  ]
+}
