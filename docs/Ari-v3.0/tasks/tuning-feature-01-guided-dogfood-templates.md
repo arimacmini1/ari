@@ -52,7 +52,7 @@ This feature embeds the Dogfood V2 workflow as the default entry point for new P
     - 2026-02-18: B7 completed. Docs sync updated `docs/Ari-v3.0/dogfood-workflow-quick-ref.md` for `start the next step`; `npm run docs:parity` PASS.
     - 2026-02-18: B8 completed. Decision: ITERATE. Runtime dependency gap (`temporalio` not installed in this shell) blocks end-to-end execution proof of `next-step` orchestration despite compile + gate success.
 
-- [ ] `T01-MH-03` Add Familiar Mode (Replit-style guided onboarding)
+- [x] `T01-MH-03` Add Familiar Mode (Replit-style guided onboarding)
   - Owner hint: Frontend / Design
   - Dependencies: T01-MH-01
   - Blocks: T01-MH-04, T02-MH-01
@@ -63,7 +63,7 @@ This feature embeds the Dogfood V2 workflow as the default entry point for new P
     - Voice intent → template mapping (e.g. "migrate my data" → migration template)
     - Onboarding completes in <5 min for first product slice
   - Progress / Fixes / Updates:
-    - 2026-02-17: Not started
+    - 2026-02-18: B1-B8 complete. Implemented Familiar Mode: intent input field, keyword-to-template mapping, quick suggestion buttons. Added migration + refactor templates. Added Advanced Mode toggle to hide advanced blocks.
 
 - [ ] `T01-MH-04` Create product-specific dogfood templates (migration, refactor, app, debug)
   - Owner hint: AI / Product

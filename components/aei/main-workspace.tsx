@@ -255,7 +255,7 @@ const defaultChecklistState: Record<ChecklistId, boolean> = {
   iterate: false,
 }
 
-function createQuickWinCanvas(kind: "simple-script" | "debug-code"): CanvasState {
+function createQuickWinCanvas(kind: "simple-script" | "debug-code" | "migration" | "refactor"): CanvasState {
   const now = Date.now().toString()
   const mkId = (suffix: string) => `qw-${kind}-${suffix}-${now}`
 
@@ -365,6 +365,146 @@ function createQuickWinCanvas(kind: "simple-script" | "debug-code"): CanvasState
       { id: `e-${n3}-${n4}`, source: n3, target: n4 },
     ],
     viewport: { x: 0, y: 0, zoom: 0.95 },
+  }
+  
+  // Migration Template
+  if (kind === "migration") {
+    const n1 = mkId("source")
+    const n2 = mkId("validate")
+    const n3 = mkId("transform")
+    const n4 = mkId("verify")
+    const n5 = mkId("cutover")
+    return {
+      nodes: [
+        {
+          id: n1,
+          type: "block",
+          data: {
+            label: "Source Analysis",
+            description: "Analyze source data/schema, identify migration scope",
+            blockType: "text",
+          },
+          position: { x: 80, y: 140 },
+        },
+        {
+          id: n2,
+          type: "block",
+          data: {
+            label: "Validate",
+            description: "Validate source data quality and constraints",
+            blockType: "task",
+          },
+          position: { x: 320, y: 140 },
+        },
+        {
+          id: n3,
+          type: "block",
+          data: {
+            label: "Transform",
+            description: "Transform and map data to target schema",
+            blockType: "task",
+          },
+          position: { x: 560, y: 140 },
+        },
+        {
+          id: n4,
+          type: "block",
+          data: {
+            label: "Verify",
+            description: "Verify row counts match, data integrity",
+            blockType: "task",
+          },
+          position: { x: 800, y: 140 },
+        },
+        {
+          id: n5,
+          type: "block",
+          data: {
+            label: "Cutover",
+            description: "Switch to new system, decommission old",
+            blockType: "decision",
+          },
+          position: { x: 1040, y: 140 },
+        },
+      ],
+      edges: [
+        { id: `e-${n1}-${n2}`, source: n1, target: n2 },
+        { id: `e-${n2}-${n3}`, source: n2, target: n3 },
+        { id: `e-${n3}-${n4}`, source: n3, target: n4 },
+        { id: `e-${n4}-${n5}`, source: n4, target: n5 },
+      ],
+      viewport: { x: 0, y: 0, zoom: 0.9 },
+    }
+  }
+  
+  // Refactor Template
+  if (kind === "refactor") {
+    const n1 = mkId("analyze")
+    const n2 = mkId("plan")
+    const n3 = mkId("safe-change")
+    const n4 = mkId("test")
+    const n5 = mkId("review")
+    return {
+      nodes: [
+        {
+          id: n1,
+          type: "block",
+          data: {
+            label: "Analyze",
+            description: "Analyze code structure, identify refactor targets",
+            blockType: "text",
+          },
+          position: { x: 80, y: 140 },
+        },
+        {
+          id: n2,
+          type: "block",
+          data: {
+            label: "Plan",
+            description: "Create refactor plan with safe boundaries",
+            blockType: "task",
+          },
+          position: { x: 300, y: 140 },
+        },
+        {
+          id: n3,
+          type: "block",
+          data: {
+            label: "Safe Change",
+            description: "Make incremental changes within safe boundaries",
+            blockType: "task",
+          },
+          position: { x: 520, y: 140 },
+        },
+        {
+          id: n4,
+          type: "block",
+          data: {
+            label: "Test Coverage",
+            description: "Verify tests pass, measure coverage delta",
+            blockType: "task",
+          },
+          position: { x: 740, y: 140 },
+        },
+        {
+          id: n5,
+          type: "block",
+          data: {
+            label: "Review",
+            description: "Diff review, approve/refuse refactor",
+            blockType: "decision",
+          },
+          position: { x: 960, y: 140 },
+        },
+      ],
+      edges: [
+        { id: `e-${n1}-${n2}`, source: n1, target: n2 },
+        { id: `e-${n2}-${n3}`, source: n2, target: n3 },
+        { id: `e-${n3}-${n4}`, source: n3, target: n4 },
+        { id: `e-${n4}-${n5}`, source: n4, target: n5 },
+      ],
+      viewport: { x: 0, y: 0, zoom: 0.9 },
+    }
   }
 }
 
@@ -1265,6 +1405,48 @@ export function MainWorkspace() {
     if (typeof window === "undefined") return ""
     return localStorage.getItem(WORKFLOW_REPO_BRANCH_KEY) ?? ""
   })
+  
+  // Familiar Mode: Intent-based template selection
+  const [intentInput, setIntentInput] = useState<string>("")
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("guided-dogfood")
+  
+  // Intent to template mapping
+  const intentToTemplateMap: Record<string, string> = {
+    "build": "guided-dogfood",
+    "product": "guided-dogfood",
+    "app": "guided-dogfood",
+    "create": "guided-dogfood",
+    "new": "guided-dogfood",
+    "script": "simple-script",
+    "automation": "simple-script",
+    "bot": "simple-script",
+    "debug": "debug-code",
+    "fix": "debug-code",
+    "error": "debug-code",
+    "bug": "debug-code",
+    "migrate": "migration",
+    "import": "migration",
+    "data": "migration",
+    "refactor": "refactor",
+    "improve": "refactor",
+    "optimize": "refactor",
+  }
+  
+  const mapIntentToTemplate = (intent: string): string => {
+    const lower = intent.toLowerCase().trim()
+    for (const [keyword, template] of Object.entries(intentToTemplateMap)) {
+      if (lower.includes(keyword)) return template
+    }
+    return "guided-dogfood" // default
+  }
+  
+  const handleIntentSubmit = () => {
+    if (intentInput.trim()) {
+      const template = mapIntentToTemplate(intentInput)
+      setSelectedTemplate(template)
+      applyQuickWin(template as any)
+    }
+  }
   const [repoBadge, setRepoBadge] = useState<string>(() => {
     if (typeof window === "undefined") return ""
     return localStorage.getItem(WORKFLOW_REPO_BADGE_KEY) ?? ""
@@ -1476,7 +1658,6 @@ export function MainWorkspace() {
       selectWorkflowStage("B")
     },
     [selectWorkflowStage]
-  )
   )
 
   const checklistCompleted = useMemo(
@@ -1810,6 +1991,50 @@ export function MainWorkspace() {
               className="rounded-md border border-border bg-amber-950/30 px-2.5 py-1 text-[11px] text-amber-200 hover:bg-amber-950/40"
             >
               🐕 Build Product (Guided Dogfood)
+            </button>
+          </div>
+          
+          {/* Familiar Mode: Intent-based template selection */}
+          <div className="mt-4 rounded-lg border border-border bg-card/40 p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="text-xs font-medium text-foreground">✨ Familiar Mode</span>
+              <span className="text-[10px] text-muted-foreground">Tell us what you want to build</span>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={intentInput}
+                onChange={(e) => setIntentInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleIntentSubmit()}
+                placeholder='e.g. "build a web app", "migrate my data", "fix this bug"'
+                className="flex-1 h-9 rounded-md border border-border bg-secondary/40 px-3 text-xs text-foreground placeholder:text-muted-foreground"
+              />
+              <button
+                type="button"
+                onClick={handleIntentSubmit}
+                className="rounded-md bg-primary px-3 py-1 text-xs text-primary-foreground hover:bg-primary/90"
+              >
+                Go
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <span className="text-[10px] text-muted-foreground">Suggestions:</span>
+              <button type="button" onClick={() => { setIntentInput("build a web app"); setSelectedTemplate("guided-dogfood"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🌐 Web App</button>
+              <button type="button" onClick={() => { setIntentInput("migrate data"); setSelectedTemplate("migration"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">📦 Migrate Data</button>
+              <button type="button" onClick={() => { setIntentInput("debug this code"); setSelectedTemplate("debug-code"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🐛 Debug Code</button>
+              <button type="button" onClick={() => { setIntentInput("refactor"); setSelectedTemplate("refactor"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🔧 Refactor</button>
+            </div>
+          </div>
+          
+          {/* Advanced Mode Toggle */}
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-[11px] text-muted-foreground">Advanced users can access full canvas & agent blocks</span>
+            <button
+              type="button"
+              onClick={() => setWorkspaceMode("advanced")}
+              className="rounded-md border border-border bg-secondary/40 px-2.5 py-1 text-[11px] text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+            >
+              Switch to Advanced Mode →
             </button>
           </div>
         </div>
