@@ -176,8 +176,47 @@ export function TraceViewer() {
           </div>
         </div>
       ) : trace ? (
-        <div className="flex-1 overflow-hidden">
-          <TraceTree
+        <div className="flex flex-col h-full">
+          {/* Product Success Indicators */}
+          <div className="flex items-center gap-4 px-4 py-2 border-b border-border bg-card/30 shrink-0">
+            <span className="text-xs font-medium text-muted-foreground">Product Status:</span>
+            {trace.status === "complete" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-950/40 border border-emerald-700/50 px-2 py-0.5 text-[10px] text-emerald-300">
+                ✅ Product Ready
+              </span>
+            ) : trace.status === "failed" ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-red-950/40 border border-red-700/50 px-2 py-0.5 text-[10px] text-red-300">
+                ❌ Needs Iteration
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-950/40 border border-amber-700/50 px-2 py-0.5 text-[10px] text-amber-300">
+                🔄 In Progress
+              </span>
+            )}
+            {trace.metrics?.rowCountMatch !== undefined && (
+              <span className="text-[10px] text-muted-foreground">
+                Rows: {trace.metrics.rowCountMatch ? "✓ Match" : "✗ Mismatch"}
+              </span>
+            )}
+            {trace.metrics?.uiFlowsPass !== undefined && (
+              <span className="text-[10px] text-muted-foreground">
+                UI Flows: {trace.metrics.uiFlowsPass ? "✓ Pass" : "✗ Fail"}
+              </span>
+            )}
+            {trace.metrics?.testCoverage !== undefined && (
+              <span className="text-[10px] text-muted-foreground">
+                Coverage: {trace.metrics.testCoverage}%
+              </span>
+            )}
+            {trace.evidence?.length ? (
+              <span className="text-[10px] text-blue-400 cursor-pointer hover:underline">
+                📎 {trace.evidence.length} evidence{trace.evidence.length > 1 ? "s" : ""}
+              </span>
+            ) : null}
+          </div>
+          
+          <div className="flex-1 overflow-hidden">
+            <TraceTree
             trace={trace}
             compareDisabled={compareDisabled}
             forkDisabled={forkDisabled}

@@ -35,12 +35,24 @@ export interface TraceExecution {
   start_time: string;               // ISO 8601
   duration: number;                 // seconds
   cost: number;                      // USD
-  status: 'success' | 'warning' | 'failed' | 'pending';
+  status: 'success' | 'warning' | 'failed' | 'pending' | 'complete';
   root_decisions: DecisionNode[];
   source_execution_id?: string;     // Optional link for forked traces
   fork_node_id?: string;            // Optional decision node that was forked
   fork_mode?: 'scoped' | 'full';    // scoped = downstream subtree only
   source_repo?: SourceRepo;
+  // Product-level success indicators (T01-MH-05)
+  metrics?: {
+    rowCountMatch?: boolean;
+    uiFlowsPass?: boolean;
+    testCoverage?: number;
+    perfDelta?: number;
+  };
+  evidence?: Array<{
+    type: 'screenshot' | 'test-log' | 'migration-report';
+    path: string;
+    label: string;
+  }>;
 }
 
 export interface TraceNode extends DecisionNode {

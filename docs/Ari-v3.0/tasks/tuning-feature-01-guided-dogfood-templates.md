@@ -78,7 +78,7 @@ This feature embeds the Dogfood V2 workflow as the default entry point for new P
   - Progress / Fixes / Updates:
     - 2026-02-18: Complete. Added 5 templates: simple-script, debug-code, migration, refactor, app-build. Each has pre-filled B1 scope examples with goal, in/out scope, and tool attachments. Migration includes verify step, refactor includes test coverage step.
 
-- [ ] `T01-MH-05` Extend trace viewer with product-level success indicators
+- [x] `T01-MH-05` Extend trace viewer with product-level success indicators
   - Owner hint: Frontend
   - Dependencies: T01-MH-02
   - Blocks: T02-MH-03
@@ -88,7 +88,7 @@ This feature embeds the Dogfood V2 workflow as the default entry point for new P
     - B8 decision badge includes "Product Ready" / "Needs Iteration" label
     - Evidence attachments (snapshots, test logs, migration reports) visible inline
   - Progress / Fixes / Updates:
-    - 2026-02-17: Not started
+    - 2026-02-18: Complete. Added product status header to TraceViewer with: Product Ready/Needs Iteration badge, row count match indicator, UI flows pass indicator, test coverage %, evidence attachments count. Updated TraceExecution model with metrics and evidence fields.
 
 ## Should-Have Tasks
 
