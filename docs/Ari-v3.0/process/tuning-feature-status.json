@@ -5,11 +5,13 @@
   "feature_status": {
     "T01": "in_progress",
     "T01-MH-02": "complete",
-    "T01-MH-03": "complete"
+    "T01-MH-03": "complete",
+    "T01-MH-04": "complete"
   },
   "notes": [
     "Canonical tuning-layer status store for Ari v3.0 dogfood execution.",
     "2026-02-18: T01-MH-02 complete - deterministic PR sub-loop integrated",
-    "2026-02-18: T01-MH-03 complete - Familiar Mode with intent input + templates"
+    "2026-02-18: T01-MH-03 complete - Familiar Mode with intent input + templates",
+    "2026-02-18: T01-MH-04 complete - 5 product templates with B1 scope + tool attachments"
   ]
 }

@@ -255,9 +255,45 @@ const defaultChecklistState: Record<ChecklistId, boolean> = {
   iterate: false,
 }
 
-function createQuickWinCanvas(kind: "simple-script" | "debug-code" | "migration" | "refactor"): CanvasState {
+function createQuickWinCanvas(kind: "simple-script" | "debug-code" | "migration" | "refactor" | "app-build"): CanvasState {
   const now = Date.now().toString()
   const mkId = (suffix: string) => `qw-${kind}-${suffix}-${now}`
+
+  // Pre-filled B1 scope examples for each template type
+  const scopeExamples: Record<string, { goal: string, inScope: string[], outScope: string[], tools: string[] }> = {
+    "simple-script": {
+      goal: "Build a simple automation script",
+      inScope: ["Read input", "Process data", "Output result"],
+      outScope: ["GUI", "Web API", "Database"],
+      tools: ["file-read", "code-gen"]
+    },
+    "debug-code": {
+      goal: "Debug and fix existing code",
+      inScope: ["Identify bug root cause", "Fix the issue", "Verify fix works"],
+      outScope: ["Refactor unrelated code", "Add new features"],
+      tools: ["code-explorer", "browser", "test-runner"]
+    },
+    "migration": {
+      goal: "Migrate data between systems",
+      inScope: ["Analyze source", "Validate data", "Transform & load", "Verify integrity"],
+      outScope: ["Real-time sync", "Rollback automation"],
+      tools: ["db-connector", "validator", "data-transform"]
+    },
+    "refactor": {
+      goal: "Refactor code safely",
+      inScope: ["Analyze structure", "Plan boundaries", "Incremental changes", "Test coverage"],
+      outScope: ["Breaking changes", "New features"],
+      tools: ["code-explorer", "test-runner", "diff-viewer"]
+    },
+    "app-build": {
+      goal: "Build a complete web application",
+      inScope: ["UI components", "Backend API", "Database schema", "Tests"],
+      outScope: ["Production deployment", "CI/CD setup"],
+      tools: ["browser", "code-gen", "test-runner", "artifact-viewer"]
+    }
+  }
+
+  const scope = scopeExamples[kind] || scopeExamples["simple-script"]
 
   if (kind === "blank") {
     return {
@@ -504,6 +540,93 @@ function createQuickWinCanvas(kind: "simple-script" | "debug-code" | "migration"
         { id: `e-${n4}-${n5}`, source: n4, target: n5 },
       ],
       viewport: { x: 0, y: 0, zoom: 0.9 },
+    }
+  }
+  
+  // App Build Template (full web application)
+  if (kind === "app-build") {
+    const n1 = mkId("spec")
+    const n2 = mkId("ui")
+    const n3 = mkId("backend")
+    const n4 = mkId("db")
+    const n5 = mkId("test")
+    const n6 = mkId("review")
+    return {
+      nodes: [
+        {
+          id: n1,
+          type: "block",
+          data: {
+            label: "B1: Spec",
+            description: "Define product requirements, UI mockups, API contracts",
+            blockType: "text",
+            scope: scopeExamples["app-build"],
+          },
+          position: { x: 80, y: 140 },
+        },
+        {
+          id: n2,
+          type: "block",
+          data: {
+            label: "B2: UI",
+            description: "Build frontend components, pages, styling",
+            blockType: "task",
+            tools: ["browser", "artifact-viewer"],
+          },
+          position: { x: 280, y: 140 },
+        },
+        {
+          id: n3,
+          type: "block",
+          data: {
+            label: "B3: Backend",
+            description: "Implement API routes, business logic",
+            blockType: "task",
+            tools: ["code-gen"],
+          },
+          position: { x: 480, y: 140 },
+        },
+        {
+          id: n4,
+          type: "block",
+          data: {
+            label: "B4: Database",
+            description: "Create schema, migrations, seed data",
+            blockType: "task",
+            tools: ["db-connector"],
+          },
+          position: { x: 680, y: 140 },
+        },
+        {
+          id: n5,
+          type: "block",
+          data: {
+            label: "B5: Test",
+            description: "Run tests, verify all flows work",
+            blockType: "task",
+            tools: ["test-runner", "browser"],
+          },
+          position: { x: 880, y: 140 },
+        },
+        {
+          id: n6,
+          type: "block",
+          data: {
+            label: "Ship",
+            description: "Review and deploy application",
+            blockType: "decision",
+          },
+          position: { x: 1080, y: 140 },
+        },
+      ],
+      edges: [
+        { id: `e-${n1}-${n2}`, source: n1, target: n2 },
+        { id: `e-${n2}-${n3}`, source: n2, target: n3 },
+        { id: `e-${n3}-${n4}`, source: n3, target: n4 },
+        { id: `e-${n4}-${n5}`, source: n4, target: n5 },
+        { id: `e-${n5}-${n6}`, source: n5, target: n6 },
+      ],
+      viewport: { x: 0, y: 0, zoom: 0.85 },
     }
   }
 }
@@ -2019,8 +2142,8 @@ export function MainWorkspace() {
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span className="text-[10px] text-muted-foreground">Suggestions:</span>
-              <button type="button" onClick={() => { setIntentInput("build a web app"); setSelectedTemplate("guided-dogfood"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🌐 Web App</button>
-              <button type="button" onClick={() => { setIntentInput("migrate data"); setSelectedTemplate("migration"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">📦 Migrate Data</button>
+              <button type="button" onClick={() => { setIntentInput("build a web app"); setSelectedTemplate("app-build"); applyQuickWin("app-build"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🌐 Web App</button>
+              <button type="button" onClick={() => { setIntentInput("migrate data"); setSelectedTemplate("migration"); applyQuickWin("migration"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">📦 Migrate Data</button>
               <button type="button" onClick={() => { setIntentInput("debug this code"); setSelectedTemplate("debug-code"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🐛 Debug Code</button>
               <button type="button" onClick={() => { setIntentInput("refactor"); setSelectedTemplate("refactor"); }} className="rounded bg-secondary/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground">🔧 Refactor</button>
             </div>

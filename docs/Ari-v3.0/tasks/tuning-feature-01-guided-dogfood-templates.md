@@ -65,7 +65,7 @@ This feature embeds the Dogfood V2 workflow as the default entry point for new P
   - Progress / Fixes / Updates:
     - 2026-02-18: B1-B8 complete. Implemented Familiar Mode: intent input field, keyword-to-template mapping, quick suggestion buttons. Added migration + refactor templates. Added Advanced Mode toggle to hide advanced blocks.
 
-- [ ] `T01-MH-04` Create product-specific dogfood templates (migration, refactor, app, debug)
+- [x] `T01-MH-04` Create product-specific dogfood templates (migration, refactor, app, debug)
   - Owner hint: AI / Product
   - Dependencies: T01-MH-01, T01-MH-03
   - Blocks: T01-MH-05, T02-MH-02
@@ -76,7 +76,7 @@ This feature embeds the Dogfood V2 workflow as the default entry point for new P
     - Refactor template enforces safe diff preview + test coverage in B5
     - Templates auto-attach relevant tools (browser, run_tests, etc.)
   - Progress / Fixes / Updates:
-    - 2026-02-17: Not started
+    - 2026-02-18: Complete. Added 5 templates: simple-script, debug-code, migration, refactor, app-build. Each has pre-filled B1 scope examples with goal, in/out scope, and tool attachments. Migration includes verify step, refactor includes test coverage step.
 
 - [ ] `T01-MH-05` Extend trace viewer with product-level success indicators
   - Owner hint: Frontend
